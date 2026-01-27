@@ -107,6 +107,27 @@ class EDSLAdapter:
         ]
         return model_name in direct_api_models
 
+    def _should_skip_agent_traits(self, model_name: Optional[str] = None) -> bool:
+        """Check if model doesn't work with EDSL agent traits.
+
+        Args:
+            model_name: Name of the model (optional, uses default if None)
+
+        Returns:
+            True if should skip agent traits, False otherwise
+        """
+        effective_model_name = model_name or self.default_config.name
+        return any([
+            "gemini" in effective_model_name.lower(),
+            "llama" in effective_model_name.lower(),
+            "meta-llama" in effective_model_name.lower(),
+            "gpt-5" in effective_model_name.lower(),
+            "o3" in effective_model_name.lower(),
+            "o1" in effective_model_name.lower(),
+            "opus-4-5" in effective_model_name.lower(),
+            "claude-opus-4-5" in effective_model_name.lower(),
+        ])
+
     def _get_anthropic_client(self):
         """Get or create Anthropic client for direct API access."""
         if self._anthropic_client is None:
@@ -370,7 +391,7 @@ class EDSLAdapter:
                 question_name=f"story_{storyteller_id}",
                 model_name=model_name,
                 temperature=temperature,
-                agent_traits={"role": "storyteller", "storyteller_id": storyteller_id}
+                agent_traits=None if self._should_skip_agent_traits(model_name) else {"role": "storyteller", "storyteller_id": storyteller_id}
             )
 
             # Extract source if mentioned (simple heuristic)
@@ -444,7 +465,7 @@ class EDSLAdapter:
                 question_name=f"question_{target_storyteller_id}_{question_number}",
                 model_name=model_name,
                 temperature=temperature,
-                agent_traits={"role": "judge"}
+                agent_traits=None if self._should_skip_agent_traits(model_name) else {"role": "judge"}
             )
 
             # Clean up the response (remove any preamble)
@@ -530,7 +551,7 @@ class EDSLAdapter:
                 question_name=f"answer_{storyteller_id}_{question_number}",
                 model_name=model_name,
                 temperature=temperature,
-                agent_traits={"role": "storyteller", "storyteller_id": storyteller_id}
+                agent_traits=None if self._should_skip_agent_traits(model_name) else {"role": "storyteller", "storyteller_id": storyteller_id}
             )
 
             return {
@@ -573,7 +594,7 @@ class EDSLAdapter:
                 question_name="verdict",
                 model_name=model_name,
                 temperature=temperature,
-                agent_traits={"role": "judge"}
+                agent_traits=None if self._should_skip_agent_traits(model_name) else {"role": "judge"}
             )
 
             # Parse the verdict
@@ -705,7 +726,7 @@ class EDSLAdapter:
                 question_name=f"intermediate_guess_{after_qa_number}",
                 model_name=model_name,
                 temperature=temperature,
-                agent_traits={"role": "judge"}
+                agent_traits=None if self._should_skip_agent_traits(model_name) else {"role": "judge"}
             )
 
             # Parse the guess (similar to verdict but simpler)
