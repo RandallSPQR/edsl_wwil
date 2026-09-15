@@ -823,7 +823,7 @@ class PrivateBlockChannelError(RuntimeError):
 
 
 def _perfect_lie_build_job(user_prompt: str, system_prompt: str, model_name: str,
-                           temperature: float, seed: int, service_name: str,
+                           temperature: float, replicate: int, service_name: str,
                            question_name: str = "story", skip_api_key_check: bool = False):
     """Build (but do not run) the EDSL job for one liar call and verify its rendered prompts."""
     model_kwargs = dict(temperature=temperature)
@@ -833,10 +833,11 @@ def _perfect_lie_build_job(user_prompt: str, system_prompt: str, model_name: str
         model = Model(model_name, service_name=service_name, **model_kwargs)
     else:
         model = Model(model_name, **model_kwargs)
-    # `seed` is the replicate index. EDSL's OpenAI-compatible services do not
+    # `replicate` is the replicate index: y_1..y_R are independent draws from
+    # P(y | prompt, T). EDSL's OpenAI-compatible services do not
     # forward it to the API, but it enters the cache key, so replicates with
     # identical prompts are not collapsed into one cached response.
-    model.parameters["seed"] = seed
+    model.parameters["replicate"] = replicate
 
     agent = Agent(traits=dict(PERFECT_LIE_AGENT_TRAITS), instruction=system_prompt)
     question = QuestionFreeText(question_text=user_prompt, question_name=question_name)
@@ -859,16 +860,16 @@ class PerfectLieAdapter:
         self.service_name = service_name
 
     def render(self, user_prompt: str, system_prompt: str, model_name: str,
-               temperature: float, seed: int, skip_api_key_check: bool = True) -> Dict:
+               temperature: float, replicate: int, skip_api_key_check: bool = True) -> Dict:
         """Return the exact prompts EDSL would send, without calling any model."""
-        _, u, s = _perfect_lie_build_job(user_prompt, system_prompt, model_name, temperature, seed,
+        _, u, s = _perfect_lie_build_job(user_prompt, system_prompt, model_name, temperature, replicate,
                                          self.service_name, skip_api_key_check=skip_api_key_check)
         return {"user_prompt": u, "system_prompt": s}
 
     def generate(self, user_prompt: str, system_prompt: str, model_name: str,
-                 temperature: float, seed: int) -> Tuple[str, Dict]:
+                 temperature: float, replicate: int) -> Tuple[str, Dict]:
         """Run one liar call. Phase 2+ only; never invoked by --dry-run."""
-        job, u, s = _perfect_lie_build_job(user_prompt, system_prompt, model_name, temperature, seed,
+        job, u, s = _perfect_lie_build_job(user_prompt, system_prompt, model_name, temperature, replicate,
                                            self.service_name)
         start = time.time()
         results = job.run(progress_bar=False, use_api_proxy=False, disable_remote_cache=True)  # local execution against OPEN_ROUTER_API_KEY; validated in Phase 2
@@ -877,6 +878,6 @@ class PerfectLieAdapter:
             raise StoryGenerationError(f"{model_name} returned no answer")
         return text, {
             "latency_ms": int((time.time() - start) * 1000),
-            "model": model_name, "temperature": temperature, "seed": seed,
+            "model": model_name, "temperature": temperature, "replicate": replicate,
             "system_prompt": s, "user_prompt": u,
         }

@@ -16,7 +16,7 @@ from .conditions import build_liar_prompts, target_system_prompt, target_user_pr
 from .grader import build_grader_input
 from .personas import Instrument, load_instrument
 
-DEFAULT_SEEDS = (1, 2, 3, 4, 5)
+DEFAULT_REPLICATES = (1, 2, 3, 4, 5)
 
 
 @dataclass(frozen=True)
@@ -30,12 +30,12 @@ class Cell:
     condition: str
     model_id: str
     model_family: str
-    seed: int
+    replicate: int
 
     @property
     def unit_key(self) -> tuple:
-        """The paired-comparison unit u = (prompt, pair, condition, model, seed)."""
-        return (self.prompt_id, self.j1, self.j2, self.condition, self.model_id, self.seed)
+        """The paired-comparison unit u = (prompt, pair, condition, model, replicate)."""
+        return (self.prompt_id, self.j1, self.j2, self.condition, self.model_id, self.replicate)
 
 
 def load_models(path: Optional[Path] = None) -> Dict:
@@ -45,7 +45,7 @@ def load_models(path: Optional[Path] = None) -> Dict:
 def enumerate_cells(
     instrument: Instrument,
     models: Dict,
-    seeds=DEFAULT_SEEDS,
+    replicates=DEFAULT_REPLICATES,
     liar_model_ids: Optional[List[str]] = None,
 ) -> Iterator[Cell]:
     liars = models["liar_models"]
@@ -56,11 +56,11 @@ def enumerate_cells(
         for target_id in row.targets:
             for condition in CONDITIONS:
                 for m in liars:
-                    for seed in seeds:
+                    for replicate in replicates:
                         yield Cell(
                             prompt_id=row.prompt_id, category=cat_by_prompt[row.prompt_id],
                             j1=row.j1, j2=row.j2, target_id=target_id, placebo_id=row.placebo,
-                            condition=condition, model_id=m["id"], model_family=m["family"], seed=seed,
+                            condition=condition, model_id=m["id"], model_family=m["family"], replicate=replicate,
                         )
 
 
@@ -172,11 +172,11 @@ def estimate_cost(instrument: Instrument, models: Dict, cells: List[Cell]) -> Co
     )
 
 
-def format_estimate(est: CostEstimate, seeds, liar_ids) -> str:
+def format_estimate(est: CostEstimate, replicates, liar_ids) -> str:
     out = []
     out.append(f"cells (lies):            {est.n_cells}")
     out.append(f"paired units u:          {est.n_units}")
-    out.append(f"seeds:                   {list(seeds)}")
+    out.append(f"replicates:              {list(replicates)}")
     out.append(f"liar models:             {liar_ids}")
     out.append("")
     hdr = f"{'line':22s} {'model':40s} {'calls':>6s} {'in_tok':>10s} {'out_tok':>10s} {'usd':>9s}"
@@ -196,3 +196,29 @@ def format_estimate(est: CostEstimate, seeds, liar_ids) -> str:
     out.append("")
     out.append(f"price source: {est.price_source}")
     return "\n".join(out)
+
+
+# ---------------------------------------------------------------- gates
+
+class PreflightError(RuntimeError):
+    """A live run was requested but a setup requirement is unmet."""
+
+
+def preflight(models: Dict, prompts_raw: Dict, mode: str) -> List[str]:
+    """Return the list of unmet requirements for `mode` in {"dry-run", "pilot", "full"}.
+
+    The full run refuses while any price is unverified or any fact prompt lacks
+    pilot evidence of fabricability. The pilot is what produces that evidence,
+    so it is gated only on the key being present (checked at call time by EDSL).
+    """
+    problems: List[str] = []
+    if mode == "dry-run":
+        return problems
+    if mode == "full":
+        if not models.get("price_fetched_at") or "UNVERIFIED" in str(models.get("price_source", "")):
+            problems.append("model prices are UNVERIFIED: run `run_perfect_lie.py --refresh-prices` first")
+        for p in prompts_raw["prompts"]:
+            fab = p.get("fabricability") or {}
+            if fab.get("status") != "verified_in_pilot" or not fab.get("evidence"):
+                problems.append(f"prompt {p['id']!r}: fabricability not verified in pilot (status={fab.get('status')!r})")
+    return problems

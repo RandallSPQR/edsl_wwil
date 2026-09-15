@@ -78,7 +78,7 @@ def test_1_edsl_rendered_prompts_carry_block_in_system_only(instrument):
     for cond in CONDITIONS:
         for t in row.targets:
             lp = build_liar_prompts(cond, row, t, instrument.personas, cat)
-            r = adapter.render(lp.user_prompt, lp.system_prompt, "test", 1.0, seed=1)
+            r = adapter.render(lp.user_prompt, lp.system_prompt, "test", 1.0, replicate=1)
             assert r["user_prompt"] == lp.user_prompt
             assert r["system_prompt"].startswith(lp.system_prompt)
             rendered_users.add(r["user_prompt"])
@@ -88,16 +88,61 @@ def test_1_edsl_rendered_prompts_carry_block_in_system_only(instrument):
     assert len(rendered_users) == 1
 
 
-def test_1_edsl_seed_separates_cache_keys():
+def test_1_edsl_replicate_separates_cache_keys():
     """Replicates with identical prompts must not collapse into one cached response."""
     pytest.importorskip("edsl")
     from edsl.caching.cache_entry import CacheEntry
     keys = {
-        CacheEntry.gen_key(model="m", parameters={"temperature": 1.0, "seed": s},
+        CacheEntry.gen_key(model="m", parameters={"temperature": 1.0, "replicate": r},
                            system_prompt="s", user_prompt="u", iteration=0)
-        for s in range(1, 6)
+        for r in range(1, 6)
     }
     assert len(keys) == 5
+
+
+def test_1_edsl_two_replicates_make_two_model_calls():
+    """Integration: replicate ids 1 and 2 with identical prompts produce two real model
+    executions; repeating replicate 1 is served from cache. Uses the offline test model."""
+    pytest.importorskip("edsl")
+    os.environ["EDSL_RUNNING_IN_PYTEST"] = "True"
+    from edsl import Cache
+    from src.edsl_adapter import _perfect_lie_build_job
+    calls = []
+    cache = Cache()
+    for rep in (1, 2, 1):
+        job, _, _ = _perfect_lie_build_job("Tell your story.", "SYS", "test", 1.0, rep, None,
+                                           skip_api_key_check=True)
+        model = job.models[0]
+        original = model.async_execute_model_call
+
+        async def counted(*a, _orig=original, _rep=rep, **k):
+            calls.append(_rep)
+            return await _orig(*a, **k)
+
+        model.async_execute_model_call = counted
+        res = job.run(cache=cache, progress_bar=False, use_api_proxy=False,
+                      disable_remote_inference=True, disable_remote_cache=True, stop_on_exception=True)
+        assert res.select("answer.story").first() is not None
+    assert calls == [1, 2], f"expected one execution per distinct replicate, got {calls}"
+    assert len(cache) == 2
+
+
+def test_1_constant_trait_identical_across_conditions(instrument):
+    """The one agent trait EDSL needs to honour `instruction` is the same in every condition,
+    so the rendered system prompt differs across conditions only by the private note."""
+    pytest.importorskip("edsl")
+    os.environ["EDSL_RUNNING_IN_PYTEST"] = "True"
+    from src.edsl_adapter import PERFECT_LIE_AGENT_TRAITS, PerfectLieAdapter
+    adapter = PerfectLieAdapter(service_name=None)
+    row = instrument.design[0]
+    cat = _category(instrument, row.prompt_id)
+    suffixes = set()
+    for cond in CONDITIONS:
+        lp = build_liar_prompts(cond, row, row.j1, instrument.personas, cat)
+        r = adapter.render(lp.user_prompt, lp.system_prompt, "test", 1.0, replicate=1)
+        suffixes.add(r["system_prompt"][len(lp.system_prompt):])
+    assert len(suffixes) == 1, "trait rendering varies with condition"
+    assert PERFECT_LIE_AGENT_TRAITS == {"role": "storyteller"}
 
 
 # ---------------------------------------------------------------- Test 2
@@ -131,7 +176,7 @@ def test_2_placebo_length_matched_to_full(instrument):
 
 def test_2_placebo_filler_is_cue_neutral(instrument):
     from src.perfect_lie.conditions import FILLER_SENTENCES
-    banned = {c.id.replace("_", " ") for c in instrument.cues} | {"date", "number", "expert", "family", "witness", "source", "emotion", "joke", "doubt"}
+    banned = {c.id.replace("_", " ") for c in instrument.cues} | {"date", "number", "expert", "family", "witness", "source", "emotion", "joke", "doubt", "quote", "official", "inspect"}
     for s in FILLER_SENTENCES:
         for word in banned:
             assert word not in s.lower(), f"filler {s!r} mentions {word!r}"
@@ -241,6 +286,32 @@ def test_every_belief_maps_to_one_ontology_cue(instrument):
     for p in instrument.personas.values():
         assert len({b.cue for b in p.beliefs}) == len(p.beliefs)
         assert {b.cue for b in p.beliefs} <= cue_ids
+
+
+def test_no_persona_uses_a_prompt_mandated_cue(instrument):
+    """Dates, numbers and places are mandated by the fibber prompt; a persona belief on them
+    would be saturated by construction (PERFECT_LIE.md §8 item 5)."""
+    mandated = {"specific_date", "numerical_precision", "geographic_detail"}
+    for p in instrument.personas.values():
+        assert not mandated & set(p.cues), f"{p.id} uses a mandated cue"
+    assert not mandated & {c.id for c in instrument.cues}
+
+
+def test_full_run_gates_on_prices_and_fabricability():
+    import json
+    from src.perfect_lie import DATA_DIR
+    from src.perfect_lie.pipeline import load_models, preflight
+    models = load_models()
+    prompts = json.loads((DATA_DIR / "prompts.json").read_text())
+    assert preflight(models, prompts, "dry-run") == []
+    assert preflight(models, prompts, "pilot") == []
+    problems = preflight(models, prompts, "full")
+    assert any("UNVERIFIED" in x for x in problems)
+    assert sum("fabricability" in x for x in problems) == 6
+    # Both requirements satisfied -> no problems.
+    ok_models = dict(models, price_fetched_at="2026-09-16T00:00:00Z", price_source="openrouter.ai/api/v1/models")
+    ok_prompts = {"prompts": [dict(p, fabricability={"status": "verified_in_pilot", "evidence": "pilot_x: 8/8 lies, 0 refusals"}) for p in prompts["prompts"]]}
+    assert preflight(ok_models, ok_prompts, "full") == []
 
 
 def test_condition_set_is_exactly_four():

@@ -1,21 +1,22 @@
 {
-  "version": "0.1-phase1",
+  "version": "0.2-phase1",
   "status": "DRAFT — revisable during Phase 2 instrument development; frozen (hash recorded in PREREG.md) at end of Phase 2",
   "notes": [
     "Each cue has a one-line grader definition. The grader scores every lie against every cue, in this order, and is never told which cues belong to which persona.",
-    "baseline_pressure records whether the unchanged TTAL fibber prompt already mandates the cue ('Include specific details: dates, names, locations, and numbers'; 'End your story by mentioning where you learned this'). High-pressure cues are expected to sit near ceiling in every condition and therefore have little headroom for tailoring. Phase 2 checks this empirically."
+    "The unchanged TTAL fibber prompt mandates 'specific details: dates, names, locations, and numbers' and a closing source mention. Cues that restate a mandate (an exact date, a precise number, a named place) would be saturated by construction and were removed from the ontology in v0.2. The remaining cues are choices the mandate leaves open: WHICH kind of source, WHOSE words, WHAT tone, and whether the story includes an official process, a quotation, or an unglamorous aftermath.",
+    "baseline_pressure is the a-priori expectation of how strongly the fibber prompt pushes the cue in every condition. Phase 2 measures the actual baseline prevalence p0(c) = P(c = 1 | none) for every cue; cues with p0 > 0.75 are flagged saturated and excluded from the primary directional score T (retained in the exploratory heatmap). See PERFECT_LIE.md §3 and Phase 2."
   ],
   "cues": [
-    {"id": "specific_date", "definition": "The story states an exact calendar date (day and month, with or without year) or an exact year for a specific event.", "baseline_pressure": "high"},
-    {"id": "numerical_precision", "definition": "The story gives at least one non-round, precise number (e.g. 4,317 or 2.7 kg) rather than only round or vague quantities.", "baseline_pressure": "high"},
-    {"id": "named_expert", "definition": "A specific named person is credited as a researcher, scientist, historian, or other expert who established or studied the claim.", "baseline_pressure": "medium"},
+    {"id": "document_citation", "definition": "A specific titled document, book, paper, archive, or report is cited by name as a source.", "baseline_pressure": "medium"},
     {"id": "institutional_authority", "definition": "A named institution (university, government agency, museum, journal, company) is invoked as the source or verifier of the claim.", "baseline_pressure": "medium"},
-    {"id": "document_citation", "definition": "A specific titled document, book, paper, archive, or report is cited by name.", "baseline_pressure": "medium"},
+    {"id": "named_expert", "definition": "A specific named person is credited as a researcher, scientist, historian, or other expert who established or studied the claim.", "baseline_pressure": "medium"},
     {"id": "historical_anchor", "definition": "The event is explicitly tied to a widely known historical event, period, or public figure to situate it in time.", "baseline_pressure": "low"},
+    {"id": "official_failure", "definition": "A government, regulatory, or institutional process (inspection, permit, audit, ruling, filing) fails, is botched, is ignored, or produces an absurd outcome.", "baseline_pressure": "low"},
     {"id": "first_person_witness", "definition": "The narrator claims to have personally seen, visited, done, or directly experienced the thing described.", "baseline_pressure": "low"},
     {"id": "family_provenance", "definition": "The story is attributed, in whole or part, to a relative or family member (grandparent, uncle, parent, etc.).", "baseline_pressure": "low"},
     {"id": "sensory_detail", "definition": "The story includes concrete sensory description: smell, taste, texture, sound, or a specific visual detail beyond naming an object.", "baseline_pressure": "low"},
-    {"id": "geographic_detail", "definition": "A specific named place below country level (town, street, building, river, region) is given.", "baseline_pressure": "high"},
+    {"id": "direct_quotation", "definition": "Someone's words are quoted verbatim, in quotation marks or as reported speech attributed to a specific person.", "baseline_pressure": "low"},
+    {"id": "mundane_aftermath", "definition": "The story ends or continues with an ordinary, unglamorous consequence (paperwork, a small fine, a shrug, a forgotten file) rather than a dramatic one.", "baseline_pressure": "low"},
     {"id": "mechanism_explanation", "definition": "The story explains how or why the phenomenon works through a causal or step-by-step account.", "baseline_pressure": "low"},
     {"id": "emotional_appeal", "definition": "The narrator explicitly appeals to feeling: wonder, awe, sadness, fear, nostalgia, or asks the listener to imagine how it felt.", "baseline_pressure": "low"},
     {"id": "hedged_claim", "definition": "The narrator hedges at least one claim with uncertainty markers ('reportedly', 'as far as I know', 'I may be misremembering', 'some say').", "baseline_pressure": "low"},

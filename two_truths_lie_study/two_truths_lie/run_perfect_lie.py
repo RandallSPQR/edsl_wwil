@@ -3,7 +3,8 @@
 
     python run_perfect_lie.py --dry-run             # cell count + cost estimate, no model calls
     python run_perfect_lie.py --dry-run --json out.json
-    python run_perfect_lie.py --pilot               # Phase 2: 1 model x 1 seed (not yet implemented)
+    python run_perfect_lie.py --pilot               # Phase 2: 1 model x 1 replicate (not yet implemented)
+    python run_perfect_lie.py --full --confirm-spend N   # Phase 3 (gated; not yet implemented)
     python run_perfect_lie.py --refresh-prices      # overwrite prices in models.json from OpenRouter
 
 Cost guard: any mode that would call a model refuses to start unless the
@@ -18,7 +19,7 @@ from pathlib import Path
 from src.perfect_lie import DATA_DIR
 from src.perfect_lie.personas import load_instrument
 from src.perfect_lie.pipeline import (
-    DEFAULT_SEEDS, enumerate_cells, estimate_cost, format_estimate, load_models,
+    DEFAULT_REPLICATES, enumerate_cells, estimate_cost, format_estimate, load_models, preflight,
 )
 
 
@@ -46,10 +47,11 @@ def refresh_prices(models_path: Path) -> None:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--dry-run", action="store_true", help="print cell count and cost estimate; no model calls")
-    ap.add_argument("--pilot", action="store_true", help="Phase 2 pilot: 1 model x 1 seed")
+    ap.add_argument("--pilot", action="store_true", help="Phase 2 pilot: 1 model x 1 replicate")
+    ap.add_argument("--full", action="store_true", help="Phase 3 full run (gated: verified prices and pilot-verified prompts)")
     ap.add_argument("--refresh-prices", action="store_true", help="fetch live prices into models.json")
     ap.add_argument("--models", nargs="*", help="restrict liar models by id")
-    ap.add_argument("--seeds", nargs="*", type=int, help="replicate indices (default 1..5)")
+    ap.add_argument("--replicates", nargs="*", type=int, help="replicate ids (default 1..5); independent draws, not provider seeds")
     ap.add_argument("--json", type=Path, help="also write the estimate as JSON")
     ap.add_argument("--confirm-spend", type=float, default=None, help="USD ceiling you approve for a live run")
     args = ap.parse_args(argv)
@@ -61,31 +63,39 @@ def main(argv=None) -> int:
 
     instrument = load_instrument()
     models = load_models(models_path)
-    seeds = tuple(args.seeds) if args.seeds else DEFAULT_SEEDS
+    replicates = tuple(args.replicates) if args.replicates else DEFAULT_REPLICATES
     liar_ids = args.models or [m["id"] for m in models["liar_models"]]
     if args.pilot:
-        seeds = (seeds[0],)
+        replicates = (replicates[0],)
         liar_ids = liar_ids[:1]
 
-    cells = list(enumerate_cells(instrument, models, seeds=seeds, liar_model_ids=liar_ids))
+    cells = list(enumerate_cells(instrument, models, replicates=replicates, liar_model_ids=liar_ids))
     est = estimate_cost(instrument, models, cells)
 
     print("instrument hashes:")
     for k, v in instrument.hashes.items():
         print(f"  {k:9s} {v}")
     print()
-    print(format_estimate(est, seeds, liar_ids))
+    print(format_estimate(est, replicates, liar_ids))
     if args.json:
         args.json.write_text(json.dumps({"hashes": instrument.hashes, "estimate": est.to_dict()}, indent=2))
         print(f"\nwrote {args.json}")
 
-    if args.dry_run or not args.pilot:
+    if args.dry_run or not (args.pilot or args.full):
         return 0
+
+    mode = "full" if args.full else "pilot"
+    problems = preflight(models, json.loads((DATA_DIR / "prompts.json").read_text()), mode)
+    if problems:
+        print(f"\nrefusing to run ({mode}):", file=sys.stderr)
+        for pr in problems:
+            print(f"  - {pr}", file=sys.stderr)
+        return 4
 
     if args.confirm_spend is None or args.confirm_spend < est.total_usd:
         print(f"\nrefusing to run: pass --confirm-spend >= {est.total_usd:.2f} to approve this spend", file=sys.stderr)
         return 2
-    print("\n--pilot execution is implemented in Phase 2; nothing was run.", file=sys.stderr)
+    print(f"\n--{mode} execution is implemented in Phase 2/3; nothing was run.", file=sys.stderr)
     return 3
 
 
