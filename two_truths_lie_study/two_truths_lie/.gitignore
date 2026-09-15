@@ -59,3 +59,8 @@ edsl/
 
 # Memory files (optional - keep if you want to track project memory)
 # CLAUDE.md
+
+# Perfect Lie stimuli are committed (frozen after Phase 2); the rest of data/ stays ignored
+!data/
+data/*
+!data/perfect_lie/

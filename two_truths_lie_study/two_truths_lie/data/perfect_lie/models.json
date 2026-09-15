@@ -1,0 +1,35 @@
+{
+  "version": "0.1-phase1",
+  "price_source": "UNVERIFIED — entered from memory on 2026-09-15. openrouter.ai is unreachable from the build sandbox (proxy 403) and no OPEN_ROUTER_API_KEY was present. Run `python run_perfect_lie.py --refresh-prices` from a machine with OpenRouter access before Phase 2; it overwrites usd_per_1k_* from GET https://openrouter.ai/api/v1/models and records the fetch date.",
+  "price_fetched_at": null,
+  "service": "open_router",
+  "env_key": "OPEN_ROUTER_API_KEY",
+  "liar_models": [
+    {"family": "openai",    "id": "openai/gpt-4.1-mini",                 "usd_per_1k_input": 0.0004,  "usd_per_1k_output": 0.0016, "supports_seed": true,  "supports_temperature": true},
+    {"family": "anthropic", "id": "anthropic/claude-haiku-4.5",          "usd_per_1k_input": 0.0010,  "usd_per_1k_output": 0.0050, "supports_seed": false, "supports_temperature": true},
+    {"family": "google",    "id": "google/gemini-2.5-flash",             "usd_per_1k_input": 0.0003,  "usd_per_1k_output": 0.0025, "supports_seed": false, "supports_temperature": true},
+    {"family": "open",      "id": "meta-llama/llama-3.3-70b-instruct",   "usd_per_1k_input": 0.00013, "usd_per_1k_output": 0.0004, "supports_seed": true,  "supports_temperature": true}
+  ],
+  "target_model": {"id": "openai/gpt-4.1-mini", "usd_per_1k_input": 0.0004, "usd_per_1k_output": 0.0016,
+    "note": "One fixed target model for every cell so target gullibility does not vary with liar family. Tertiary measure only."},
+  "grader_model": {"id": "anthropic/claude-sonnet-4.5", "usd_per_1k_input": 0.0030, "usd_per_1k_output": 0.0150,
+    "note": "Larger model, blind by construction (see grader.py). Same family as one liar model; report grader-family × liar-family as a robustness check in Phase 4."},
+  "alternatives_considered": {
+    "openai": ["openai/gpt-4o-mini (0.00015/0.0006)", "openai/gpt-5-mini (0.00025/0.002; reasoning model, no temperature control)"],
+    "anthropic": ["anthropic/claude-3.5-haiku (0.0008/0.004)"],
+    "google": ["google/gemini-2.5-flash-lite (0.0001/0.0004)"],
+    "open": ["qwen/qwen3-235b-a22b", "deepseek/deepseek-chat-v3-0324"],
+    "grader": ["openai/gpt-4.1 (0.002/0.008)", "google/gemini-2.5-pro (0.00125/0.01)"]
+  },
+  "token_assumptions": {
+    "note": "Per-call token estimates used by --dry-run. Liar user prompt is the measured FibberPrompt render; the rest are conservative round numbers. Phase 2 pilot replaces them with measured means.",
+    "liar_system_tokens_by_condition": {"none": 40, "placebo": 160, "partial": 100, "full": 160},
+    "liar_output_tokens": 600,
+    "target_system_tokens": 140,
+    "target_instruction_tokens": 160,
+    "target_output_tokens": 80,
+    "grader_rubric_tokens": 700,
+    "grader_output_tokens": 300,
+    "words_to_tokens": 1.35
+  }
+}

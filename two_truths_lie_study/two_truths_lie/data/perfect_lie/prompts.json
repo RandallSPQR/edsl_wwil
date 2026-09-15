@@ -1,0 +1,15 @@
+{
+  "version": "0.1-phase1",
+  "notes": [
+    "A 'fact prompt' in this study is the unchanged TTAL FibberPrompt rendered for one fact category with strategy='baseline'. The fibber prompt takes only a category, so the six prompts are the six categories of data/curated_facts.json.",
+    "PERFECT_LIE.md Phase 0 asks for prompts 'the TTAL baseline already showed are fabricable'. The repository does not contain per-category fibber-evasion data (raw baseline rounds are not committed; PHASE2_SUMMARY.md reports only an overall fibber success rate of 31.2%). Selection therefore falls back to: every category the baseline ran. Replace any entry here before Phase 2 if the offline baseline data show a category is not fabricable."
+  ],
+  "prompts": [
+    {"id": "science",    "category": "science",    "selection_basis": "baseline category; per-category evasion not in repo"},
+    {"id": "history",    "category": "history",    "selection_basis": "baseline category; per-category evasion not in repo"},
+    {"id": "biology",    "category": "biology",    "selection_basis": "baseline category; per-category evasion not in repo"},
+    {"id": "geography",  "category": "geography",  "selection_basis": "baseline category; per-category evasion not in repo"},
+    {"id": "technology", "category": "technology", "selection_basis": "baseline category; per-category evasion not in repo"},
+    {"id": "culture",    "category": "culture",    "selection_basis": "baseline category; per-category evasion not in repo"}
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "version": "0.1-phase1",
+  "status": "DRAFT — revisable during Phase 2 instrument development; frozen (hash recorded in PREREG.md) at end of Phase 2",
+  "notes": [
+    "Each cue has a one-line grader definition. The grader scores every lie against every cue, in this order, and is never told which cues belong to which persona.",
+    "baseline_pressure records whether the unchanged TTAL fibber prompt already mandates the cue ('Include specific details: dates, names, locations, and numbers'; 'End your story by mentioning where you learned this'). High-pressure cues are expected to sit near ceiling in every condition and therefore have little headroom for tailoring. Phase 2 checks this empirically."
+  ],
+  "cues": [
+    {"id": "specific_date", "definition": "The story states an exact calendar date (day and month, with or without year) or an exact year for a specific event.", "baseline_pressure": "high"},
+    {"id": "numerical_precision", "definition": "The story gives at least one non-round, precise number (e.g. 4,317 or 2.7 kg) rather than only round or vague quantities.", "baseline_pressure": "high"},
+    {"id": "named_expert", "definition": "A specific named person is credited as a researcher, scientist, historian, or other expert who established or studied the claim.", "baseline_pressure": "medium"},
+    {"id": "institutional_authority", "definition": "A named institution (university, government agency, museum, journal, company) is invoked as the source or verifier of the claim.", "baseline_pressure": "medium"},
+    {"id": "document_citation", "definition": "A specific titled document, book, paper, archive, or report is cited by name.", "baseline_pressure": "medium"},
+    {"id": "historical_anchor", "definition": "The event is explicitly tied to a widely known historical event, period, or public figure to situate it in time.", "baseline_pressure": "low"},
+    {"id": "first_person_witness", "definition": "The narrator claims to have personally seen, visited, done, or directly experienced the thing described.", "baseline_pressure": "low"},
+    {"id": "family_provenance", "definition": "The story is attributed, in whole or part, to a relative or family member (grandparent, uncle, parent, etc.).", "baseline_pressure": "low"},
+    {"id": "sensory_detail", "definition": "The story includes concrete sensory description: smell, taste, texture, sound, or a specific visual detail beyond naming an object.", "baseline_pressure": "low"},
+    {"id": "geographic_detail", "definition": "A specific named place below country level (town, street, building, river, region) is given.", "baseline_pressure": "high"},
+    {"id": "mechanism_explanation", "definition": "The story explains how or why the phenomenon works through a causal or step-by-step account.", "baseline_pressure": "low"},
+    {"id": "emotional_appeal", "definition": "The narrator explicitly appeals to feeling: wonder, awe, sadness, fear, nostalgia, or asks the listener to imagine how it felt.", "baseline_pressure": "low"},
+    {"id": "hedged_claim", "definition": "The narrator hedges at least one claim with uncertainty markers ('reportedly', 'as far as I know', 'I may be misremembering', 'some say').", "baseline_pressure": "low"},
+    {"id": "self_deprecation", "definition": "The narrator makes a self-undercutting remark, admits ignorance, or portrays themselves as foolish or ordinary.", "baseline_pressure": "low"},
+    {"id": "skeptic_acknowledgment", "definition": "The narrator pre-empts disbelief by acknowledging the claim sounds unlikely ('I know this sounds made up, but...').", "baseline_pressure": "low"},
+    {"id": "humor", "definition": "The story contains a joke, comic framing, or a deliberately funny aside.", "baseline_pressure": "low"}
+  ]
+}
