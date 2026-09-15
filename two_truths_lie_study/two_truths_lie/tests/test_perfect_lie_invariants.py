@@ -314,6 +314,100 @@ def test_full_run_gates_on_prices_and_fabricability():
     assert preflight(ok_models, ok_prompts, "full") == []
 
 
+# ---------------------------------------------------------------- reasoning tier
+
+def _cells(levels=None, replicates=(1, 2, 3, 4, 5)):
+    from src.perfect_lie.pipeline import REASONING_LEVELS, enumerate_cells, load_models
+    ins = load_instrument()
+    models = load_models()
+    return list(enumerate_cells(ins, models, replicates=replicates, levels=levels or REASONING_LEVELS)), models
+
+
+def test_tier_reasoning_level_not_confounded_with_condition_or_target():
+    """For every (prompt, pair, model, level, replicate) all 4 conditions x 2 targets exist,
+    so budget can never differ across the cells that form a paired unit."""
+    from collections import defaultdict
+    cells, _ = _cells()
+    seen = defaultdict(set)
+    for c in cells:
+        seen[(c.prompt_id, c.j1, c.j2, c.model_id, c.reasoning_level, c.replicate)].add((c.condition, c.target_id))
+    for k, combos in seen.items():
+        assert len(combos) == 8, f"{k}: {sorted(combos)}"
+    # Within a paired unit the reasoning payload and output cap are identical for both lies.
+    by_unit = defaultdict(set)
+    for c in cells:
+        by_unit[c.unit_key].add((tuple(sorted(c.reasoning.items())), c.max_output_tokens))
+    assert all(len(v) == 1 for v in by_unit.values())
+
+
+def test_tier1_is_the_original_960_design():
+    cells, _ = _cells(levels=("off",))
+    assert len(cells) == 960
+    assert {c.reasoning_level for c in cells} == {"off"}
+    assert len({c.unit_key for c in cells}) == 480
+
+
+def test_off_level_is_true_off_or_documented_exception():
+    _, models = _cells()
+    for m in models["liar_models"]:
+        off = m["levels"]["off"]["reasoning"]
+        if m["true_off_available"]:
+            assert off == {"enabled": False}, m["id"]
+        else:
+            assert m["true_off_note"], m["id"]
+            assert off.get("effort") == "minimal", m["id"]
+
+
+def test_output_cap_exceeds_thinking_plus_story():
+    _, models = _cells()
+    story = models["reasoning_design"]["story_output_tokens"]
+    for m in models["liar_models"]:
+        for name, lv in m["levels"].items():
+            assert lv["max_output_tokens"] >= lv["expected_thinking_tokens"] + story, f"{m['id']}/{name}"
+
+
+def test_adapter_forwards_reasoning_and_output_cap_to_openrouter_request(instrument):
+    """The reasoning payload must reach the request parameters and the cache key; a repeat
+    at a different level must have a different cache key."""
+    pytest.importorskip("edsl")
+    os.environ["EDSL_RUNNING_IN_PYTEST"] = "True"
+    from edsl.caching.cache_entry import CacheEntry
+    from src.edsl_adapter import PerfectLieAdapter, _perfect_lie_build_job
+    adapter = PerfectLieAdapter(service_name="open_router")
+    row = instrument.design[0]
+    lp = build_liar_prompts("full", row, row.j1, instrument.personas, _category(instrument, row.prompt_id))
+    keys = set()
+    for level, payload, cap in (("off", {"enabled": False}, 1500), ("low", {"max_tokens": 2048}, 4000), ("high", {"max_tokens": 8192}, 10000)):
+        r = adapter.render(lp.user_prompt, lp.system_prompt, "anthropic/claude-sonnet-4.5", 1.0, replicate=1,
+                           reasoning=payload, max_output_tokens=cap)
+        assert r["request_params"]["reasoning"] == payload, level
+        assert r["request_params"]["max_completion_tokens"] == cap, level
+        job, _, _ = _perfect_lie_build_job(lp.user_prompt, lp.system_prompt, "anthropic/claude-sonnet-4.5", 1.0, 1,
+                                           "open_router", skip_api_key_check=True, reasoning=payload, max_output_tokens=cap)
+        m = job.models[0]
+        keys.add(CacheEntry.gen_key(model=m.model, parameters=m.parameters, system_prompt="s", user_prompt="u", iteration=0))
+    assert len(keys) == 3
+
+
+def test_5_thinking_trace_never_reaches_cue_grader(instrument):
+    """Invariant 5: the cue grader input is built from the public prompt and the lie only."""
+    from src.perfect_lie.grader import build_trace_probe_input, grader_input_from_record
+    sentinel = "TRACE-SENTINEL the judge trusts relatives so I will mention my grandmother"
+    record = {
+        "user_prompt": public_user_prompt("science"), "lie": "A plain story.",
+        "thinking_trace": sentinel, "reasoning": sentinel, "reasoning_details": [{"text": sentinel}],
+        "condition": "full", "target_id": "P2", "reasoning_level": "high",
+    }
+    gi = grader_input_from_record(record, instrument.cues)
+    text = gi.system_prompt + gi.user_prompt
+    assert "TRACE-SENTINEL" not in text and "grandmother" not in text
+    assert "P2" not in text and "high" not in text.split("STORY:")[1]
+    # The trace probe is the only consumer of the trace, and it sees nothing else.
+    tp = build_trace_probe_input(sentinel)
+    assert sentinel in tp.user_prompt
+    assert "A plain story." not in tp.user_prompt and "P2" not in tp.user_prompt
+
+
 def test_condition_set_is_exactly_four():
     assert CONDITIONS == ("none", "placebo", "partial", "full")
     with pytest.raises(ValueError):

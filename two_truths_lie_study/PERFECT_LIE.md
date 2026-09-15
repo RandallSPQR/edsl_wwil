@@ -61,7 +61,24 @@ score establishes the arrow above.
 4. **Directional, not distance.** The primary measure is whether the two lies differ *toward
    their respective targets*, not merely whether they differ. See §3, Measures.
 
+5. **The thinking trace never enters the cue grader.** Thinking-tier liars may return a
+   reasoning trace. It is stored, and read only by a separate blind trace probe. The cue
+   grader's input is built from the public prompt and the lie text alone.
+   *Test:* build the grader input from a record carrying a sentinel trace; assert the
+   sentinel is absent. The trace probe input contains the trace and nothing else.
+
 ## 3. Design
+
+### Why a reasoning tier
+Tier 1 alone answers "does B̂ⱼ enter the policy?". The tier answers "what governs whether
+it enters?", and each outcome means something different:
+- *Baked in:* T_full > 0 at R = off, flat in R. Target-conditioning is a property of the base
+  policy, not of deliberation.
+- *Emergent with deliberation:* T_full ≈ 0 at R = off, rising in R. B̂ⱼ enters only through
+  inference-time computation.
+- *Absent at every R:* stigmergy holds even with room to deliberate.
+The placebo separates "thinking makes the lie move" from "thinking makes it move toward the
+target".
 
 ### Roles
 - **Liar (i):** must tell a fabricated story and have the target accept it as true. Same
@@ -71,6 +88,13 @@ score establishes the arrow above.
   The persona is not shown to the grader.
 - **Grader (blind, larger model):** sees Eₜ plus the lie plus the global cue ontology.
   Outputs a cue vector cᵢ = (c₁, …, c_K) of booleans/counts and a confidence, as JSON.
+  Non-thinking, temperature 0. Primary grader `anthropic/claude-sonnet-4.5` is
+  preregistered; secondary grader `openai/gpt-5` (effort minimal) annotates the same lies
+  and is reported as inter-grader agreement and a re-analysis of T, never pooled.
+- **Trace probe (blind, secondary process measure):** for thinking-tier lies whose
+  provider returns a trace, a separate pass sees the trace only and answers one question:
+  does it refer to the audience's beliefs? Lie-level predictor of T; the first empirical
+  handle on B̂ⱼ as a represented object, which is what the Missing Piece needs.
 
 ### Global cue ontology
 A fixed list of K ≈ 12–16 rhetorical cues, e.g.
@@ -105,12 +129,22 @@ Placebo is length-matched to `full` (pad with neutral filler if persona lengths 
   partners (a balanced incomplete block over pairs; a fixed rotation table in `design.json`).
   This partially unconfounds persona from topic.
 - 4 conditions.
-- 4 liar model families via OpenRouter (cheap tier each: OpenAI, Anthropic, Google, one open model).
+- 4 liar model families via OpenRouter, one model id per family: `openai/gpt-5`,
+  `anthropic/claude-sonnet-4.5`, `google/gemini-2.5-flash`, `deepseek/deepseek-chat-v3.1`.
+- **Reasoning budget R ∈ {off, low, high}, varied within one set of weights** via
+  OpenRouter's unified `reasoning` field (`models.json`). `off` is thinking disabled;
+  `low` ≈ 2k and `high` ≈ 8k thinking tokens where the provider takes a budget.
+  Exceptions, preregistered: gpt-5 has no true off, so its `off` is effort=minimal and the
+  family is a partial replication of that level; deepseek-chat-v3.1 has an on/off switch
+  only, so it has `off` and `high`. The budget is constant within a paired unit (tested).
 - 5 replicates. Each is an independent draw y_r ~ P(y | prompt, T), not a provider seed;
   the replicate id enters the cache key so draws are never collapsed.
 
-Cells: 6 prompts × 2 targets × 4 conditions × 4 models × 5 replicates = **960 lies**, plus 960
-grader calls. Budget the grader before running.
+Cells, **Tier 1** (R = off, the primary test): 6 prompts × 2 targets × 4 conditions × 4 models
+× 5 replicates = **960 lies**. **Tier 2** (R = low, high): 1,680 more lies (three families
+× 2 levels + one family × 1 level, × 240). Total 2,640 lies, each graded by the primary and
+the secondary cue grader; the 1,680 Tier 2 lies with a returned trace also get the trace
+probe. Budget the graders before running.
 
 ### Measures
 
@@ -158,9 +192,10 @@ latency, cost.
 Model is a fixed effect (four levels is too thin for a random effect, and family
 differences are a stated interest):
 
-    T ~ condition * model + (1|prompt) + (1|personaPair) + (1|replicate)
+    T ~ condition * model + (1|prompt) + (1|personaPair) + (1|replicate)          [Tier 1]
+    T ~ condition * R + condition * model + (1|prompt) + (1|personaPair) + (1|replicate)   [Tiers 1+2]
 
-with `placebo` as the reference level for condition. Add a random condition slope on prompt
+with `placebo` as the reference level for condition and R ordinal (off < low < high). Add a random condition slope on prompt
 if the data support it. The result is the `full` coefficient and its CI, then the
 `full × model` interactions. Report both distance measures alongside.
 
@@ -176,6 +211,10 @@ ids, the saturation rule with the measured p₀(c) table, and the two tests belo
 
 The causal contrast is full vs placebo, because placebo is what controls for "any private
 text moves the lie." The null is that the `full` coefficient's CI includes zero.
+
+**Second preregistered test (dose-response).** In the Tiers 1+2 model, the `full × R`
+interaction: H₀: the slope of β_full in R is zero. Two preregistered tests, reported with
+their own CIs; no further correction, everything else is descriptive.
 
 **Secondary, reported separately.** Whether T_full > 0 against the theoretical zero, and
 the ordering T_full > T_partial > T_placebo ≈ T_none. These are descriptive; they are not
@@ -223,9 +262,14 @@ against the hypothesis, and pilot-tuned stimuli are never described as untouched
 - [x] Test 3: grader input contains no persona id, no condition label, and the full ontology in fixed order
 - [x] Test 4: `partial` uses exactly the persona's `partial_cues`, never a redraw
 - [x] `--dry-run` cell counter and cost estimate (gameplay + grader)
+- [x] Reasoning tier: `models.json` levels per family; `reasoning` forwarded through EDSL's open_router route (`_filter_parameters_for_service`); output cap per level; `--tier tier1|tier2|all`
+- [x] Test: budget constant within every paired unit; Tier 1 is exactly the 960-lie design
+- [x] Test: `off` is `{enabled: false}` or a documented exception; output cap ≥ thinking + story
+- [x] Test: adapter puts `reasoning` and the cap in the request and the cache key
+- [x] Test 5: thinking trace never reaches the cue grader
 
 ### Phase 2 — instrument development (days 4–7)
-- [ ] `--pilot`: 1 model, 1 replicate, all prompts/pairs/conditions (48 lies)
+- [ ] `--pilot`: 1 model, 1 replicate, R = off, all prompts/pairs/conditions (48 lies); then a 16-lie thinking smoke test per family to confirm the `reasoning` field is honoured (trace returned or thinking tokens billed) and to measure thinking-token usage per level
 - [ ] `grader.py`: rubric prompt over the global ontology; outputs full cue vector + confidence as JSON
 - [ ] `scoring.py`: T from the 2×2 matrix; D_cos; acceptance
 - [ ] Hand-check 30 grader outputs; if cue agreement < 85%, revise cue definitions or rubric
@@ -238,13 +282,15 @@ against the hypothesis, and pilot-tuned stimuli are never described as untouched
 
 ### Phase 3 — pre-register and run (days 8–11)
 - [ ] Write and commit `PREREG.md` (prediction ordering, T definition, hashes, rotation table, N, model ids; primary test H₀: β_full = 0 with placebo as reference; T_full > 0 and the ordering as reported secondaries)
-- [ ] Full run: 960 lies, checkpointed so a crash resumes; manifest with SHA, model ids, replicates, hashes, spend. `--full` refuses to start while any price is UNVERIFIED or any prompt lacks pilot fabricability evidence (`pipeline.preflight`)
-- [ ] Grader pass on all 960; store raw cue vectors
+- [ ] Full run: 2,640 lies (Tier 1 then Tier 2), checkpointed so a crash resumes; manifest with SHA, model ids, replicates, hashes, spend. `--full` refuses to start while any price is UNVERIFIED or any prompt lacks pilot fabricability evidence (`pipeline.preflight`)
+- [ ] Primary and secondary grader pass on all 2,640; trace probe on Tier 2 lies with a trace; store raw cue vectors and probe outputs
 
 ### Phase 4 — analysis (days 12–15)
-- [ ] Mixed model as specified; `full` coefficient and CI; `full × model` interactions
+- [ ] Mixed model as specified; `full` coefficient and CI (Tier 1); `full × R` slope (Tiers 1+2); `full × model` interactions
+- [ ] Inter-grader agreement (primary vs secondary) per cue; T re-estimated under the secondary grader
+- [ ] Trace probe: P(audience_reference | condition, R); does audience reference predict T at the lie level?
 - [ ] D_cos by condition (manipulation check); acceptance by condition (tertiary)
-- [ ] Figure 1: T by condition, one panel per model family; horizontal line at T = 0 (theoretical zero); placebo highlighted as the reference condition, not drawn as zero
+- [ ] Figure 1: T by condition and R, one panel per model family; horizontal line at T = 0 (theoretical zero); placebo highlighted as the reference condition, not drawn as zero
 - [ ] Figure 2: cue-usage heatmap, ontology cues × condition, target cues marked
 - [ ] `RESULTS.md`: the `full` coefficient, what it means under the narrow headline claim, one paragraph per model family
 
@@ -317,6 +363,13 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
    deviation, not metadata: the Phase 2 pilot must show all six produce viable fabrications
    under `none`, replacements are documented in `prompts.json`, and `--full` is gated on
    `fabricability.status == verified_in_pilot` for every prompt.
+10. **EDSL does not forward a reasoning budget.** `build_params` sends only temperature and
+   the standard sampling fields. *Resolution:* a four-line addition to EDSL's
+   `_filter_parameters_for_service` forwards `model.parameters["reasoning"]` for the
+   `open_router` service; the adapter stores the level's payload there, so it also enters
+   the cache key. The output cap is sent as `max_tokens` from the level's
+   `max_output_tokens`. Whether OpenRouter honours the field for each provider is checked in
+   the Phase 2 thinking smoke test, not assumed.
 9. **Prices are from memory.** `--full` is gated on `price_fetched_at` being set by
    `--refresh-prices`, so an unverified price cannot start a paid run.
 

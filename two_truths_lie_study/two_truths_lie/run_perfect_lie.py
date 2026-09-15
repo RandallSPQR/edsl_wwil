@@ -19,7 +19,7 @@ from pathlib import Path
 from src.perfect_lie import DATA_DIR
 from src.perfect_lie.personas import load_instrument
 from src.perfect_lie.pipeline import (
-    DEFAULT_REPLICATES, enumerate_cells, estimate_cost, format_estimate, load_models, preflight,
+    DEFAULT_REPLICATES, REASONING_LEVELS, TIERS, enumerate_cells, estimate_cost, format_estimate, load_models, preflight,
 )
 
 
@@ -29,7 +29,7 @@ def refresh_prices(models_path: Path) -> None:
     models = json.loads(models_path.read_text())
     with urllib.request.urlopen("https://openrouter.ai/api/v1/models", timeout=30) as r:
         live = {m["id"]: m for m in json.load(r)["data"]}
-    entries = list(models["liar_models"]) + [models["target_model"], models["grader_model"]]
+    entries = list(models["liar_models"]) + [models["target_model"]] + list(models["graders"]) + ([models["trace_probe"]] if models.get("trace_probe") else [])
     missing = []
     for e in entries:
         m = live.get(e["id"])
@@ -42,12 +42,15 @@ def refresh_prices(models_path: Path) -> None:
     models["price_source"] = "openrouter.ai/api/v1/models"
     models_path.write_text(json.dumps(models, indent=2) + "\n")
     print(f"prices refreshed; missing ids: {missing or 'none'}")
+    if missing:
+        raise SystemExit("some model ids do not exist on OpenRouter; fix models.json before Phase 2")
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--dry-run", action="store_true", help="print cell count and cost estimate; no model calls")
     ap.add_argument("--pilot", action="store_true", help="Phase 2 pilot: 1 model x 1 replicate")
+    ap.add_argument("--tier", choices=sorted(TIERS), default="all", help="tier1 = reasoning off only (primary test); tier2 = low+high; all = both")
     ap.add_argument("--full", action="store_true", help="Phase 3 full run (gated: verified prices and pilot-verified prompts)")
     ap.add_argument("--refresh-prices", action="store_true", help="fetch live prices into models.json")
     ap.add_argument("--models", nargs="*", help="restrict liar models by id")
@@ -65,18 +68,20 @@ def main(argv=None) -> int:
     models = load_models(models_path)
     replicates = tuple(args.replicates) if args.replicates else DEFAULT_REPLICATES
     liar_ids = args.models or [m["id"] for m in models["liar_models"]]
+    levels = TIERS[args.tier]
     if args.pilot:
         replicates = (replicates[0],)
         liar_ids = liar_ids[:1]
+        levels = ("off",)
 
-    cells = list(enumerate_cells(instrument, models, replicates=replicates, liar_model_ids=liar_ids))
+    cells = list(enumerate_cells(instrument, models, replicates=replicates, liar_model_ids=liar_ids, levels=levels))
     est = estimate_cost(instrument, models, cells)
 
     print("instrument hashes:")
     for k, v in instrument.hashes.items():
         print(f"  {k:9s} {v}")
     print()
-    print(format_estimate(est, replicates, liar_ids))
+    print(format_estimate(est, replicates, liar_ids, levels))
     if args.json:
         args.json.write_text(json.dumps({"hashes": instrument.hashes, "estimate": est.to_dict()}, indent=2))
         print(f"\nwrote {args.json}")

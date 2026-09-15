@@ -229,6 +229,15 @@ class OpenAIService(InferenceServiceABC):
                         params.pop("presence_penalty", None)
                         params.pop("frequency_penalty", None)
 
+                # OpenRouter: forward the unified `reasoning` field when the model was
+                # constructed with one (Model(..., service_name="open_router") then
+                # model.parameters["reasoning"] = {...}). Used by the Perfect Lie study
+                # to vary thinking budget within one set of weights.
+                if self._inference_service_ == "open_router":
+                    reasoning = self.parameters.get("reasoning") if isinstance(self.parameters, dict) else None
+                    if reasoning:
+                        params["reasoning"] = dict(reasoning)
+
                 # Add additional service-specific filtering logic here as needed
                 # Example:
                 # elif self._inference_service_ == "another_service":
