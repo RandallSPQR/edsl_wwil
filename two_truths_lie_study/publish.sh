@@ -33,14 +33,7 @@ RESULTS_SRC="$(cd "$RESULTS_SRC" && pwd)"
 
 RESULT_DIRS=(phase1_older phase2_small phase3_flagship championship framebreak)
 
-# ---------------------------------------------------------------- safety ---
-found_env="$(find "$STUDY_DIR" "$RESULTS_SRC" -name '.env' -o -name '.env.*' 2>/dev/null | head -n 5 || true)"
-if [[ -n "$found_env" ]]; then
-    echo "Refusing to publish: .env file(s) present:" >&2
-    echo "$found_env" >&2
-    exit 1
-fi
-
+# ---------------------------------------------------------------- checks ---
 for d in "${RESULT_DIRS[@]}"; do
     if [[ ! -d "$RESULTS_SRC/$d" ]]; then
         echo "Missing results directory: $RESULTS_SRC/$d" >&2
@@ -93,6 +86,31 @@ find "$OUT/two_truths_lie/results" \( -name 'CLAUDE.md' -o -name '.env' -o -name
 
 # Drop directories that only ever held excluded stubs.
 find "$OUT" -type d -empty -delete
+
+# ---------------------------------------------------------------- safety ---
+# .env files in the source checkout are expected (they hold local API keys)
+# and are never copied. What must not happen is any of them, or any key
+# value, ending up in the published tree, so check the output, not the input.
+leaked_env="$(find "$OUT" -name '.env*' | head -n 5 || true)"
+if [[ -n "$leaked_env" ]]; then
+    echo "Refusing to publish: .env file(s) in the built tree:" >&2
+    echo "$leaked_env" >&2
+    exit 1
+fi
+
+# Common API key shapes: OpenAI/Anthropic sk-..., Google AIza..., Expected
+# Parrot / generic hex tokens assigned to *_API_KEY or *_KEY.
+key_hits="$(grep -rIEn \
+    -e 'sk-(ant-|proj-)?[A-Za-z0-9_-]{20,}' \
+    -e 'AIza[0-9A-Za-z_-]{30,}' \
+    -e '(API_KEY|_KEY|_TOKEN)[[:space:]]*[=:][[:space:]]*["'"'"']?[A-Za-z0-9_-]{24,}' \
+    "$OUT" --exclude-dir=.git \
+    | grep -viE 'your_|_here|example|placeholder|xxx' | head -n 10 || true)"
+if [[ -n "$key_hits" ]]; then
+    echo "Refusing to publish: possible API keys in the built tree:" >&2
+    echo "$key_hits" >&2
+    exit 1
+fi
 
 # The study depended on the parent EDSL checkout by relative path; a
 # standalone repo needs the published package instead.
