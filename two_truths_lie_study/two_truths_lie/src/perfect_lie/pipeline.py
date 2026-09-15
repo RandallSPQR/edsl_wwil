@@ -259,12 +259,17 @@ class PreflightError(RuntimeError):
     """A live run was requested but a setup requirement is unmet."""
 
 
+def priced_entries(models: Dict) -> List[Dict]:
+    return list(models["liar_models"]) + [models["target_model"]] + list(models["graders"]) \
+        + ([models["trace_probe"]] if models.get("trace_probe") else [])
+
+
 def preflight(models: Dict, prompts_raw: Dict, mode: str) -> List[str]:
     """Return the list of unmet requirements for `mode` in {"dry-run", "pilot", "full"}.
 
-    The full run refuses while any price is unverified or any fact prompt lacks
-    pilot evidence of fabricability. The pilot is what produces that evidence,
-    so it is gated only on the key being present (checked at call time by EDSL).
+    The full run refuses while any price is unverified or any fact prompt lacks pilot
+    evidence of fabricability. Price verification is checked per entry, not only at the
+    file level, so a stale entry cannot hide behind a file-level timestamp.
     """
     problems: List[str] = []
     if mode == "dry-run":
@@ -272,6 +277,9 @@ def preflight(models: Dict, prompts_raw: Dict, mode: str) -> List[str]:
     if mode == "full":
         if not models.get("price_fetched_at") or "UNVERIFIED" in str(models.get("price_source", "")):
             problems.append("model prices are UNVERIFIED: run `run_perfect_lie.py --refresh-prices` first")
+        for e in priced_entries(models):
+            if not e.get("price_verified_at"):
+                problems.append(f"price for {e['id']!r} has no price_verified_at; refresh prices")
         for p in prompts_raw["prompts"]:
             fab = p.get("fabricability") or {}
             if fab.get("status") != "verified_in_pilot" or not fab.get("evidence"):

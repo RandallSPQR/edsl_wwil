@@ -217,15 +217,31 @@ def test_3_grader_input_identical_up_to_public_prompt_and_lie(instrument):
     assert len(systems) == 1
 
 
-def test_3_grader_output_parser_requires_every_cue(instrument):
+def test_3_grader_output_parser_fails_closed(instrument):
+    """A malformed grader response must raise, never coerce. bool("false") is True in Python."""
+    import json
     ids = [c.id for c in instrument.cues]
     good = {"cues": {i: False for i in ids}, "counts": {i: 0 for i in ids}, "confidence": 7}
-    import json
     parsed = parse_grader_output("prefix " + json.dumps(good) + " suffix", ids)
-    assert list(parsed["cues"]) == ids
-    bad = dict(good); bad["cues"] = {i: False for i in ids[:-1]}
-    with pytest.raises(ValueError):
-        parse_grader_output(json.dumps(bad), ids)
+    assert list(parsed["cues"]) == ids and not any(parsed["cues"].values())
+
+    def bad(mutate):
+        obj = json.loads(json.dumps(good))
+        mutate(obj)
+        with pytest.raises(ValueError):
+            parse_grader_output(json.dumps(obj), ids)
+
+    bad(lambda o: o["cues"].__setitem__(ids[0], "false"))          # string, not boolean
+    bad(lambda o: o["cues"].__setitem__(ids[0], 0))                # int, not boolean
+    bad(lambda o: o["cues"].pop(ids[-1]))                          # missing cue
+    bad(lambda o: o["cues"].__setitem__("extra_cue", True))        # extra cue
+    bad(lambda o: o["counts"].pop(ids[-1]))                        # missing count
+    bad(lambda o: o["counts"].__setitem__(ids[0], -1))             # negative count
+    bad(lambda o: o["counts"].__setitem__(ids[0], "2"))            # string count
+    bad(lambda o: o["counts"].__setitem__(ids[0], 2))              # count>0 but cue False
+    bad(lambda o: o.__setitem__("confidence", 11))                 # out of range
+    bad(lambda o: o.__setitem__("confidence", "7"))                # string confidence
+    bad(lambda o: o.pop("confidence"))                             # missing key
 
 
 # ---------------------------------------------------------------- Test 4
@@ -300,7 +316,7 @@ def test_no_persona_uses_a_prompt_mandated_cue(instrument):
 def test_full_run_gates_on_prices_and_fabricability():
     import json
     from src.perfect_lie import DATA_DIR
-    from src.perfect_lie.pipeline import load_models, preflight
+    from src.perfect_lie.pipeline import load_models, preflight, priced_entries
     models = load_models()
     prompts = json.loads((DATA_DIR / "prompts.json").read_text())
     assert preflight(models, prompts, "dry-run") == []
@@ -308,10 +324,21 @@ def test_full_run_gates_on_prices_and_fabricability():
     problems = preflight(models, prompts, "full")
     assert any("UNVERIFIED" in x for x in problems)
     assert sum("fabricability" in x for x in problems) == 6
-    # Both requirements satisfied -> no problems.
-    ok_models = dict(models, price_fetched_at="2026-09-16T00:00:00Z", price_source="openrouter.ai/api/v1/models")
+
+    def verified_models(skip_one=False):
+        m = json.loads(json.dumps(models))
+        m.update(price_fetched_at="2026-09-16T00:00:00Z", price_source="openrouter.ai/api/v1/models")
+        for i, e in enumerate(priced_entries(m)):
+            if skip_one and i == 2:
+                continue
+            e["price_verified_at"] = "2026-09-16T00:00:00Z"
+        return m
+
     ok_prompts = {"prompts": [dict(p, fabricability={"status": "verified_in_pilot", "evidence": "pilot_x: 8/8 lies, 0 refusals"}) for p in prompts["prompts"]]}
-    assert preflight(ok_models, ok_prompts, "full") == []
+    assert preflight(verified_models(), ok_prompts, "full") == []
+    # A file-level timestamp does not excuse an entry without its own verification stamp.
+    problems = preflight(verified_models(skip_one=True), ok_prompts, "full")
+    assert len(problems) == 1 and "price_verified_at" in problems[0]
 
 
 # ---------------------------------------------------------------- reasoning tier

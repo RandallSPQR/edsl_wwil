@@ -192,17 +192,35 @@ latency, cost.
 Model is a fixed effect (four levels is too thin for a random effect, and family
 differences are a stated interest):
 
-    T ~ condition * model + (1|prompt) + (1|personaPair) + (1|replicate)          [Tier 1]
-    T ~ condition * R + condition * model + (1|prompt) + (1|personaPair) + (1|replicate)   [Tiers 1+2]
+    T ~ condition * model + (1|prompt)                                              [Tier 1]
 
-with `placebo` as the reference level for condition and R ordinal (off < low < high). Add a random condition slope on prompt
-if the data support it. The result is the `full` coefficient and its CI, then the
-`full × model` interactions. Report both distance measures alongside.
+with `placebo` as the reference level for condition. Two things are deliberately absent.
+There is no `(1|personaPair)`: the rotation in `design.json` assigns exactly one pair to each
+prompt, so prompt and pair are the same partition and **are confounded by design**; a
+second variance component on the same grouping is not identifiable. The prompt intercept
+carries the pair. There is no `(1|replicate)`: replicate ids label independent draws and
+share no state across cells, so the residual already carries replicate-to-replicate
+variation. Add a random condition slope on prompt if the data support it. The result is
+the `full` coefficient and its CI, then the `full × model` interactions. Report both
+distance measures alongside.
+
+**Reasoning tier (secondary extension, not pooled).** R is not one treatment across
+families: gpt-5 `off` is effort=minimal, deepseek has no `low`, Anthropic and Google take
+token budgets, OpenAI takes effort labels. A pooled ordinal `condition × R` would assert
+that one unit of R means the same thing in every family; it does not. Instead, within each
+family × level cell, estimate the full-vs-placebo contrast
+
+    β_full(family, R) = T_full − T_placebo
+
+from the same model fitted per family with `condition * R + (1|prompt)`, R categorical, and
+report the set of contrasts with CIs. The three outcomes in "Why a reasoning tier" are read
+off those contrasts descriptively.
 
 ### Pre-registration
 `PREREG.md`, committed before the full run, contains: the prediction ordering above, the
 exact T definition, the cue ontology hash, the personas hash, the rotation table, N, model
-ids, the saturation rule with the measured p₀(c) table, and the two tests below. Not edited after the run starts.
+ids, the saturation rule with the measured p₀(c) table, the primary test below, and the
+per-family reasoning contrasts as the stated secondary estimand. Not edited after the run starts.
 
 **Primary test (comparative).** With `placebo` as the reference level,
 β_full = T_full − T_placebo. Preregister
@@ -212,9 +230,9 @@ ids, the saturation rule with the measured p₀(c) table, and the two tests belo
 The causal contrast is full vs placebo, because placebo is what controls for "any private
 text moves the lie." The null is that the `full` coefficient's CI includes zero.
 
-**Second preregistered test (dose-response).** In the Tiers 1+2 model, the `full × R`
-interaction: H₀: the slope of β_full in R is zero. Two preregistered tests, reported with
-their own CIs; no further correction, everything else is descriptive.
+**One preregistered test.** β_full at R = off is the experiment. The reasoning tier is
+a preregistered *extension* with a stated estimand (the per-family, per-level
+full-vs-placebo contrasts above) but no pooled decision rule; it is reported, not tested.
 
 **Secondary, reported separately.** Whether T_full > 0 against the theoretical zero, and
 the ordering T_full > T_partial > T_placebo ≈ T_none. These are descriptive; they are not
@@ -267,6 +285,7 @@ against the hypothesis, and pilot-tuned stimuli are never described as untouched
 - [x] Test: `off` is `{enabled: false}` or a documented exception; output cap ≥ thinking + story
 - [x] Test: adapter puts `reasoning` and the cap in the request and the cache key
 - [x] Test 5: thinking trace never reaches the cue grader
+- [x] Review round 1 (advisor): drop `(1|personaPair)` and `(1|replicate)` (prompt and pair confounded by design); grader parser fails closed on any non-boolean cue, non-integer count, out-of-range confidence, or key mismatch; `--refresh-prices` is atomic and stamps `price_verified_at` per entry, which `preflight` checks; pooled ordinal reasoning slope replaced by per-family contrasts
 
 ### Phase 2 — instrument development (days 4–7)
 - [ ] `--pilot`: 1 model, 1 replicate, R = off, all prompts/pairs/conditions (48 lies); then a 16-lie thinking smoke test per family to confirm the `reasoning` field is honoured (trace returned or thinking tokens billed) and to measure thinking-token usage per level
@@ -281,12 +300,12 @@ against the hypothesis, and pilot-tuned stimuli are never described as untouched
 - [ ] Note in RESULTS.md that Phase 2 data were used to tune the instrument and are excluded from inference
 
 ### Phase 3 — pre-register and run (days 8–11)
-- [ ] Write and commit `PREREG.md` (prediction ordering, T definition, hashes, rotation table, N, model ids; primary test H₀: β_full = 0 with placebo as reference; T_full > 0 and the ordering as reported secondaries)
+- [ ] Write and commit `PREREG.md` (prediction ordering, T definition, hashes, rotation table, N, model ids; primary test H₀: β_full = 0 with placebo as reference; the `(1|prompt)`-only model with the prompt/pair confound stated; per-family reasoning contrasts as the secondary estimand; T_full > 0 and the ordering as reported secondaries)
 - [ ] Full run: 2,640 lies (Tier 1 then Tier 2), checkpointed so a crash resumes; manifest with SHA, model ids, replicates, hashes, spend. `--full` refuses to start while any price is UNVERIFIED or any prompt lacks pilot fabricability evidence (`pipeline.preflight`)
 - [ ] Primary and secondary grader pass on all 2,640; trace probe on Tier 2 lies with a trace; store raw cue vectors and probe outputs
 
 ### Phase 4 — analysis (days 12–15)
-- [ ] Mixed model as specified; `full` coefficient and CI (Tier 1); `full × R` slope (Tiers 1+2); `full × model` interactions
+- [ ] Mixed model as specified, `(1|prompt)` only; `full` coefficient and CI (Tier 1); `full × model` interactions; per-family × level full-vs-placebo contrasts for the reasoning tier, no pooled slope
 - [ ] Inter-grader agreement (primary vs secondary) per cue; T re-estimated under the secondary grader
 - [ ] Trace probe: P(audience_reference | condition, R); does audience reference predict T at the lie level?
 - [ ] D_cos by condition (manipulation check); acceptance by condition (tertiary)

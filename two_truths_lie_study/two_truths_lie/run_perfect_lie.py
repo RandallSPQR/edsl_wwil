@@ -24,26 +24,30 @@ from src.perfect_lie.pipeline import (
 
 
 def refresh_prices(models_path: Path) -> None:
+    """Overwrite every price from OpenRouter's model list. Atomic: nothing is written unless
+    every model id exists and every entry was priced, so a partial refresh can never leave
+    the file looking verified while some entries still hold remembered prices."""
     import datetime
     import urllib.request
     models = json.loads(models_path.read_text())
     with urllib.request.urlopen("https://openrouter.ai/api/v1/models", timeout=30) as r:
         live = {m["id"]: m for m in json.load(r)["data"]}
-    entries = list(models["liar_models"]) + [models["target_model"]] + list(models["graders"]) + ([models["trace_probe"]] if models.get("trace_probe") else [])
-    missing = []
+    entries = list(models["liar_models"]) + [models["target_model"]] + list(models["graders"]) \
+        + ([models["trace_probe"]] if models.get("trace_probe") else [])
+    now = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+    missing = [e["id"] for e in entries if e["id"] not in live]
+    if missing:
+        raise SystemExit(f"not writing {models_path.name}: model ids not on OpenRouter: {missing}. "
+                         "Fix models.json and rerun --refresh-prices.")
     for e in entries:
-        m = live.get(e["id"])
-        if m is None:
-            missing.append(e["id"])
-            continue
+        m = live[e["id"]]
         e["usd_per_1k_input"] = float(m["pricing"]["prompt"]) * 1000
         e["usd_per_1k_output"] = float(m["pricing"]["completion"]) * 1000
-    models["price_fetched_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+        e["price_verified_at"] = now
+    models["price_fetched_at"] = now
     models["price_source"] = "openrouter.ai/api/v1/models"
     models_path.write_text(json.dumps(models, indent=2) + "\n")
-    print(f"prices refreshed; missing ids: {missing or 'none'}")
-    if missing:
-        raise SystemExit("some model ids do not exist on OpenRouter; fix models.json before Phase 2")
+    print(f"prices verified for {len(entries)} entries at {now}")
 
 
 def main(argv=None) -> int:

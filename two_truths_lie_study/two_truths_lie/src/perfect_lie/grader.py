@@ -62,22 +62,49 @@ def build_grader_input(public_prompt: str, lie: str, cues: Sequence[Cue]) -> Gra
 
 
 def parse_grader_output(text: str, cue_order: Sequence[str]) -> Dict:
-    """Parse and validate the grader JSON. Raises ValueError on any missing cue."""
+    """Parse and validate the grader JSON. Fails closed.
+
+    Any deviation from the schema raises ValueError: a missing or extra cue, a cue value
+    that is not a JSON boolean (bool("false") is True in Python, so strings are rejected,
+    never coerced), a count that is not a non-negative integer, or a confidence outside
+    1..10. A malformed grader response must never silently alter the primary DV.
+    """
     start, end = text.find("{"), text.rfind("}")
     if start < 0 or end < 0:
         raise ValueError("grader output contains no JSON object")
     obj = json.loads(text[start:end + 1])
+    if not isinstance(obj, dict):
+        raise ValueError("grader output is not a JSON object")
     for key in ("cues", "counts", "confidence"):
         if key not in obj:
             raise ValueError(f"grader output missing key {key!r}")
-    for cue in cue_order:
-        if cue not in obj["cues"] or cue not in obj["counts"]:
-            raise ValueError(f"grader output missing cue {cue!r}")
-    return {
-        "cues": {c: bool(obj["cues"][c]) for c in cue_order},
-        "counts": {c: int(obj["counts"][c]) for c in cue_order},
-        "confidence": int(obj["confidence"]),
-    }
+    expected = set(cue_order)
+    if len(expected) != len(cue_order):
+        raise ValueError("cue_order contains duplicates")
+    for key in ("cues", "counts"):
+        if not isinstance(obj[key], dict):
+            raise ValueError(f"grader output {key!r} is not an object")
+        got = set(obj[key])
+        if got != expected:
+            raise ValueError(f"grader output {key!r} keys differ from ontology: "
+                             f"missing={sorted(expected - got)} extra={sorted(got - expected)}")
+    cues: Dict[str, bool] = {}
+    counts: Dict[str, int] = {}
+    for c in cue_order:
+        v = obj["cues"][c]
+        if type(v) is not bool:
+            raise ValueError(f"grader output cues[{c!r}] is {v!r} ({type(v).__name__}), not a JSON boolean")
+        n = obj["counts"][c]
+        if type(n) is not int or n < 0:
+            raise ValueError(f"grader output counts[{c!r}] is {n!r}, not a non-negative integer")
+        if v != (n > 0):
+            raise ValueError(f"grader output cues[{c!r}]={v} inconsistent with counts[{c!r}]={n}")
+        cues[c] = v
+        counts[c] = n
+    conf = obj["confidence"]
+    if type(conf) is not int or not (1 <= conf <= 10):
+        raise ValueError(f"grader output confidence is {conf!r}, not an integer in 1..10")
+    return {"cues": cues, "counts": counts, "confidence": conf}
 
 
 # ---------------------------------------------------------------- record-level entry points
