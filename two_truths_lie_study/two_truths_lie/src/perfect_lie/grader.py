@@ -75,9 +75,10 @@ def parse_grader_output(text: str, cue_order: Sequence[str]) -> Dict:
     obj = json.loads(text[start:end + 1])
     if not isinstance(obj, dict):
         raise ValueError("grader output is not a JSON object")
-    for key in ("cues", "counts", "confidence"):
-        if key not in obj:
-            raise ValueError(f"grader output missing key {key!r}")
+    required = {"cues", "counts", "confidence"}
+    if set(obj) != required:
+        raise ValueError(f"grader output top-level keys must be exactly {sorted(required)}: "
+                         f"missing={sorted(required - set(obj))} extra={sorted(set(obj) - required)}")
     expected = set(cue_order)
     if len(expected) != len(cue_order):
         raise ValueError("cue_order contains duplicates")

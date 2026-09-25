@@ -382,15 +382,18 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
    deviation, not metadata: the Phase 2 pilot must show all six produce viable fabrications
    under `none`, replacements are documented in `prompts.json`, and `--full` is gated on
    `fabricability.status == verified_in_pilot` for every prompt.
-10. **EDSL does not forward a reasoning budget.** `build_params` sends only temperature and
+9. **EDSL does not forward a reasoning budget.** `build_params` sends only temperature and
    the standard sampling fields. *Resolution:* a four-line addition to EDSL's
    `_filter_parameters_for_service` forwards `model.parameters["reasoning"]` for the
    `open_router` service; the adapter stores the level's payload there, so it also enters
    the cache key. The output cap is sent as `max_tokens` from the level's
    `max_output_tokens`. Whether OpenRouter honours the field for each provider is checked in
    the Phase 2 thinking smoke test, not assumed.
-9. **Prices are from memory.** `--full` is gated on `price_fetched_at` being set by
-   `--refresh-prices`, so an unverified price cannot start a paid run.
+10. **Prices are from memory.** `--full` is gated on `--refresh-prices` having run: the
+   file-level `price_fetched_at` must be set AND every priced entry (liars, target, graders,
+   trace probe) must carry its own `price_verified_at`. The refresh is atomic: it writes
+   nothing unless every model id resolves on OpenRouter, so a partial refresh cannot leave
+   some entries on remembered prices behind a verified-looking file.
 
 Not conflicts, but recorded: EDSL sends `max_completion_tokens`, `logprobs`, and penalty
 parameters to every OpenRouter model; some providers reject these. Fix in

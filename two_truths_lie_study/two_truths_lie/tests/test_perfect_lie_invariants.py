@@ -242,6 +242,7 @@ def test_3_grader_output_parser_fails_closed(instrument):
     bad(lambda o: o.__setitem__("confidence", 11))                 # out of range
     bad(lambda o: o.__setitem__("confidence", "7"))                # string confidence
     bad(lambda o: o.pop("confidence"))                             # missing key
+    bad(lambda o: o.__setitem__("notes", "looks fine"))            # extra top-level key
 
 
 # ---------------------------------------------------------------- Test 4
