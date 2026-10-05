@@ -63,7 +63,7 @@ def _git(*args: str) -> str:
 class Run:
     def __init__(self, *, mode: str, run_dir: Path, cells: List[Cell], instrument: Instrument, models: Dict,
                  adapter, spend_cap_usd: float, concurrency: int = 4, models_path: Optional[Path] = None,
-                 stages: tuple = STAGES):
+                 stages: tuple = STAGES, trace_probe_locked: bool = True, billing_probe=None):
         if mode not in ("smoke", "pilot", "full"):
             raise ValueError(f"unknown mode {mode!r}")
         self.mode = mode
@@ -77,6 +77,16 @@ class Run:
         self.concurrency = concurrency
         self.models_path = models_path
         self.stages = stages if mode != "smoke" else ("liar",)
+        # Owner lock (data/perfect_lie/run_locks.json): the trace probe never runs while locked.
+        self.trace_probe_locked = trace_probe_locked
+        if trace_probe_locked:
+            self.stages = tuple(st for st in self.stages if st != "trace_probe")
+        # billing_probe() returns the total billed on the key. Spend for the cap is the larger
+        # of the run's own counter and the billed delta since the run started, because a call
+        # that times out on our side can still complete and be billed upstream.
+        self.billing_probe = billing_probe
+        self.billed_at_start = None
+        self.billed_delta = 0.0
         self.liar_by_id = {m["id"]: m for m in models["liar_models"]}
         self.design_by_prompt = {r.prompt_id: r for r in instrument.design}
         self.records: Dict[str, Dict] = {}
@@ -142,7 +152,10 @@ class Run:
             "n_cells_planned": len(self.cells),
             "n_complete": sum(r.get("status") == "complete" for r in recs),
             "n_error": sum(r.get("status") == "error" for r in recs),
-            "spend_usd": round(self.spent, 4), "spend_cap_usd": self.spend_cap, "spend_cap_reached": self.cap_reached,
+            "spend_usd": round(self.effective_spend(), 4), "spend_counted_usd": round(self.spent, 4),
+            "openrouter_billed_delta_usd": round(self.billed_delta, 4) if self.billed_at_start is not None else None,
+            "spend_cap_usd": self.spend_cap, "spend_cap_reached": self.cap_reached,
+            "trace_probe_locked": self.trace_probe_locked,
             "python": platform.python_version(),
             "edsl_version": _edsl_version(),
         }
@@ -158,19 +171,47 @@ class Run:
     async def run(self) -> Dict:
         self.load()
         self.started_at = self.started_at or utc_now()
+        if self.billing_probe:
+            try:
+                self.billed_at_start = self.billing_probe()
+            except Exception:
+                self.billed_at_start = None
         self.write_manifest()
         sem = asyncio.Semaphore(self.concurrency)
 
         async def guarded(cell: Cell):
             async with sem:
-                if self.spent >= self.spend_cap:
+                self._refresh_billed()
+                if self.effective_spend() >= self.spend_cap:
                     self.cap_reached = True
                     return
                 await self.run_cell(cell)
 
         await asyncio.gather(*(guarded(c) for c in self.pending()))
+        self._refresh_billed()
         self.write_manifest(finished=not self.cap_reached and not self.pending())
         return json.loads((self.run_dir / "manifest.json").read_text())
+
+    def _refresh_billed(self) -> None:
+        if self.billing_probe and self.billed_at_start is not None:
+            try:
+                self.billed_delta = max(self.billed_delta, self.billing_probe() - self.billed_at_start)
+            except Exception:
+                pass
+
+    def effective_spend(self) -> float:
+        return max(self.spent, self.billed_delta)
+
+    async def _charge_failed_call(self, entry: Dict, max_output_tokens: Optional[int], rec: Dict) -> None:
+        """A failed call may still be billed upstream (and retried by EDSL). Charge a
+        conservative bound so the cap stays honest: every attempt at the full output cap."""
+        attempts = int(os.environ.get("EDSL_MAX_ATTEMPTS", "3"))
+        est = attempts * ((max_output_tokens or 2000) / 1000 * entry["usd_per_1k_output"]
+                          + 2000 / 1000 * entry["usd_per_1k_input"])
+        async with self._lock:
+            self.spent += est
+        rec["cost_usd"] = rec.get("cost_usd", 0.0) + est
+        rec["cost_includes_failed_call_bound"] = True
 
     async def _charge(self, entry: Dict, usage: Dict) -> float:
         cost = _price(entry, usage)
@@ -219,10 +260,14 @@ class Run:
     async def _liar(self, cell: Cell, rec: Dict) -> None:
         lp = build_liar_prompts(cell.condition, self.design_by_prompt[cell.prompt_id], cell.target_id,
                                 self.instrument.personas, cell.category)
-        out = await self.adapter.acall(role="liar", user_prompt=lp.user_prompt, system_prompt=lp.system_prompt,
-                                       model_name=cell.model_id, temperature=cell.temperature,
-                                       replicate=cell.replicate, run_namespace=self.namespace,
-                                       reasoning=cell.reasoning, max_output_tokens=cell.max_output_tokens)
+        try:
+            out = await self.adapter.acall(role="liar", user_prompt=lp.user_prompt, system_prompt=lp.system_prompt,
+                                           model_name=cell.model_id, temperature=cell.temperature,
+                                           replicate=cell.replicate, run_namespace=self.namespace,
+                                           reasoning=cell.reasoning, max_output_tokens=cell.max_output_tokens)
+        except Exception:
+            await self._charge_failed_call(self.liar_by_id[cell.model_id], cell.max_output_tokens, rec)
+            raise
         cost = await self._charge(self.liar_by_id[cell.model_id], out["usage"])
         rec.update(lie=out["text"], user_prompt=lp.user_prompt, liar_system_prompt=lp.system_prompt,
                    liar_usage=out["usage"], liar_finish_reason=out["finish_reason"],
@@ -268,6 +313,8 @@ class Run:
         rec["grades"] = grades
 
     async def _trace_probe(self, rec: Dict) -> None:
+        if self.trace_probe_locked:
+            raise RuntimeError("trace probe is locked by the owner (run_locks.json); it must not run")
         tp = self.models.get("trace_probe")
         if not tp or not rec.get("thinking_trace") or rec.get("reasoning_level") == "off":
             rec["trace_probe"] = None

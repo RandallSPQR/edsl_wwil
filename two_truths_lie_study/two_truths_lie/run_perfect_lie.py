@@ -42,6 +42,20 @@ try:
 except ImportError:
     pass
 
+# EDSL reads its settings once, at import. Its default API timeout (60 s) is shorter than
+# a gpt-5 high-effort call, and a timed-out call is retried up to EDSL_MAX_ATTEMPTS times
+# while OpenRouter still bills each attempt it completes. Set before EDSL is imported;
+# an explicit environment value wins.
+import os as _os
+_os.environ.setdefault("EDSL_API_TIMEOUT", "900")
+
+LOCKS_PATH = DATA_DIR / "run_locks.json"
+
+
+def run_locks() -> dict:
+    return json.loads(LOCKS_PATH.read_text()) if LOCKS_PATH.exists() else {}
+
+
 KEY_VAR = "OPEN_ROUTER_API_KEY"
 # Names people commonly use for this key that EDSL does NOT read.
 KEY_MISNAMES = ("OPENROUTER_API_KEY", "OPENROUTER_KEY", "OPEN_ROUTER_KEY", "OPENROUTER_TOKEN")
@@ -78,6 +92,16 @@ def refresh_prices(models_path: Path) -> None:
         sp = e.get("openrouter_supported_parameters") or []
         print(f"  {e['id']:40s} in ${e['usd_per_1k_input']:.5f}/1K  out ${e['usd_per_1k_output']:.5f}/1K  "
               f"reasoning={'reasoning' in sp}  temperature={'temperature' in sp}")
+
+
+def openrouter_billed_usd() -> float:
+    """Total usage billed on this key so far, from OpenRouter's free /api/v1/key endpoint."""
+    import os
+    import urllib.request
+    req = urllib.request.Request("https://openrouter.ai/api/v1/key",
+                                 headers={"Authorization": f"Bearer {os.environ[KEY_VAR]}"})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        return float(json.load(r)["data"].get("usage") or 0.0)
 
 
 def check_env() -> int:
@@ -295,6 +319,9 @@ def main(argv=None) -> int:
         return 0
 
     problems = preflight(models, json.loads((DATA_DIR / "prompts.json").read_text()), run_mode)
+    locks = run_locks()
+    if run_mode == "full" and locks.get("full_run", {}).get("locked", True):
+        problems.insert(0, f"full run is LOCKED by the owner ({LOCKS_PATH.name}): {locks.get('full_run', {}).get('reason')}")
     if problems:
         print(f"\nrefusing to run ({run_mode}):", file=sys.stderr)
         for pr in problems:
@@ -311,7 +338,9 @@ def main(argv=None) -> int:
         run_dir = RESULTS_ROOT / f"{run_mode}_{stamp}"
     run = Run(mode=run_mode, run_dir=run_dir, cells=cells, instrument=instrument, models=models,
               adapter=PerfectLieAdapter(service_name=models.get("service", "open_router")),
-              spend_cap_usd=args.confirm_spend, concurrency=args.concurrency, models_path=models_path)
+              spend_cap_usd=args.confirm_spend, concurrency=args.concurrency, models_path=models_path,
+              trace_probe_locked=locks.get("trace_probe", {}).get("locked", True),
+              billing_probe=openrouter_billed_usd)
     manifest = asyncio.run(run.run())
     print(f"\n{run_mode}: {manifest['n_complete']}/{manifest['n_cells_planned']} complete, "
           f"{manifest['n_error']} error, spend ${manifest['spend_usd']:.2f}"

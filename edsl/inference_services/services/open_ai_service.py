@@ -236,7 +236,12 @@ class OpenAIService(InferenceServiceABC):
                 if self._inference_service_ == "open_router":
                     reasoning = self.parameters.get("reasoning") if isinstance(self.parameters, dict) else None
                     if reasoning:
-                        params["reasoning"] = dict(reasoning)
+                        # The OpenAI client rejects unknown keyword arguments, so
+                        # OpenRouter-only fields go through extra_body, which the
+                        # client merges into the JSON request body.
+                        extra = dict(params.get("extra_body") or {})
+                        extra["reasoning"] = dict(reasoning)
+                        params["extra_body"] = extra
                     # Do not send top_logprobs without logprobs: some upstream
                     # providers reject the combination instead of ignoring it.
                     if not params.get("logprobs"):

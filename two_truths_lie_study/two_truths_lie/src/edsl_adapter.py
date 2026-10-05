@@ -1002,7 +1002,7 @@ class PerfectLieAdapter:
         results = await job.run_async(**kwargs)
         out = _perfect_lie_parse_results(results, qname)
         if out["text"] is None:
-            raise PerfectLieCallError(f"{role} call to {model_name} returned no answer")
+            raise PerfectLieCallError(f"{role} call to {model_name} returned no answer: {_perfect_lie_exception_text(results)}")
         out.update({
             "latency_ms": int((time.time() - start) * 1000),
             "model": model_name, "temperature": temperature, "replicate": replicate,
@@ -1025,3 +1025,19 @@ class PerfectLieAdapter:
         if out["text"] is None:
             raise StoryGenerationError(f"{model_name} returned no answer")
         return out["text"], {k: v for k, v in out.items() if k not in ("text", "raw")}
+
+
+def _perfect_lie_exception_text(results) -> str:
+    """Best-effort: the underlying exception EDSL caught, so a failed call records its cause."""
+    try:
+        th = results.task_history
+        for interview in getattr(th, "total_interviews", []) or []:
+            for qname, excs in (getattr(interview, "exceptions", {}) or {}).items():
+                for e in excs:
+                    exc = getattr(e, "exception", None)
+                    if exc is not None:
+                        return f"{type(exc).__name__}: {exc}"[:800]
+                    return str(e)[:800]
+    except Exception:
+        pass
+    return "no exception detail available"

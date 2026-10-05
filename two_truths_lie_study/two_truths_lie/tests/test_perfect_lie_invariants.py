@@ -330,7 +330,13 @@ def test_live_runs_gate_on_key_prices_and_fabricability():
     import json
     from src.perfect_lie import DATA_DIR
     from src.perfect_lie.pipeline import load_models, preflight
-    models = load_models()
+    from src.perfect_lie.pipeline import priced_entries
+    models = json.loads(json.dumps(load_models()))
+    # Start from an unverified copy regardless of the committed file's state.
+    models["price_fetched_at"] = None
+    models["price_source"] = "UNVERIFIED"
+    for e in priced_entries(models):
+        e.pop("price_verified_at", None)
     prompts = json.loads((DATA_DIR / "prompts.json").read_text())
     key = {"OPEN_ROUTER_API_KEY": "x"}
     assert preflight(models, prompts, "dry-run", env={}) == []
@@ -417,7 +423,8 @@ def test_adapter_forwards_reasoning_and_output_cap_to_openrouter_request(instrum
     for level, payload, cap in (("off", {"enabled": False}, 1500), ("low", {"max_tokens": 2048}, 4000), ("high", {"max_tokens": 8192}, 10000)):
         r = adapter.render(lp.user_prompt, lp.system_prompt, "anthropic/claude-sonnet-4.5", 1.0, replicate=1,
                            reasoning=payload, max_output_tokens=cap)
-        assert r["request_params"]["reasoning"] == payload, level
+        assert r["request_params"]["extra_body"]["reasoning"] == payload, level
+        assert "reasoning" not in r["request_params"], "top-level reasoning is rejected by the OpenAI client"
         assert r["request_params"]["max_completion_tokens"] == cap, level
         job, _, _ = _perfect_lie_build_job(lp.user_prompt, lp.system_prompt, "anthropic/claude-sonnet-4.5", 1.0, 1,
                                            "open_router", skip_api_key_check=True, reasoning=payload, max_output_tokens=cap)
@@ -650,12 +657,13 @@ def test_runner_end_to_end_records_manifest_and_resume(instrument, tmp_path):
               adapter=fake, spend_cap_usd=100.0, concurrency=3)
     mf = asyncio.run(run.run())
     assert mf["n_complete"] == 8 and mf["n_error"] == 0 and mf["mode"] == "pilot"
+    assert mf["trace_probe_locked"] is True
     assert mf["finished_at"] and mf["spend_usd"] > 0 and "grader_rubric" in mf["hashes"]
     recs = load_records(tmp_path / "pilot")
     assert len(recs) == 8 and all(r["status"] == "complete" for r in recs)
     r = recs[0]
     assert set(r["grades"]) == {"primary", "secondary"} and r["target"]["accept"] is True
-    assert r["trace_probe"] is None  # reasoning off: no probe
+    assert r.get("trace_probe") is None  # locked, and reasoning off: no probe
     # A malformed grader answer was retried with a new attempt id, not served from cache.
     assert any(c["role"] == "grader" and c["attempt"] == 1 for c in fake.calls)
     assert all(c["namespace"] == "pilot" for c in fake.calls)
@@ -750,3 +758,100 @@ def test_run_script_loads_env_file_before_gates(tmp_path, monkeypatch):
     monkeypatch.delenv("OPEN_ROUTER_API_KEY", raising=False)
     src = open(run_perfect_lie.__file__).read()
     assert src.index("load_dotenv(ENV_FILE") < src.index("def main(")
+
+
+def test_openrouter_params_are_accepted_by_the_real_openai_client(instrument):
+    """The smoke test found the OpenAI client rejecting a top-level `reasoning` argument.
+    Build the exact params EDSL sends, pass them to the real client with a fake network
+    layer, and check the JSON body that would go to OpenRouter."""
+    pytest.importorskip("edsl")
+    import asyncio, json
+    import httpx
+    import openai
+    os.environ["EDSL_RUNNING_IN_PYTEST"] = "True"
+    from src.edsl_adapter import _perfect_lie_build_job
+    from edsl.inference_services.services.open_ai_service import OpenAIParameterBuilder
+    captured = {}
+
+    def handler(request):
+        captured["body"] = json.loads(request.content)
+        return httpx.Response(200, json={
+            "id": "x", "object": "chat.completion", "created": 0, "model": "m",
+            "choices": [{"index": 0, "finish_reason": "stop",
+                         "message": {"role": "assistant", "content": "story", "reasoning": "thought"}}],
+            "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2}})
+
+    job, _, _ = _perfect_lie_build_job("U", "S", "anthropic/claude-sonnet-4.5", 1.0, 1, "open_router",
+                                       skip_api_key_check=True, reasoning={"max_tokens": 2048}, max_output_tokens=4000)
+    m = job.models[0]
+    params = OpenAIParameterBuilder.build_params(
+        model=m.model, messages=[{"role": "user", "content": "U"}], temperature=m.temperature,
+        max_tokens=m.max_tokens, top_p=m.top_p, frequency_penalty=m.frequency_penalty,
+        presence_penalty=m.presence_penalty, logprobs=m.logprobs, top_logprobs=m.top_logprobs)
+    params = m._filter_parameters_for_service(params)
+    client = openai.AsyncOpenAI(api_key="x", base_url="https://openrouter.test/api/v1",
+                                http_client=httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+    resp = asyncio.run(client.chat.completions.create(**params))
+    body = captured["body"]
+    assert body["reasoning"] == {"max_tokens": 2048}
+    assert body["max_completion_tokens"] == 4000 and body["temperature"] == 1.0
+    assert "top_logprobs" not in body
+    # The trace survives model_dump(), which is what EDSL stores as the raw response.
+    from src.edsl_adapter import _perfect_lie_extract_trace_from_raw
+    assert _perfect_lie_extract_trace_from_raw(resp.model_dump()) == ("thought", "text")
+
+
+def test_owner_locks_block_full_run_and_trace_probe():
+    """Owner instruction (2026-10-05): the full run and the trace probe must not run."""
+    import json
+    from src.perfect_lie import DATA_DIR
+    locks = json.loads((DATA_DIR / "run_locks.json").read_text())
+    assert locks["full_run"]["locked"] is True
+    assert locks["trace_probe"]["locked"] is True
+
+
+def test_full_mode_refused_while_locked(monkeypatch, capsys):
+    import run_perfect_lie
+    monkeypatch.setenv("OPEN_ROUTER_API_KEY", "sk-or-v1-test")
+    rc = run_perfect_lie.main(["--full", "--tier", "tier1", "--confirm-spend", "1000"])
+    assert rc == 4
+    assert "LOCKED" in capsys.readouterr().err
+
+
+def test_trace_probe_never_called_while_locked(instrument, tmp_path):
+    """A thinking-level cell with a trace must not reach the trace probe while it is locked."""
+    import asyncio
+    from src.perfect_lie.pipeline import enumerate_cells, load_models
+    from src.perfect_lie.runner import Run, load_records
+    models = load_models()
+    cells = [c for c in enumerate_cells(instrument, models, replicates=(1,), levels=("high",))][:2]
+    fake = FakeAdapter(instrument)
+    asyncio.run(Run(mode="pilot", run_dir=tmp_path / "tp", cells=cells, instrument=instrument, models=models,
+                    adapter=fake, spend_cap_usd=100.0).run())
+    assert not any(c["role"] == "trace_probe" for c in fake.calls)
+    assert all(r["status"] == "complete" for r in load_records(tmp_path / "tp"))
+
+
+def test_failed_call_is_charged_and_billed_delta_caps_spend(instrument, tmp_path):
+    import asyncio
+    from src.perfect_lie.pipeline import load_models
+    from src.perfect_lie.runner import Run
+    models = load_models()
+    cells = [c for c in _pilot_cells(instrument, models) if c.condition == "full"][:1]
+    fake = FakeAdapter(instrument, fail_liar_once_for="PRIVATE NOTE")
+    mf = asyncio.run(Run(mode="pilot", run_dir=tmp_path / "f", cells=cells, instrument=instrument, models=models,
+                         adapter=fake, spend_cap_usd=100.0).run())
+    assert mf["n_error"] == 1 and mf["spend_counted_usd"] > 0  # failed call still charged
+    billed = iter([10.0, 10.0, 60.0, 60.0, 60.0])
+    cells = _pilot_cells(instrument, models, n=3)
+    mf = asyncio.run(Run(mode="pilot", run_dir=tmp_path / "b", cells=cells, instrument=instrument, models=models,
+                         adapter=FakeAdapter(instrument), spend_cap_usd=40.0, concurrency=1,
+                         billing_probe=lambda: next(billed)).run())
+    assert mf["spend_cap_reached"] is True and mf["openrouter_billed_delta_usd"] == 50.0
+
+
+def test_edsl_timeout_raised_before_edsl_import():
+    import run_perfect_lie
+    src = open(run_perfect_lie.__file__).read()
+    assert 'setdefault("EDSL_API_TIMEOUT"' in src
+    assert src.index('setdefault("EDSL_API_TIMEOUT"') < src.index("from src.edsl_adapter import")
