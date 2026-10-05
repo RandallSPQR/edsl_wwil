@@ -2,7 +2,8 @@
 """The Perfect Lie: entry point.
 
     python run_perfect_lie.py --check-env                           # is the OpenRouter key set up right? (no model calls)
-    python run_perfect_lie.py --dry-run [--tier tier1|tier2|all]   # cells + cost, no model calls
+    python run_perfect_lie.py --classes                             # list model classes and their status
+    python run_perfect_lie.py --dry-run --class C1 [--tier ...]     # cells + cost, no model calls
     python run_perfect_lie.py --refresh-prices                      # verify prices from OpenRouter (no key needed)
     python run_perfect_lie.py --smoke --confirm-spend USD           # liar-only checks, every family x level
     python run_perfect_lie.py --pilot --confirm-spend USD           # Phase 2 pilot, one family at reasoning off
@@ -10,6 +11,10 @@
     python run_perfect_lie.py --resume RUN_DIR --confirm-spend USD  # continue a crashed or capped run
     python run_perfect_lie.py --score RUN_DIR                       # T, p0, co-firing, acceptance, fabricability
     python run_perfect_lie.py --record-fabricability RUN_DIR        # write pilot evidence into prompts.json
+    python run_perfect_lie.py --export-replay RUN_DIR               # open-weight lies + exact messages for pod replay
+
+Every live and dry-run command works on one class (--class, default C1). Pilot and full
+runs need the class approved in models.json; a smoke test may run on a proposed class.
 
 Cost guard: a live mode prints its estimate, refuses unless --confirm-spend is at least
 the estimate, and stops scheduling new cells once actual spend reaches --confirm-spend.
@@ -26,7 +31,7 @@ from src.perfect_lie import DATA_DIR
 from src.perfect_lie.personas import load_instrument
 from src.perfect_lie.pipeline import (
     DEFAULT_REPLICATES, TIERS, enumerate_cells, estimate_cost, format_estimate, load_models, preflight,
-    priced_entries, smoke_cells,
+    priced_entries, select_class, smoke_cells,
 )
 
 HERE = Path(__file__).resolve().parent
@@ -66,8 +71,9 @@ def utc_now() -> str:
 
 
 def refresh_prices(models_path: Path) -> None:
-    """Overwrite every price from OpenRouter's public model list. Atomic: nothing is written
-    unless every model id exists, and every entry is stamped with price_verified_at."""
+    """Overwrite every price, in every class, from OpenRouter's public model list, and confirm
+    each provider pin still has a matching endpoint (bf16 for open weights). Atomic: nothing
+    is written unless every id resolves and every pin is servable."""
     import urllib.request
     models = json.loads(models_path.read_text())
     with urllib.request.urlopen("https://openrouter.ai/api/v1/models", timeout=30) as r:
@@ -77,6 +83,24 @@ def refresh_prices(models_path: Path) -> None:
     if missing:
         raise SystemExit(f"not writing {models_path.name}: model ids not on OpenRouter: {missing}. "
                          "Fix models.json and rerun --refresh-prices.")
+    pin_problems = []
+    checked = {}
+    for e in entries:
+        pin = e.get("provider")
+        if not pin or e["id"] in checked:
+            continue
+        with urllib.request.urlopen(f"https://openrouter.ai/api/v1/models/{e['id']}/endpoints", timeout=30) as r:
+            eps = json.load(r)["data"]["endpoints"]
+        allowed = {x.lower() for x in (pin.get("only") or pin.get("order") or [])}
+        quants = set(pin.get("quantizations") or [])
+        ok = [ep for ep in eps if (ep.get("tag", "").split("/")[0].lower() in allowed
+                                   or (ep.get("provider_name") or "").lower() in allowed)
+              and (not quants or ep.get("quantization") in quants)]
+        checked[e["id"]] = [f"{ep.get('provider_name')}:{ep.get('quantization')}" for ep in ok]
+        if not ok:
+            pin_problems.append(f"{e['id']}: no endpoint matches pin {pin}")
+    if pin_problems:
+        raise SystemExit("not writing models.json: " + "; ".join(pin_problems))
     now = utc_now()
     for e in entries:
         m = live[e["id"]]
@@ -84,14 +108,62 @@ def refresh_prices(models_path: Path) -> None:
         e["usd_per_1k_output"] = float(m["pricing"]["completion"]) * 1000
         e["price_verified_at"] = now
         e["openrouter_supported_parameters"] = m.get("supported_parameters")
+        if e["id"] in checked:
+            e["pinned_endpoints_verified"] = checked[e["id"]]
     models["price_fetched_at"] = now
     models["price_source"] = "openrouter.ai/api/v1/models"
     models_path.write_text(json.dumps(models, indent=2) + "\n")
-    print(f"prices verified for {len(entries)} entries at {now}")
+    seen = set()
+    print(f"prices verified for {len({e['id'] for e in entries})} model ids at {now}")
     for e in entries:
+        if e["id"] in seen:
+            continue
+        seen.add(e["id"])
         sp = e.get("openrouter_supported_parameters") or []
+        pin = f"  pinned {checked[e['id']]}" if e["id"] in checked else ""
         print(f"  {e['id']:40s} in ${e['usd_per_1k_input']:.5f}/1K  out ${e['usd_per_1k_output']:.5f}/1K  "
-              f"reasoning={'reasoning' in sp}  temperature={'temperature' in sp}")
+              f"reasoning={'reasoning' in sp}{pin}")
+
+
+def list_classes() -> int:
+    models = load_models()
+    for cid in models["class_design"]["order"]:
+        c = models["classes"][cid]
+        print(f"{cid}  [{c['status']}]  {c['name']}")
+        for m in c["liar_models"]:
+            pin = f" pin={m['provider']['only']}/bf16" if m.get("provider") else ""
+            sysr = "" if m.get("system_role", True) else " (no system role: folded)"
+            print(f"     liar  {m['id']:40s} {m['family']:9s} {m['weights']:6s} {m['released']}{pin}{sysr}")
+        extra = [t["id"] for t in c["target_models"] if t["id"] not in {m["id"] for m in c["liar_models"]}]
+        print(f"     targets: every liar above{(' + ' + ', '.join(extra)) if extra else ''}")
+    print("graders (all classes): " + ", ".join(f"{g['role']}={g['id']}" for g in models["graders"]))
+    return 0
+
+
+def export_replay(run_dir: Path) -> int:
+    """Write replay.jsonl: for every open-weight lie, the HF checkpoint, the exact messages the
+    model received, and the completion, so the pod can teacher-force the same sequence."""
+    from src.perfect_lie.runner import load_records
+    models = load_models()
+    liars = {m["id"]: m for c in models["classes"].values() for m in c["liar_models"]}
+    out, n = run_dir / "replay.jsonl", 0
+    with out.open("w") as f:
+        for r in load_records(run_dir):
+            m = liars.get(r.get("model_id"))
+            if not m or m.get("weights") != "open" or not r.get("lie"):
+                continue
+            f.write(json.dumps({
+                "cell_id": r["cell_id"], "hf_checkpoint": m.get("hf_checkpoint"), "openrouter_id": m["id"],
+                "served_provider": r.get("liar_served_provider"), "provider_pin": r.get("liar_provider_pin"),
+                "messages": r.get("liar_delivered_messages"), "completion": r["lie"],
+                "temperature": r.get("temperature"), "max_output_tokens": r.get("max_output_tokens"),
+                "condition": r["condition"], "prompt_id": r["prompt_id"], "pair": [r["j1"], r["j2"]],
+                "target_persona": r["target_id"], "replicate": r["replicate"],
+                "generation_id": r.get("liar_generation_id"),
+            }, ensure_ascii=False) + "\n")
+            n += 1
+    print(f"wrote {n} open-weight lies to {out}")
+    return 0
 
 
 def openrouter_billed_usd() -> float:
@@ -179,8 +251,8 @@ def score(run_dir: Path) -> int:
     from src.perfect_lie.runner import load_records, smoke_report
     from src.perfect_lie import scoring
     ins = load_instrument()
-    models = load_models()
     mf = json.loads((run_dir / "manifest.json").read_text())
+    models = select_class(load_models(), mf.get("class_id") or "C3")
     recs = load_records(run_dir)
     out = {"run_dir": str(run_dir), "mode": mf["mode"], "n_records": len(recs)}
     if mf["mode"] == "smoke":
@@ -201,6 +273,9 @@ def score(run_dir: Path) -> int:
                                               scoring.mean_T_by(rows, "model_family", "reasoning_level", "condition").items()},
             acceptance_by_condition={"|".join(k): v for k, v in scoring.acceptance_by(recs, "condition").items()},
             cofiring_top=scoring.cofiring_report(recs, ins.design, ins.personas)[:20],
+            acceptance_crossing_family=scoring.acceptance_crossing(recs, "family"),
+            acceptance_crossing_model=scoring.acceptance_crossing(recs, "model"),
+            grader_self_preference=scoring.grader_self_preference(recs, cue_ids, models["graders"]),
             fabricability=scoring.fabricability_report(recs, [p.id for p in ins.prompts]),
             units=rows,
         )
@@ -213,6 +288,15 @@ def score(run_dir: Path) -> int:
         print("\nfabricability under none:")
         for k, v in out["fabricability"].items():
             print(f"  {k:12s} {v['viable']}/{v['n']} viable" + (f"  failures: {v['failures']}" if v["failures"] else ""))
+        cr = out["acceptance_crossing_family"]
+        print("\nacceptance, liar family -> target family:")
+        for k, v in cr["matrix"].items():
+            print(f"  {k:24s} n={v['n']:4d}  accept={v['accept_rate']:.2f}")
+        print(f"  same family minus other: {cr['summary']['diagonal_minus_off']}")
+        print("\ngrader self-preference (own family marked *):")
+        for row in out["grader_self_preference"]:
+            print(f"  {row['grader']:9s} on {row['liar_family']:9s}{' *' if row['own_family'] else '  '} "
+                  f"cues marked {row['mean_cues_marked']:.2f}  disagreement {row['disagreement_with_others']:.3f}  n={row['n']}")
         print("\ntop cross-pair co-firing (phi):")
         for r in out["cofiring_top"][:8]:
             print(f"  {r['prompt_id']:12s} {r['cue_j1']}/{r['cue_j2']}  phi={r['phi']:.2f}  joint={r['p_joint']:.2f}")
@@ -256,6 +340,9 @@ def main(argv=None) -> int:
     mode.add_argument("--record-fabricability", type=Path, metavar="RUN_DIR", help="write pilot evidence into prompts.json")
     mode.add_argument("--refresh-prices", action="store_true", help="verify prices from OpenRouter into models.json")
     mode.add_argument("--check-env", action="store_true", help="check the OpenRouter key setup; never prints the key")
+    mode.add_argument("--classes", action="store_true", help="list model classes and their status")
+    mode.add_argument("--export-replay", type=Path, metavar="RUN_DIR", help="export open-weight lies for pod replay")
+    ap.add_argument("--class", dest="class_id", default="C1", help="model class to run (default C1)")
     ap.add_argument("--tier", choices=sorted(TIERS), default="all", help="tier1 = reasoning off only; tier2 = low+high")
     ap.add_argument("--models", nargs="*", help="restrict liar models by id")
     ap.add_argument("--replicates", nargs="*", type=int, help="replicate ids (default 1..5); independent draws, not seeds")
@@ -269,6 +356,10 @@ def main(argv=None) -> int:
     models_path = DATA_DIR / "models.json"
     if args.check_env:
         return check_env()
+    if args.classes:
+        return list_classes()
+    if args.export_replay:
+        return export_replay(args.export_replay)
     if args.refresh_prices:
         refresh_prices(models_path)
         return 0
@@ -278,34 +369,42 @@ def main(argv=None) -> int:
         return record_fabricability(args.record_fabricability)
 
     instrument = load_instrument()
-    models = load_models(models_path)
-    replicates = tuple(args.replicates) if args.replicates else DEFAULT_REPLICATES
-    liar_ids = args.models or [m["id"] for m in models["liar_models"]]
+    all_models = load_models(models_path)
     levels = TIERS[args.tier]
 
     run_mode = "full"
     run_dir = args.run_dir
+    class_id = args.class_id
     if args.resume:
         run_dir = args.resume
-        run_mode = json.loads((run_dir / "manifest.json").read_text())["mode"]
+        prev = json.loads((run_dir / "manifest.json").read_text())
+        run_mode = prev["mode"]
+        class_id = prev.get("class_id") or class_id
     elif args.smoke:
         run_mode = "smoke"
     elif args.pilot:
         run_mode = "pilot"
     elif not args.full:
         run_mode = None  # dry run
+    models = select_class(all_models, class_id)
+    replicates = tuple(args.replicates) if args.replicates else DEFAULT_REPLICATES
+    liar_ids = args.models or [m["id"] for m in models["liar_models"]]
+    print(f"class {class_id} [{models['class_status']}]: {models['class_name']}")
 
     if run_mode == "smoke":
         cells = smoke_cells(instrument, models, per_level=args.per_level)
         if args.models:
             cells = [c for c in cells if c.model_id in args.models]
     elif run_mode == "pilot":
-        pl = models["pilot_liar"]
-        cells = list(enumerate_cells(instrument, models, replicates=(1,), liar_model_ids=[pl["id"]], levels=(pl["level"],)))
+        # Every liar in the class, reasoning off, one replicate: the fabricability gate has to
+        # hold for each model, and the weakest model is where it is most likely to fail.
+        cells = list(enumerate_cells(instrument, models, replicates=(1,), liar_model_ids=liar_ids, levels=("off",)))
     else:
         cells = list(enumerate_cells(instrument, models, replicates=replicates, liar_model_ids=liar_ids, levels=levels))
 
-    est = estimate_cost(instrument, models, cells, liar_only=(run_mode == "smoke"))
+    probe_locked = run_locks().get("trace_probe", {}).get("locked", True)
+    est = estimate_cost(instrument, models, cells, liar_only=(run_mode == "smoke"),
+                        include_trace_probe=not probe_locked)
     print("instrument hashes:")
     for k, v in instrument.hashes.items():
         print(f"  {k:9s} {v}")

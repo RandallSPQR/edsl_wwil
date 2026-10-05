@@ -1,7 +1,8 @@
-"""Cell enumeration and the --dry-run cost estimate.
+"""Model classes, cell enumeration, the --dry-run cost estimate, and run gates.
 
-Nothing in this module calls a model. Execution (Phase 2 --pilot, Phase 3 full
-run) is added after the cost estimate is approved.
+Nothing in this module calls a model. models.json holds every class; a run works on
+one class at a time through select_class(), which returns a view whose liar_models
+and target_models are that class's.
 """
 
 from __future__ import annotations
@@ -34,10 +35,13 @@ class Cell:
     model_id: str
     model_family: str
     reasoning_level: str
-    reasoning: Dict           # OpenRouter unified `reasoning` request field for this level
+    reasoning: Optional[Dict]  # OpenRouter unified `reasoning` field for this level; None = not sent
     max_output_tokens: int
     temperature: float        # fixed per family, identical at every level
     replicate: int
+    provider: Optional[Dict] = None   # OpenRouter provider routing (pin), None = default routing
+    system_role: bool = True          # False: private block folded into the user turn (Gemma)
+    class_id: str = ""
 
     @property
     def unit_key(self) -> tuple:
@@ -50,39 +54,73 @@ class Cell:
 
 
 def load_models(path: Optional[Path] = None) -> Dict:
+    """The whole models file, validated across every class. Use select_class() for a run."""
     models = json.loads((path or DATA_DIR / "models.json").read_text())
     validate_models(models)
     return models
 
 
+def select_class(models: Dict, class_id: str) -> Dict:
+    """A view of the models file for one class: liar_models and target_models are the
+    class's; graders, trace probe, token assumptions and prices are shared."""
+    if class_id not in models["classes"]:
+        raise ValueError(f"unknown class {class_id!r}; classes: {sorted(models['classes'])}")
+    c = models["classes"][class_id]
+    view = {k: v for k, v in models.items() if k != "classes"}
+    view.update(class_id=class_id, class_name=c.get("name"), class_status=c.get("status"),
+                liar_models=c["liar_models"], target_models=c["target_models"])
+    return view
+
+
+def _validate_liar(models: Dict, m: Dict) -> None:
+    if "temperature" not in m:
+        raise ValueError(f"{m['id']}: a single family-level temperature is required")
+    levels = m["levels"]
+    for name, lv in levels.items():
+        if "temperature" in lv:
+            raise ValueError(f"{m['id']}/{name}: temperature must not vary by reasoning level")
+    if "off" not in levels:
+        raise ValueError(f"{m['id']}: every family needs an `off` level (Tier 1)")
+    unknown = set(levels) - set(REASONING_LEVELS)
+    if unknown:
+        raise ValueError(f"{m['id']}: unknown reasoning levels {sorted(unknown)}")
+    for name, lv in levels.items():
+        if "reasoning" not in lv or "expected_thinking_tokens" not in lv or "max_output_tokens" not in lv:
+            raise ValueError(f"{m['id']}/{name}: level needs reasoning, expected_thinking_tokens, max_output_tokens")
+        if lv["max_output_tokens"] < lv["expected_thinking_tokens"] + models["reasoning_design"]["story_output_tokens"]:
+            raise ValueError(f"{m['id']}/{name}: max_output_tokens must exceed thinking + story")
+    off = levels["off"]["reasoning"]
+    if not m.get("reasoning_capable", True):
+        if off is not None or set(levels) != {"off"}:
+            raise ValueError(f"{m['id']}: a model without a reasoning mode has only `off`, with reasoning null")
+    elif m.get("true_off_available", False):
+        if off != {"enabled": False}:
+            raise ValueError(f"{m['id']}: true_off_available but off level is {off}")
+    elif not m.get("true_off_note"):
+        raise ValueError(f"{m['id']}: no true off level; document the exception in true_off_note")
+    if m.get("weights") == "open" and m.get("provider") and "bf16" not in (m["provider"].get("quantizations") or []):
+        raise ValueError(f"{m['id']}: an open-weight pin must require bf16 so pod replay matches")
+
+
 def validate_models(models: Dict) -> None:
-    for m in models["liar_models"]:
-        if "temperature" not in m:
-            raise ValueError(f"{m['id']}: a single family-level temperature is required")
-        levels = m["levels"]
-        for name, lv in levels.items():
-            if "temperature" in lv:
-                raise ValueError(f"{m['id']}/{name}: temperature must not vary by reasoning level")
-        if "off" not in levels:
-            raise ValueError(f"{m['id']}: every family needs an `off` level (Tier 1)")
-        unknown = set(levels) - set(REASONING_LEVELS)
-        if unknown:
-            raise ValueError(f"{m['id']}: unknown reasoning levels {sorted(unknown)}")
-        for name, lv in levels.items():
-            if "reasoning" not in lv or "expected_thinking_tokens" not in lv or "max_output_tokens" not in lv:
-                raise ValueError(f"{m['id']}/{name}: level needs reasoning, expected_thinking_tokens, max_output_tokens")
-            if lv["max_output_tokens"] < lv["expected_thinking_tokens"] + models["reasoning_design"]["story_output_tokens"]:
-                raise ValueError(f"{m['id']}/{name}: max_output_tokens must exceed thinking + story")
-        off = levels["off"]["reasoning"]
-        if m.get("true_off_available", False):
-            if off != {"enabled": False}:
-                raise ValueError(f"{m['id']}: true_off_available but off level is {off}")
-        elif not m.get("true_off_note"):
-            raise ValueError(f"{m['id']}: no true off level; document the exception in true_off_note")
+    for cid, c in models["classes"].items():
+        if c.get("status") not in ("proposed", "approved", "retired"):
+            raise ValueError(f"class {cid}: status must be proposed, approved or retired")
+        ids = [m["id"] for m in c["liar_models"]]
+        if len(ids) != len(set(ids)):
+            raise ValueError(f"class {cid}: duplicate liar ids")
+        for m in c["liar_models"]:
+            _validate_liar(models, m)
+        tids = [t["id"] for t in c["target_models"]]
+        if not set(ids) <= set(tids):
+            raise ValueError(f"class {cid}: every liar must also be a target (liar x target crossing)")
+        for t in c["target_models"]:
+            if "temperature" not in t or "max_output_tokens" not in t:
+                raise ValueError(f"{cid}/{t['id']}: target needs temperature and max_output_tokens")
     roles = [g["role"] for g in models["graders"]]
-    if roles.count("primary") != 1:
-        raise ValueError("exactly one grader must have role=primary")
-    for e in [models["target_model"], models.get("trace_probe") or {}] + list(models["graders"]):
+    if roles.count("primary") != 1 or len(roles) != len(set(roles)):
+        raise ValueError("graders need unique roles and exactly one role=primary")
+    for e in [models.get("trace_probe") or {}] + list(models["graders"]):
         if e and ("temperature" not in e or "max_output_tokens" not in e):
             raise ValueError(f"{e.get('id')}: temperature and max_output_tokens are required")
 
@@ -111,9 +149,13 @@ def enumerate_cells(
                                 prompt_id=row.prompt_id, category=cat_by_prompt[row.prompt_id],
                                 j1=row.j1, j2=row.j2, target_id=target_id, placebo_id=row.placebo,
                                 condition=condition, model_id=m["id"], model_family=m["family"],
-                                reasoning_level=level, reasoning=dict(lv["reasoning"]),
+                                reasoning_level=level,
+                                reasoning=dict(lv["reasoning"]) if lv["reasoning"] is not None else None,
                                 max_output_tokens=int(lv["max_output_tokens"]),
                                 temperature=float(m["temperature"]), replicate=replicate,
+                                provider=dict(m["provider"]) if m.get("provider") else None,
+                                system_role=bool(m.get("system_role", True)),
+                                class_id=models.get("class_id", ""),
                             )
 
 
@@ -165,11 +207,12 @@ def _usd(price: Dict, in_tok: int, out_tok: int) -> float:
     return in_tok / 1000 * price["usd_per_1k_input"] + out_tok / 1000 * price["usd_per_1k_output"]
 
 
-def estimate_cost(instrument: Instrument, models: Dict, cells: List[Cell], liar_only: bool = False) -> CostEstimate:
+def estimate_cost(instrument: Instrument, models: Dict, cells: List[Cell], liar_only: bool = False,
+                  include_trace_probe: bool = False) -> CostEstimate:
     ta = models["token_assumptions"]
     w2t = ta["words_to_tokens"]
     liar_by_id = {m["id"]: m for m in models["liar_models"]}
-    target = models["target_model"]
+    targets = models["target_models"]
     cat_by_prompt = {p.id: p.category for p in instrument.prompts}
     design_by_prompt = {r.prompt_id: r for r in instrument.design}
     story_out = ta["liar_output_tokens"]
@@ -217,7 +260,9 @@ def estimate_cost(instrument: Instrument, models: Dict, cells: List[Cell], liar_
     for (mid, _), line in liar_lines.items():
         line.usd = _usd(liar_by_id[mid], line.input_tokens, line.output_tokens)
 
-    target_line = CostLine("target", target["id"], len(cells), target_in, target_out, _usd(target, target_in, target_out))
+    # Every lie is read by every target in the class panel (liar family x target family).
+    target_lines = [CostLine(f"target[{t.get('family', '?')}]", t["id"], len(cells), target_in, target_out,
+                             _usd(t, target_in, target_out)) for t in targets]
     if liar_only:
         n_units = len({c.unit_key for c in cells})
         return CostEstimate(
@@ -231,7 +276,7 @@ def estimate_cost(instrument: Instrument, models: Dict, cells: List[Cell], liar_
         out = grader_out + len(cells) * g.get("expected_thinking_tokens", 0)
         grader_lines.append(CostLine(f"grader[{g['role']}]", g["id"], len(cells), grader_in, out, _usd(g, grader_in, out)))
     tp = models.get("trace_probe")
-    if tp and trace_cells:
+    if include_trace_probe and tp and trace_cells:
         tin = trace_cells * ta["trace_probe_input_tokens"]
         tout = trace_cells * ta["trace_probe_output_tokens"]
         grader_lines.append(CostLine("trace_probe", tp["id"], trace_cells, tin, tout, _usd(tp, tin, tout)))
@@ -239,7 +284,7 @@ def estimate_cost(instrument: Instrument, models: Dict, cells: List[Cell], liar_
     n_units = len({c.unit_key for c in cells})
     return CostEstimate(
         n_cells=len(cells), n_units=n_units, n_cells_by_tier=dict(sorted(tier_counts.items())),
-        gameplay=list(liar_lines.values()) + [target_line], grader=grader_lines,
+        gameplay=list(liar_lines.values()) + target_lines, grader=grader_lines,
         price_source=models.get("price_source", ""), price_fetched_at=models.get("price_fetched_at"),
     )
 
@@ -278,8 +323,14 @@ class PreflightError(RuntimeError):
 
 
 def priced_entries(models: Dict) -> List[Dict]:
-    return list(models["liar_models"]) + [models["target_model"]] + list(models["graders"]) \
-        + ([models["trace_probe"]] if models.get("trace_probe") else [])
+    """Every priced entry: for the whole file, all classes; for a class view, that class."""
+    if "classes" in models:
+        classes = list(models["classes"].values())
+        liars = [m for c in classes for m in c["liar_models"]]
+        targets = [t for c in classes for t in c["target_models"]]
+    else:
+        liars, targets = list(models["liar_models"]), list(models["target_models"])
+    return liars + targets + list(models["graders"]) + ([models["trace_probe"]] if models.get("trace_probe") else [])
 
 
 def preflight(models: Dict, prompts_raw: Dict, mode: str, env: Optional[Dict] = None) -> List[str]:
@@ -294,6 +345,9 @@ def preflight(models: Dict, prompts_raw: Dict, mode: str, env: Optional[Dict] = 
     if mode == "dry-run":
         return problems
     env = os.environ if env is None else env
+    if mode in ("pilot", "full") and models.get("class_status") != "approved":
+        problems.append(f"class {models.get('class_id')} is {models.get('class_status')!r}; the owner must approve it "
+                        "(status 'approved' in models.json) before a pilot or full run. A smoke test may run on a proposed class.")
     key_var = models.get("env_key", "OPEN_ROUTER_API_KEY")
     if not env.get(key_var):
         misnamed = [n for n in ("OPENROUTER_API_KEY", "OPENROUTER_KEY", "OPEN_ROUTER_KEY") if env.get(n)]

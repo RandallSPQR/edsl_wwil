@@ -70,6 +70,63 @@ score establishes the arrow above.
 
 ## 3. Design
 
+### Model classes (proposed 2026-10-05, for owner review)
+
+The study runs in classes, old and cheap first, working up to the current state of the art.
+Each class mixes open-weight models with closed models of similar vintage and size. A class
+runs only after the owner sets its status to `approved` in `models.json`; a smoke test may run
+on a proposed class, because that is how a class is checked before approval.
+`python run_perfect_lie.py --classes` prints the current ladder.
+
+| class | name | open weights | closed |
+|---|---|---|---|
+| C1 | Small, 2024 to early 2025, non-thinking | Llama 3.1 8B Instruct (meta), Gemma 3 27B IT (google) | gpt-4o-mini (openai), gemini-2.5-flash-lite, thinking off (google) |
+| C2 | Mid-size, 2025, non-thinking | Llama 4 Maverick (meta), Qwen3 235B instruct 2507 (qwen), DeepSeek V3 0324 (deepseek) | gpt-4.1-mini, claude-haiku-4.5 thinking off, gemini-2.5-flash thinking off |
+| C3 | Frontier 2025 with reasoning tier | DeepSeek V3.1 | gpt-5, claude-sonnet-4.5, gemini-2.5-flash (the original design; smoke-tested) |
+| C4 | Current state of the art, 2026 | Gemma 4 31B, Qwen3.8 27B | claude-opus-5.5, gpt-5.6-sol, gemini-3.8-flash, grok-4.7 |
+
+- **C1's open pair is the owner's choice:** probes exist for both. Each is pinned to a bf16
+  provider (Llama: CoreWeave, Gemma: Novita) with fallbacks off, so the lies come from the
+  same weights the pod replays. A response from any other provider is refused.
+- **No Anthropic model of C1's size or age is still served** on OpenRouter (the oldest is
+  claude-sonnet-4, May 2025). Anthropic enters at C2.
+- **Google appears open and closed in C1** (Gemma and Gemini), which gives a same-lab
+  open-versus-closed comparison.
+- **The Gemma line runs through C1 and C4** (Gemma 3 27B, Gemma 4 31B), the only open line
+  that spans the ladder.
+- **Reasoning tier:** only C3 and C4 have one. C1 and C2 are non-thinking, so Tier 1 only.
+  C4's reasoning levels are set from its smoke test before approval.
+
+### Cross-family analyses (approved 2026-10-05)
+
+Both are descriptive; neither changes T or the primary test.
+
+1. **Liar family × target family (trace selectivity).** Every liar in a class is also a target
+   model, and every lie is read by the whole target panel, plus one anchor target
+   (gpt-4.1-mini) held fixed across classes so acceptance compares between classes. The lie is
+   generated once per cell; only the reading is crossed, so the cost is target calls only.
+   Reported as the acceptance matrix at family and model level, and the same-family minus
+   other-family difference (`scoring.acceptance_crossing`).
+2. **Grader family × liar family (self-preference).** A fixed panel grades every lie: Claude
+   Sonnet 4.5 (primary, preregistered for T), gpt-5, gemini-2.5-flash (thinking off), and
+   Llama 4 Maverick. For each grader and liar family: cues marked per lie and disagreement
+   with the leave-one-out majority of the other graders (`scoring.grader_self_preference`).
+   Self-preference is a grader whose numbers move on its own lab's lies. In C1 the primary
+   grader has no same-family liar, so the check runs through the other three graders.
+
+### Delivery and replay (open weights)
+
+- **Gemma has no system role.** For Gemma (as liar or target) the private block is folded
+  into the single user turn exactly as Gemma 3's chat template places a system message:
+  system text, a blank line, then the public prompt byte for byte. Every other model receives
+  the private block as a system message. Invariant 1 holds for both (tested): the public text
+  is identical across conditions. The delivery difference is a stated property of the family.
+- **Replay contract.** Every liar record stores the exact messages delivered, the served
+  provider, the pin, and OpenRouter's generation id. `--export-replay RUN_DIR` writes the
+  open-weight lies with their HF checkpoint ids, so the pod teacher-forces the same sequence
+  through the same weights and reads activations. Steering (§3 of the steering track) runs on
+  the pod.
+
 ### Why a reasoning tier
 Tier 1 alone answers "does B̂ⱼ enter the policy?". The tier answers "what governs whether
 it enters?", and each outcome means something different:
@@ -316,7 +373,11 @@ against the hypothesis, and pilot-tuned stimuli are never described as untouched
 - [x] Review round 3: pipeline written (`runner.py`: liar → target → both cue graders → trace probe, stage-by-stage checkpoint in `records.jsonl`, atomic `manifest.json`, resume refuses if instrument or model hashes changed, runtime spend cap); `scoring.py` (T, saturation, co-firing, lexical D_cos, acceptance, fabricability); grader and trace-probe calls with strict parsing and cache-bypassing retries; local execution forced; run namespace in the cache key; temperature fixed per family; P6 and `direct_quotation` wording fixed
 
 ### Phase 2 — instrument development (days 4–7)
-- [ ] `--refresh-prices` (needs network access to openrouter.ai, no key). Every live mode refuses until it has run
+- [x] `--refresh-prices` run 2026-10-05 for all four classes (19 model ids; both bf16 pins confirmed servable)
+- [x] Smoke test on C3 (44 lies, liar stage only): every check passes (results committed)
+- [ ] **Owner review of the class ladder** (§3 Model classes); approve C1
+- [ ] `--smoke --class C1` (16 lies, under $0.01): pins honoured, Gemma fold delivered, no refusals
+- [ ] `--pilot --class C1` (192 lies, every liar at off, both cross-family readings, four graders)
 - [ ] `--smoke`: 4 liar cells per family × level (44 lies). `--score` on the smoke run flags: reasoning tokens at a true `off`; no reasoning tokens at `low`/`high` (field ignored); `high` not above `low`; `finish_reason=length` (thinking ate the story); completion tokens above the cap (`max_completion_tokens` not respected); trace kind per family (expect `summary` or `encrypted` from gpt-5, so its trace-probe sample may be thin); any lie failing the viability screen. Fix and rerun before the pilot
 - [ ] `--pilot`: pilot liar (`models.json` → `pilot_liar`, claude-sonnet-4.5 at off), 1 replicate, all prompts/pairs/conditions (48 lies), every stage
 - [x] `grader.py`: rubric prompt over the global ontology; outputs full cue vector + confidence as JSON
@@ -444,6 +505,14 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
    OpenRouter id `openai/gpt-5` does not match EDSL's reasoning-model list). *Resolution:*
    one temperature per family in `models.json`, 1.0 for every liar family, identical at
    every level (tested).
+15. **Gemma has no system role** (found 2026-10-05). Providers handle a system message for
+   Gemma differently or reject it. *Resolution:* the private block is folded into the user
+   turn by us, exactly as the chat template would, and the delivered messages are recorded.
+16. **OpenRouter serves open weights at mixed precision** (fp8 and int4 alongside bf16).
+   Lies from a quantized provider would not match the pod's weights. *Resolution:* open-weight
+   liars are pinned to a bf16 provider with fallbacks off; validation rejects an open-weight
+   pin without bf16; `--refresh-prices` confirms each pin has a matching endpoint; the runner
+   refuses any response whose served provider is outside the pin.
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.
 

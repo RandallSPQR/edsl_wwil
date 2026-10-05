@@ -12,7 +12,7 @@ import os
 import re
 import time
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from functools import wraps
 
 from edsl import Agent, Model, QuestionFreeText
@@ -850,11 +850,19 @@ class PerfectLieCallError(RuntimeError):
     """A live call returned no usable answer."""
 
 
+def fold_system_into_user(system_prompt: str, user_prompt: str) -> str:
+    """How Gemma 3's chat template delivers a system message: prepended to the first user
+    turn, separated by a blank line. Doing it ourselves makes the delivered text exact and
+    recorded, instead of depending on each provider's handling of a system role."""
+    return f"{system_prompt}\n\n{user_prompt}" if system_prompt else user_prompt
+
+
 def _perfect_lie_build_job(user_prompt: str, system_prompt: str, model_name: str,
                            temperature: float, replicate: int, service_name: str,
                            question_name: str = "story", skip_api_key_check: bool = False,
                            reasoning: Optional[Dict] = None, max_output_tokens: Optional[int] = None,
-                           role: str = "liar", run_namespace: str = "", attempt: int = 0):
+                           role: str = "liar", run_namespace: str = "", attempt: int = 0,
+                           provider: Optional[Dict] = None, system_role: bool = True):
     """Build (but do not run) the EDSL job for one call and verify its rendered prompts.
 
     reasoning: OpenRouter's unified `reasoning` request field for this cell's budget level
@@ -886,20 +894,39 @@ def _perfect_lie_build_job(user_prompt: str, system_prompt: str, model_name: str
         model.parameters["attempt"] = attempt
     if reasoning is not None:
         model.parameters["reasoning"] = dict(reasoning)
+    if provider:
+        model.parameters["provider"] = dict(provider)
 
-    traits = dict(PERFECT_LIE_ROLE_TRAITS[role])
-    agent = Agent(traits=traits, instruction=system_prompt)
-    question = QuestionFreeText(question_text=user_prompt, question_name=question_name)
-    job = question.by(agent).by(model)
+    if system_role:
+        traits = dict(PERFECT_LIE_ROLE_TRAITS[role])
+        agent = Agent(traits=traits, instruction=system_prompt)
+        question = QuestionFreeText(question_text=user_prompt, question_name=question_name)
+        job = question.by(agent).by(model)
+        expected_user = user_prompt
+    else:
+        # No system role (Gemma): one user turn, private block first, exactly as the model's
+        # chat template would place a system message. No agent, so EDSL sends no system message.
+        expected_user = fold_system_into_user(system_prompt, user_prompt)
+        question = QuestionFreeText(question_text=expected_user, question_name=question_name)
+        job = question.by(model)
 
     rendered = job.prompts().to_dicts()[0]
     rendered_user = str(rendered["user_prompt"])
     rendered_system = str(rendered["system_prompt"])
-    if rendered_user != user_prompt:
-        raise PrivateBlockChannelError("rendered user prompt differs from the public prompt E_t")
-    if not rendered_system.startswith(system_prompt):
+    if rendered_user != expected_user:
+        raise PrivateBlockChannelError("rendered user prompt differs from what this model must receive")
+    if system_role and not rendered_system.startswith(system_prompt):
         raise PrivateBlockChannelError("rendered system prompt does not begin with the private block")
+    if not system_role and rendered_system != "":
+        raise PrivateBlockChannelError("a model without a system role must receive no system message")
     return job, rendered_user, rendered_system
+
+
+def delivered_messages(rendered_user: str, rendered_system: str) -> List[Dict[str, str]]:
+    """The chat messages EDSL sends (it drops an empty system message). Stored with every
+    call so the pod can replay the exact sequence through the same weights."""
+    msgs = [{"role": "system", "content": rendered_system}] if rendered_system else []
+    return msgs + [{"role": "user", "content": rendered_user}]
 
 
 def _perfect_lie_parse_results(results, question_name: str) -> Dict:
@@ -923,10 +950,13 @@ def _perfect_lie_parse_results(results, question_name: str) -> Dict:
             finish_reason = choices[0].get("finish_reason")
     trace, trace_kind = _perfect_lie_extract_trace_from_raw(raw)
     generation_id = raw.get("id") if isinstance(raw, dict) else None
+    served_provider = raw.get("provider") if isinstance(raw, dict) else None
     return {"text": text, "raw": raw, "usage": usage, "finish_reason": finish_reason,
             "thinking_trace": trace, "thinking_trace_kind": trace_kind,
             # OpenRouter's id for this call; GET /api/v1/generation?id=... returns its billed cost.
-            "generation_id": generation_id}
+            "generation_id": generation_id,
+            # Which upstream provider OpenRouter used; checked against the pin.
+            "served_provider": served_provider}
 
 
 def _perfect_lie_extract_trace_from_raw(raw) -> Tuple[Optional[str], Optional[str]]:
@@ -975,29 +1005,33 @@ class PerfectLieAdapter:
     def render(self, user_prompt: str, system_prompt: str, model_name: str,
                temperature: float, replicate: int, skip_api_key_check: bool = True,
                reasoning: Optional[Dict] = None, max_output_tokens: Optional[int] = None,
-               role: str = "liar") -> Dict:
+               role: str = "liar", provider: Optional[Dict] = None, system_role: bool = True) -> Dict:
         """Return the exact prompts and request parameters EDSL would send, without calling any model."""
         job, u, s = _perfect_lie_build_job(user_prompt, system_prompt, model_name, temperature, replicate,
                                            self.service_name, skip_api_key_check=skip_api_key_check,
-                                           reasoning=reasoning, max_output_tokens=max_output_tokens, role=role)
+                                           reasoning=reasoning, max_output_tokens=max_output_tokens, role=role,
+                                           provider=provider, system_role=system_role)
         model = job.models[0]
         params = {"model": model_name, "messages": [], "max_completion_tokens": getattr(model, "max_tokens", None),
                   "logprobs": False, "top_logprobs": 3}
         if hasattr(model, "_filter_parameters_for_service"):
             params = model._filter_parameters_for_service(params)
-        return {"user_prompt": u, "system_prompt": s, "request_params": params}
+        return {"user_prompt": u, "system_prompt": s, "request_params": params,
+                "delivered_messages": delivered_messages(u, s)}
 
     async def acall(self, *, role: str, user_prompt: str, system_prompt: str, model_name: str,
                     temperature: float, replicate: int, run_namespace: str,
                     reasoning: Optional[Dict] = None, max_output_tokens: Optional[int] = None,
-                    attempt: int = 0, cache=None) -> Dict:
+                    attempt: int = 0, cache=None, provider: Optional[Dict] = None,
+                    system_role: bool = True) -> Dict:
         """Run one live call locally. Never invoked by --dry-run or by the offline tests' render paths."""
         qname = {"liar": "story", "target": "verdict", "grader": "annotation", "trace_probe": "probe"}[role]
         job, u, s = _perfect_lie_build_job(user_prompt, system_prompt, model_name, temperature, replicate,
                                            self.service_name, question_name=qname, reasoning=reasoning,
                                            max_output_tokens=max_output_tokens, role=role,
                                            run_namespace=run_namespace, attempt=attempt,
-                                           skip_api_key_check=self.service_name is None)
+                                           skip_api_key_check=self.service_name is None,
+                                           provider=provider, system_role=system_role)
         start = time.time()
         kwargs = dict(PERFECT_LIE_RUN_FLAGS)
         if cache is not None:
@@ -1011,7 +1045,8 @@ class PerfectLieAdapter:
             "model": model_name, "temperature": temperature, "replicate": replicate,
             "reasoning": reasoning, "max_output_tokens": max_output_tokens,
             "attempt": attempt, "run_namespace": run_namespace,
-            "system_prompt": s, "user_prompt": u,
+            "system_prompt": s, "user_prompt": u, "delivered_messages": delivered_messages(u, s),
+            "provider_pin": provider, "system_role": system_role,
         })
         return out
 

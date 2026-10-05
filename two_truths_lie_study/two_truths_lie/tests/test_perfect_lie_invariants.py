@@ -23,6 +23,16 @@ def instrument():
     return load_instrument()
 
 
+def _models(class_id="C3", approved=False):
+    """A class view of models.json. C3 is the reasoning-tier class most tests were written for."""
+    import json
+    from src.perfect_lie.pipeline import load_models, select_class
+    view = json.loads(json.dumps(select_class(load_models(), class_id)))
+    if approved:
+        view["class_status"] = "approved"
+    return view
+
+
 def _category(instrument, prompt_id):
     return next(p.category for p in instrument.prompts if p.id == prompt_id)
 
@@ -329,9 +339,9 @@ def _verified(models, skip_one=False):
 def test_live_runs_gate_on_key_prices_and_fabricability():
     import json
     from src.perfect_lie import DATA_DIR
-    from src.perfect_lie.pipeline import load_models, preflight
+    from src.perfect_lie.pipeline import preflight
     from src.perfect_lie.pipeline import priced_entries
-    models = json.loads(json.dumps(load_models()))
+    models = json.loads(json.dumps(_models()))
     # Start from an unverified copy regardless of the committed file's state.
     models["price_fetched_at"] = None
     models["price_source"] = "UNVERIFIED"
@@ -345,24 +355,27 @@ def test_live_runs_gate_on_key_prices_and_fabricability():
         problems = preflight(models, prompts, mode, env={})
         assert any("OPEN_ROUTER_API_KEY" in x for x in problems), mode
         assert any("UNVERIFIED" in x for x in problems), mode
-    assert preflight(_verified(models), prompts, "pilot", env=key) == []
+    # A smoke test may run on a proposed class; a pilot needs the owner's approval.
     assert preflight(_verified(models), prompts, "smoke", env=key) == []
+    assert any("must approve" in x for x in preflight(_verified(models), prompts, "pilot", env=key))
+    approved = dict(_verified(models), class_status="approved")
+    assert preflight(approved, prompts, "pilot", env=key) == []
     # Full additionally needs fabricability evidence for all six prompts.
     assert sum("fabricability" in x for x in preflight(_verified(models), prompts, "full", env=key)) == 6
     ok_prompts = {"prompts": [dict(p, fabricability={"status": "verified_in_pilot", "evidence": "pilot_x: 8/8"})
                               for p in prompts["prompts"]]}
-    assert preflight(_verified(models), ok_prompts, "full", env=key) == []
+    assert preflight(approved, ok_prompts, "full", env=key) == []
     # A file-level timestamp does not excuse an entry without its own stamp.
-    problems = preflight(_verified(models, skip_one=True), ok_prompts, "full", env=key)
+    problems = preflight(dict(_verified(models, skip_one=True), class_status="approved"), ok_prompts, "full", env=key)
     assert len(problems) == 1 and "price_verified_at" in problems[0]
 
 
 # ---------------------------------------------------------------- reasoning tier
 
 def _cells(levels=None, replicates=(1, 2, 3, 4, 5)):
-    from src.perfect_lie.pipeline import REASONING_LEVELS, enumerate_cells, load_models
+    from src.perfect_lie.pipeline import REASONING_LEVELS, enumerate_cells
     ins = load_instrument()
-    models = load_models()
+    models = _models()
     return list(enumerate_cells(ins, models, replicates=replicates, levels=levels or REASONING_LEVELS)), models
 
 
@@ -604,8 +617,10 @@ def test_viability_screen():
 class FakeAdapter:
     """Stands in for PerfectLieAdapter: returns well-formed answers, records every call."""
 
-    def __init__(self, instrument, fail_liar_once_for=None, malformed_grader_first=False, liar_tokens=500):
+    def __init__(self, instrument, fail_liar_once_for=None, malformed_grader_first=False, liar_tokens=500,
+                 serve_wrong_provider=False):
         self.calls = []
+        self.serve_wrong_provider = serve_wrong_provider
         self.cue_ids = [c.id for c in instrument.cues]
         self.fail_liar_once_for = fail_liar_once_for
         self.malformed_grader_first = malformed_grader_first
@@ -613,10 +628,23 @@ class FakeAdapter:
         self._failed = set()
 
     async def acall(self, *, role, user_prompt, system_prompt, model_name, temperature, replicate,
-                    run_namespace, reasoning=None, max_output_tokens=None, attempt=0, cache=None):
+                    run_namespace, reasoning=None, max_output_tokens=None, attempt=0, cache=None,
+                    provider=None, system_role=True):
         import json
         self.calls.append({"role": role, "user_prompt": user_prompt, "system_prompt": system_prompt,
-                           "attempt": attempt, "namespace": run_namespace})
+                           "attempt": attempt, "namespace": run_namespace, "model": model_name,
+                           "provider": provider, "system_role": system_role})
+        served = (provider.get("only") or [None])[0] if provider else "SomeProvider"
+        if self.serve_wrong_provider and provider:
+            served = "SomewhereElse"
+        res = await self._answer(role, user_prompt, system_prompt, attempt)
+        res["served_provider"] = served
+        res["delivered_messages"] = ([{"role": "system", "content": system_prompt}] if system_role else []) + \
+            [{"role": "user", "content": user_prompt if system_role else f"{system_prompt}\n\n{user_prompt}"}]
+        return res
+
+    async def _answer(self, role, user_prompt, system_prompt, attempt):
+        import json
         usage = {"prompt_tokens": 1000, "completion_tokens": 100, "reasoning_tokens": 0}
         if role == "liar":
             if self.fail_liar_once_for and self.fail_liar_once_for in system_prompt and system_prompt not in self._failed:
@@ -642,15 +670,14 @@ class FakeAdapter:
 def _pilot_cells(instrument, models, n=None):
     from src.perfect_lie.pipeline import enumerate_cells
     cells = list(enumerate_cells(instrument, models, replicates=(1,),
-                                 liar_model_ids=[models["pilot_liar"]["id"]], levels=("off",)))
+                                 liar_model_ids=[models["liar_models"][0]["id"]], levels=("off",)))
     return cells[:n] if n else cells
 
 
 def test_runner_end_to_end_records_manifest_and_resume(instrument, tmp_path):
     import asyncio, json
-    from src.perfect_lie.pipeline import load_models
     from src.perfect_lie.runner import Run, load_records
-    models = load_models()
+    models = _models()
     cells = _pilot_cells(instrument, models, n=8)
     fake = FakeAdapter(instrument, malformed_grader_first=True)
     run = Run(mode="pilot", run_dir=tmp_path / "pilot", cells=cells, instrument=instrument, models=models,
@@ -662,7 +689,9 @@ def test_runner_end_to_end_records_manifest_and_resume(instrument, tmp_path):
     recs = load_records(tmp_path / "pilot")
     assert len(recs) == 8 and all(r["status"] == "complete" for r in recs)
     r = recs[0]
-    assert set(r["grades"]) == {"primary", "secondary"} and r["target"]["accept"] is True
+    assert set(r["grades"]) == {g["role"] for g in models["graders"]}
+    assert set(r["targets"]) == {t["id"] for t in models["target_models"]}
+    assert all(t["accept"] is True for t in r["targets"].values())
     assert r.get("trace_probe") is None  # locked, and reasoning off: no probe
     # A malformed grader answer was retried with a new attempt id, not served from cache.
     assert any(c["role"] == "grader" and c["attempt"] == 1 for c in fake.calls)
@@ -676,9 +705,8 @@ def test_runner_end_to_end_records_manifest_and_resume(instrument, tmp_path):
 
 def test_runner_retries_failed_cells_on_resume_without_repaying(instrument, tmp_path):
     import asyncio
-    from src.perfect_lie.pipeline import load_models
     from src.perfect_lie.runner import Run, load_records
-    models = load_models()
+    models = _models()
     cells = [c for c in _pilot_cells(instrument, models) if c.condition == "full"][:2]
     fake = FakeAdapter(instrument, fail_liar_once_for="PRIVATE NOTE")
     mk = lambda: Run(mode="pilot", run_dir=tmp_path / "r", cells=cells, instrument=instrument, models=models,
@@ -693,9 +721,8 @@ def test_runner_retries_failed_cells_on_resume_without_repaying(instrument, tmp_
 
 def test_runner_refuses_resume_after_instrument_change(instrument, tmp_path):
     import asyncio, json
-    from src.perfect_lie.pipeline import load_models
     from src.perfect_lie.runner import Run
-    models = load_models()
+    models = _models()
     cells = _pilot_cells(instrument, models, n=1)
     asyncio.run(Run(mode="pilot", run_dir=tmp_path / "x", cells=cells, instrument=instrument, models=models,
                     adapter=FakeAdapter(instrument), spend_cap_usd=100.0).run())
@@ -708,9 +735,8 @@ def test_runner_refuses_resume_after_instrument_change(instrument, tmp_path):
 
 def test_runner_stops_scheduling_at_spend_cap(instrument, tmp_path):
     import asyncio
-    from src.perfect_lie.pipeline import load_models
     from src.perfect_lie.runner import Run
-    models = load_models()
+    models = _models()
     cells = _pilot_cells(instrument, models, n=10)
     fake = FakeAdapter(instrument)
     mf = asyncio.run(Run(mode="pilot", run_dir=tmp_path / "cap", cells=cells, instrument=instrument, models=models,
@@ -720,9 +746,9 @@ def test_runner_stops_scheduling_at_spend_cap(instrument, tmp_path):
 
 def test_smoke_report_flags_ignored_reasoning_and_truncation(instrument, tmp_path):
     import asyncio
-    from src.perfect_lie.pipeline import load_models, smoke_cells
+    from src.perfect_lie.pipeline import smoke_cells
     from src.perfect_lie.runner import Run, load_records, smoke_report
-    models = load_models()
+    models = _models()
     cells = smoke_cells(instrument, models, per_level=2)
     assert {(c.model_id, c.reasoning_level) for c in cells} == {
         (m["id"], lv) for m in models["liar_models"] for lv in m["levels"]}
@@ -736,11 +762,11 @@ def test_smoke_report_flags_ignored_reasoning_and_truncation(instrument, tmp_pat
 
 
 def test_preflight_names_the_common_misnamed_key():
-    from src.perfect_lie.pipeline import load_models, preflight
+    from src.perfect_lie.pipeline import preflight
     import json
     from src.perfect_lie import DATA_DIR
     prompts = json.loads((DATA_DIR / "prompts.json").read_text())
-    problems = preflight(load_models(), prompts, "pilot", env={"OPENROUTER_API_KEY": "sk-or-v1-x"})
+    problems = preflight(_models(), prompts, "pilot", env={"OPENROUTER_API_KEY": "sk-or-v1-x"})
     assert any("rename it" in p for p in problems)
 
 
@@ -821,9 +847,9 @@ def test_full_mode_refused_while_locked(monkeypatch, capsys):
 def test_trace_probe_never_called_while_locked(instrument, tmp_path):
     """A thinking-level cell with a trace must not reach the trace probe while it is locked."""
     import asyncio
-    from src.perfect_lie.pipeline import enumerate_cells, load_models
+    from src.perfect_lie.pipeline import enumerate_cells
     from src.perfect_lie.runner import Run, load_records
-    models = load_models()
+    models = _models()
     cells = [c for c in enumerate_cells(instrument, models, replicates=(1,), levels=("high",))][:2]
     fake = FakeAdapter(instrument)
     asyncio.run(Run(mode="pilot", run_dir=tmp_path / "tp", cells=cells, instrument=instrument, models=models,
@@ -834,9 +860,8 @@ def test_trace_probe_never_called_while_locked(instrument, tmp_path):
 
 def test_failed_call_is_charged_and_billed_delta_caps_spend(instrument, tmp_path):
     import asyncio
-    from src.perfect_lie.pipeline import load_models
     from src.perfect_lie.runner import Run
-    models = load_models()
+    models = _models()
     cells = [c for c in _pilot_cells(instrument, models) if c.condition == "full"][:1]
     fake = FakeAdapter(instrument, fail_liar_once_for="PRIVATE NOTE")
     mf = asyncio.run(Run(mode="pilot", run_dir=tmp_path / "f", cells=cells, instrument=instrument, models=models,
@@ -855,3 +880,153 @@ def test_edsl_timeout_raised_before_edsl_import():
     src = open(run_perfect_lie.__file__).read()
     assert 'setdefault("EDSL_API_TIMEOUT"' in src
     assert src.index('setdefault("EDSL_API_TIMEOUT"') < src.index("from src.edsl_adapter import")
+
+
+# ---------------------------------------------------------------- classes, pins, cross-family (2026-10-05)
+
+def test_class1_open_pair_is_owner_choice_pinned_to_bf16():
+    m = _models("C1")
+    by = {x["id"]: x for x in m["liar_models"]}
+    for mid, hf in (("meta-llama/llama-3.1-8b-instruct", "meta-llama/Llama-3.1-8B-Instruct"),
+                    ("google/gemma-3-27b-it", "google/gemma-3-27b-it")):
+        assert by[mid]["weights"] == "open" and by[mid]["hf_checkpoint"] == hf
+        assert by[mid]["provider"]["quantizations"] == ["bf16"] and by[mid]["provider"]["allow_fallbacks"] is False
+    assert by["google/gemma-3-27b-it"]["system_role"] is False
+
+
+def test_every_class_crosses_liars_with_targets_and_proposed_classes_cannot_pilot():
+    from src.perfect_lie.pipeline import load_models
+    full = load_models()
+    for cid, c in full["classes"].items():
+        assert {m["id"] for m in c["liar_models"]} <= {t["id"] for t in c["target_models"]}, cid
+    assert all(c["status"] == "proposed" for c in full["classes"].values()), "no class is approved yet"
+
+
+def test_validation_rejects_open_pin_without_bf16():
+    import json
+    from src.perfect_lie.pipeline import load_models, validate_models
+    m = json.loads(json.dumps(load_models()))
+    m["classes"]["C1"]["liar_models"][0]["provider"]["quantizations"] = ["fp8"]
+    with pytest.raises(ValueError):
+        validate_models(m)
+
+
+def test_gemma_receives_private_block_folded_into_one_user_turn(instrument):
+    """No system role: one user message, private block first, then the public prompt byte for
+    byte. The public part is identical across conditions (invariant 1 for the folded channel)."""
+    pytest.importorskip("edsl")
+    os.environ["EDSL_RUNNING_IN_PYTEST"] = "True"
+    from src.edsl_adapter import PerfectLieAdapter
+    ad = PerfectLieAdapter(service_name="open_router")
+    row = instrument.design[0]
+    cat = _category(instrument, row.prompt_id)
+    pin = {"only": ["novita"], "quantizations": ["bf16"], "allow_fallbacks": False}
+    publics = set()
+    for cond in CONDITIONS:
+        lp = build_liar_prompts(cond, row, row.j1, instrument.personas, cat)
+        r = ad.render(lp.user_prompt, lp.system_prompt, "google/gemma-3-27b-it", 1.0, replicate=1,
+                      provider=pin, system_role=False)
+        msgs = r["delivered_messages"]
+        assert len(msgs) == 1 and msgs[0]["role"] == "user"
+        assert msgs[0]["content"] == lp.system_prompt + "\n\n" + lp.user_prompt
+        publics.add(msgs[0]["content"][len(lp.system_prompt) + 2:])
+        assert r["request_params"]["extra_body"]["provider"] == pin
+    assert len(publics) == 1
+
+
+def test_provider_pin_reaches_openrouter_request_body():
+    """The real OpenAI client, mock transport: the pin must be in the JSON body."""
+    pytest.importorskip("edsl")
+    import asyncio, json
+    import httpx, openai
+    os.environ["EDSL_RUNNING_IN_PYTEST"] = "True"
+    from src.edsl_adapter import _perfect_lie_build_job
+    from edsl.inference_services.services.open_ai_service import OpenAIParameterBuilder
+    captured = {}
+
+    def handler(request):
+        captured["body"] = json.loads(request.content)
+        return httpx.Response(200, json={"id": "gen-1", "object": "chat.completion", "created": 0, "model": "m",
+                                         "provider": "CoreWeave",
+                                         "choices": [{"index": 0, "finish_reason": "stop",
+                                                      "message": {"role": "assistant", "content": "s"}}],
+                                         "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2}})
+
+    pin = {"only": ["coreweave"], "quantizations": ["bf16"], "allow_fallbacks": False}
+    job, _, _ = _perfect_lie_build_job("U", "S", "meta-llama/llama-3.1-8b-instruct", 1.0, 1, "open_router",
+                                       skip_api_key_check=True, max_output_tokens=1500, provider=pin)
+    m = job.models[0]
+    params = OpenAIParameterBuilder.build_params(model=m.model, messages=[{"role": "user", "content": "U"}],
+                                                 temperature=m.temperature, max_tokens=m.max_tokens, top_p=m.top_p,
+                                                 frequency_penalty=m.frequency_penalty, presence_penalty=m.presence_penalty,
+                                                 logprobs=m.logprobs, top_logprobs=m.top_logprobs)
+    params = m._filter_parameters_for_service(params)
+    client = openai.AsyncOpenAI(api_key="x", base_url="https://openrouter.test/api/v1",
+                                http_client=httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+    resp = asyncio.run(client.chat.completions.create(**params))
+    assert captured["body"]["provider"] == pin and "reasoning" not in captured["body"]
+    assert resp.model_dump().get("provider") == "CoreWeave"  # survives into the stored raw response
+
+
+def _c1_cells(instrument, n):
+    from src.perfect_lie.pipeline import enumerate_cells
+    m = _models("C1")
+    return m, list(enumerate_cells(instrument, m, replicates=(1,), levels=("off",)))[:n]
+
+
+def test_runner_refuses_lie_from_unpinned_provider(instrument, tmp_path):
+    import asyncio
+    from src.perfect_lie.runner import Run, load_records
+    m, cells = _c1_cells(instrument, 40)
+    cells = [c for c in cells if c.model_id == "google/gemma-3-27b-it"][:2]
+    asyncio.run(Run(mode="pilot", run_dir=tmp_path / "pin", cells=cells, instrument=instrument, models=m,
+                    adapter=FakeAdapter(instrument, serve_wrong_provider=True), spend_cap_usd=100.0).run())
+    recs = load_records(tmp_path / "pin")
+    assert all(r["status"] == "error" and "ProviderPinError" in r["errors"][-1]["error"] for r in recs)
+
+
+def test_class1_run_crosses_targets_and_records_replay_fields(instrument, tmp_path):
+    import asyncio, json
+    from src.perfect_lie.runner import Run, load_records
+    from src.perfect_lie import scoring
+    m, cells = _c1_cells(instrument, 40)
+    fake = FakeAdapter(instrument)
+    asyncio.run(Run(mode="pilot", run_dir=tmp_path / "c1", cells=cells, instrument=instrument, models=m,
+                    adapter=fake, spend_cap_usd=100.0, concurrency=4).run())
+    recs = load_records(tmp_path / "c1")
+    assert recs and all(r["status"] == "complete" for r in recs)
+    gemma = [r for r in recs if r["model_id"] == "google/gemma-3-27b-it"]
+    assert gemma and all(len(r["liar_delivered_messages"]) == 1 and r["liar_served_provider"] == "novita" for r in gemma)
+    assert all(set(r["targets"]) == {t["id"] for t in m["target_models"]} for r in recs)
+    # Gemma as a target also gets its persona folded into the user turn.
+    assert any(c["role"] == "target" and c["model"] == "google/gemma-3-27b-it" and c["system_role"] is False
+               for c in fake.calls)
+    cross = scoring.acceptance_crossing(recs, "family")
+    assert "meta -> meta" in cross["matrix"] and "google -> google" in cross["matrix"]
+    assert cross["summary"]["diagonal_n"] > 0 and cross["summary"]["off_diagonal_n"] > 0
+    # Replay export: open-weight lies only, with the exact messages and the HF checkpoint.
+    import run_perfect_lie
+    (tmp_path / "c1" / "manifest.json").write_text(json.dumps(dict(json.loads((tmp_path / "c1" / "manifest.json").read_text()))))
+    run_perfect_lie.export_replay(tmp_path / "c1")
+    rows = [json.loads(l) for l in (tmp_path / "c1" / "replay.jsonl").read_text().splitlines()]
+    assert rows and {r["hf_checkpoint"] for r in rows} <= {"meta-llama/Llama-3.1-8B-Instruct", "google/gemma-3-27b-it"}
+    assert all(r["messages"] and r["completion"] for r in rows)
+
+
+def test_grader_self_preference_flags_a_grader_lenient_on_its_own_family():
+    from src.perfect_lie.scoring import grader_self_preference
+    cues = ["a", "b", "c", "d"]
+    graders = [{"role": "primary", "family": "anthropic"}, {"role": "google", "family": "google"},
+               {"role": "meta", "family": "meta"}]
+    recs = []
+    for fam in ("google", "meta", "openai"):
+        for _ in range(5):
+            base = {"a": True, "b": False, "c": False, "d": False}
+            grades = {g["role"]: {"cues": dict(base)} for g in graders}
+            if fam == "google":  # the google grader marks everything on google lies
+                grades["google"]["cues"] = {c: True for c in cues}
+            recs.append({"status": "complete", "model_family": fam, "grades": grades})
+    rows = {(r["grader"], r["liar_family"]): r for r in grader_self_preference(recs, cues, graders)}
+    assert rows[("google", "google")]["own_family"] is True
+    assert rows[("google", "google")]["disagreement_with_others"] == 0.75
+    assert rows[("google", "meta")]["disagreement_with_others"] == 0.0

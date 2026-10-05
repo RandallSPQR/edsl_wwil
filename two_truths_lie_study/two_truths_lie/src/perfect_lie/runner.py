@@ -35,6 +35,19 @@ from .pipeline import Cell
 from .scoring import parse_target_output
 
 STAGES = ("liar", "target", "graders", "trace_probe")
+
+
+class ProviderPinError(RuntimeError):
+    """OpenRouter served a call from a provider outside the pin (wrong weights for replay)."""
+
+
+def check_pin(pin: Optional[Dict], served: Optional[str], label: str) -> None:
+    """Fail closed: a pinned call must report a provider inside the pin."""
+    if not pin:
+        return
+    allowed = {x.lower() for x in (pin.get("only") or pin.get("order") or [])}
+    if not served or served.lower() not in allowed:
+        raise ProviderPinError(f"{label}: served by {served!r}, pin allows {sorted(allowed)}")
 MAX_PARSE_ATTEMPTS = 3
 
 
@@ -144,7 +157,8 @@ class Run:
             "liar_models": sorted({c.model_id for c in self.cells}),
             "reasoning_levels": sorted({c.reasoning_level for c in self.cells}),
             "replicates": sorted({c.replicate for c in self.cells}),
-            "target_model": self.models["target_model"]["id"],
+            "class_id": self.models.get("class_id"), "class_status": self.models.get("class_status"),
+            "target_models": [t["id"] for t in self.models["target_models"]],
             "graders": [g["id"] for g in self.models["graders"]],
             "trace_probe": (self.models.get("trace_probe") or {}).get("id"),
             "stages": list(self.stages),
@@ -264,17 +278,24 @@ class Run:
             out = await self.adapter.acall(role="liar", user_prompt=lp.user_prompt, system_prompt=lp.system_prompt,
                                            model_name=cell.model_id, temperature=cell.temperature,
                                            replicate=cell.replicate, run_namespace=self.namespace,
-                                           reasoning=cell.reasoning, max_output_tokens=cell.max_output_tokens)
+                                           reasoning=cell.reasoning, max_output_tokens=cell.max_output_tokens,
+                                           provider=cell.provider, system_role=cell.system_role)
         except Exception:
             await self._charge_failed_call(self.liar_by_id[cell.model_id], cell.max_output_tokens, rec)
             raise
         cost = await self._charge(self.liar_by_id[cell.model_id], out["usage"])
+        rec["cost_usd"] = rec.get("cost_usd", 0.0) + cost
+        check_pin(cell.provider, out.get("served_provider"), f"liar {cell.model_id}")
         rec.update(lie=out["text"], user_prompt=lp.user_prompt, liar_system_prompt=lp.system_prompt,
                    liar_usage=out["usage"], liar_finish_reason=out["finish_reason"],
                    liar_latency_ms=out.get("latency_ms"), lie_words=len((out["text"] or "").split()),
                    thinking_trace=out.get("thinking_trace"), thinking_trace_kind=out.get("thinking_trace_kind"),
-                   liar_generation_id=out.get("generation_id"))
-        rec["cost_usd"] = rec.get("cost_usd", 0.0) + cost
+                   liar_generation_id=out.get("generation_id"),
+                   liar_served_provider=out.get("served_provider"), liar_provider_pin=cell.provider,
+                   liar_system_role=cell.system_role,
+                   # Exactly what the model received, for replay through the same weights on the pod.
+                   liar_delivered_messages=out.get("delivered_messages"),
+                   liar_rendered_system_prompt=out.get("system_prompt"))
 
     async def _call_parsed(self, *, role: str, entry: Dict, system_prompt: str, user_prompt: str,
                            parse, rec: Dict, label: str):
@@ -286,8 +307,11 @@ class Run:
                                            model_name=entry["id"], temperature=entry["temperature"],
                                            replicate=1, run_namespace=self.namespace,
                                            reasoning=entry.get("reasoning"),
-                                           max_output_tokens=entry.get("max_output_tokens"), attempt=attempt)
+                                           max_output_tokens=entry.get("max_output_tokens"), attempt=attempt,
+                                           provider=entry.get("provider"),
+                                           system_role=entry.get("system_role", True))
             rec["cost_usd"] = rec.get("cost_usd", 0.0) + await self._charge(entry, out["usage"])
+            check_pin(entry.get("provider"), out.get("served_provider"), f"{label} {entry['id']}")
             try:
                 return parse(out["text"]), out, attempt
             except ValueError as e:
@@ -296,11 +320,18 @@ class Run:
         raise ValueError(f"{label}: no well-formed answer after {MAX_PARSE_ATTEMPTS} attempts: {last_err}")
 
     async def _target(self, cell: Cell, rec: Dict) -> None:
-        t = self.models["target_model"]
-        parsed, out, attempt = await self._call_parsed(
-            role="target", entry=t, system_prompt=target_system_prompt(self.instrument.personas[cell.target_id]),
-            user_prompt=target_user_prompt(rec["lie"]), parse=parse_target_output, rec=rec, label="target")
-        rec["target"] = {**parsed, "raw": out["text"], "attempt": attempt, "usage": out["usage"]}
+        """Every target model in the class panel reads the same lie (liar family x target family)."""
+        targets = dict(rec.get("targets") or {})
+        for t in self.models["target_models"]:
+            if t["id"] in targets:
+                continue  # resumed: this target already answered
+            parsed, out, attempt = await self._call_parsed(
+                role="target", entry=t, system_prompt=target_system_prompt(self.instrument.personas[cell.target_id]),
+                user_prompt=target_user_prompt(rec["lie"]), parse=parse_target_output, rec=rec, label="target")
+            targets[t["id"]] = {**parsed, "family": t.get("family"), "raw": out["text"], "attempt": attempt,
+                                "usage": out["usage"], "served_provider": out.get("served_provider")}
+            rec["targets"] = targets
+        rec["targets"] = targets
 
     async def _graders(self, rec: Dict) -> None:
         cue_order = [c.id for c in self.instrument.cues]
