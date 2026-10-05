@@ -272,7 +272,8 @@ class Run:
         rec.update(lie=out["text"], user_prompt=lp.user_prompt, liar_system_prompt=lp.system_prompt,
                    liar_usage=out["usage"], liar_finish_reason=out["finish_reason"],
                    liar_latency_ms=out.get("latency_ms"), lie_words=len((out["text"] or "").split()),
-                   thinking_trace=out.get("thinking_trace"), thinking_trace_kind=out.get("thinking_trace_kind"))
+                   thinking_trace=out.get("thinking_trace"), thinking_trace_kind=out.get("thinking_trace_kind"),
+                   liar_generation_id=out.get("generation_id"))
         rec["cost_usd"] = rec.get("cost_usd", 0.0) + cost
 
     async def _call_parsed(self, *, role: str, entry: Dict, system_prompt: str, user_prompt: str,

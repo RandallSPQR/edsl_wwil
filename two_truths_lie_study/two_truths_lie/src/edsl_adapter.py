@@ -922,8 +922,11 @@ def _perfect_lie_parse_results(results, question_name: str) -> Dict:
         if choices and isinstance(choices[0], dict):
             finish_reason = choices[0].get("finish_reason")
     trace, trace_kind = _perfect_lie_extract_trace_from_raw(raw)
+    generation_id = raw.get("id") if isinstance(raw, dict) else None
     return {"text": text, "raw": raw, "usage": usage, "finish_reason": finish_reason,
-            "thinking_trace": trace, "thinking_trace_kind": trace_kind}
+            "thinking_trace": trace, "thinking_trace_kind": trace_kind,
+            # OpenRouter's id for this call; GET /api/v1/generation?id=... returns its billed cost.
+            "generation_id": generation_id}
 
 
 def _perfect_lie_extract_trace_from_raw(raw) -> Tuple[Optional[str], Optional[str]]:
