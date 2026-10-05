@@ -1,7 +1,7 @@
 {
   "version": "0.4-phase1",
-  "price_source": "UNVERIFIED \u2014 entered from memory on 2026-09-15. openrouter.ai is denied by the build environment's network policy (CONNECT 403) and no OPEN_ROUTER_API_KEY was present. Run `python run_perfect_lie.py --refresh-prices` from a machine with OpenRouter access before Phase 2; it overwrites usd_per_1k_* from GET https://openrouter.ai/api/v1/models, checks every id exists, and records the fetch date.",
-  "price_fetched_at": null,
+  "price_source": "openrouter.ai/api/v1/models",
+  "price_fetched_at": "2026-10-05T16:21:17+00:00",
   "service": "open_router",
   "env_key": "OPEN_ROUTER_API_KEY",
   "reasoning_design": {
@@ -45,13 +45,27 @@
           "max_output_tokens": 16000
         }
       },
-      "temperature": 1.0
+      "temperature": 1.0,
+      "price_verified_at": "2026-10-05T16:21:17+00:00",
+      "openrouter_supported_parameters": [
+        "include_reasoning",
+        "max_completion_tokens",
+        "max_tokens",
+        "reasoning",
+        "reasoning_effort",
+        "response_format",
+        "seed",
+        "structured_outputs",
+        "tool_choice",
+        "tools",
+        "verbosity"
+      ]
     },
     {
       "family": "anthropic",
       "id": "anthropic/claude-sonnet-4.5",
       "usd_per_1k_input": 0.003,
-      "usd_per_1k_output": 0.015,
+      "usd_per_1k_output": 0.015000000000000001,
       "true_off_available": true,
       "levels": {
         "off": {
@@ -76,7 +90,22 @@
           "max_output_tokens": 10000
         }
       },
-      "temperature": 1.0
+      "temperature": 1.0,
+      "price_verified_at": "2026-10-05T16:21:17+00:00",
+      "openrouter_supported_parameters": [
+        "include_reasoning",
+        "max_completion_tokens",
+        "max_tokens",
+        "reasoning",
+        "response_format",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_k",
+        "top_p"
+      ]
     },
     {
       "family": "google",
@@ -107,13 +136,27 @@
           "max_output_tokens": 10000
         }
       },
-      "temperature": 1.0
+      "temperature": 1.0,
+      "price_verified_at": "2026-10-05T16:21:17+00:00",
+      "openrouter_supported_parameters": [
+        "include_reasoning",
+        "max_tokens",
+        "reasoning",
+        "response_format",
+        "seed",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_p"
+      ]
     },
     {
       "family": "open",
       "id": "deepseek/deepseek-chat-v3.1",
-      "usd_per_1k_input": 0.0002,
-      "usd_per_1k_output": 0.0008,
+      "usd_per_1k_input": 0.00025,
+      "usd_per_1k_output": 0.00095,
       "true_off_available": true,
       "levels_note": "Hybrid thinking model with an on/off switch but no budget control, so it has two levels. `high` is used for the on state so that it aligns with the other families' upper level; there is no `low`.",
       "levels": {
@@ -132,31 +175,80 @@
           "max_output_tokens": 10000
         }
       },
-      "temperature": 1.0
+      "temperature": 1.0,
+      "price_verified_at": "2026-10-05T16:21:17+00:00",
+      "openrouter_supported_parameters": [
+        "frequency_penalty",
+        "include_reasoning",
+        "logit_bias",
+        "logprobs",
+        "max_tokens",
+        "min_p",
+        "presence_penalty",
+        "reasoning",
+        "repetition_penalty",
+        "response_format",
+        "seed",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_k",
+        "top_logprobs",
+        "top_p"
+      ]
     }
   ],
   "target_model": {
     "id": "openai/gpt-4.1-mini",
-    "usd_per_1k_input": 0.0004,
-    "usd_per_1k_output": 0.0016,
+    "usd_per_1k_input": 0.00039999999999999996,
+    "usd_per_1k_output": 0.0015999999999999999,
     "note": "One fixed non-thinking target for every cell so target gullibility does not vary with liar family or budget. Tertiary measure only.",
     "temperature": 0.0,
     "max_output_tokens": 300,
-    "reasoning": null
+    "reasoning": null,
+    "price_verified_at": "2026-10-05T16:21:17+00:00",
+    "openrouter_supported_parameters": [
+      "max_completion_tokens",
+      "max_tokens",
+      "response_format",
+      "seed",
+      "structured_outputs",
+      "temperature",
+      "tool_choice",
+      "tools",
+      "top_p"
+    ]
   },
   "graders": [
     {
       "role": "primary",
       "id": "anthropic/claude-sonnet-4.5",
       "usd_per_1k_input": 0.003,
-      "usd_per_1k_output": 0.015,
+      "usd_per_1k_output": 0.015000000000000001,
       "reasoning": {
         "enabled": false
       },
       "temperature": 0.0,
       "expected_thinking_tokens": 0,
       "note": "Preregistered cue grader. Non-thinking, temperature 0. Blind by construction (grader.py). Shares a family with one liar; the secondary grader is the robustness check.",
-      "max_output_tokens": 2000
+      "max_output_tokens": 2000,
+      "price_verified_at": "2026-10-05T16:21:17+00:00",
+      "openrouter_supported_parameters": [
+        "include_reasoning",
+        "max_completion_tokens",
+        "max_tokens",
+        "reasoning",
+        "response_format",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_k",
+        "top_p"
+      ]
     },
     {
       "role": "secondary",
@@ -169,19 +261,48 @@
       "temperature": 1.0,
       "expected_thinking_tokens": 150,
       "note": "Same rubric, same 2,640 lies. Reported as inter-grader agreement and as a re-analysis of T; never pooled with the primary. Temperature 1.0 because gpt-5 accepts no other value.",
-      "max_output_tokens": 4000
+      "max_output_tokens": 4000,
+      "price_verified_at": "2026-10-05T16:21:17+00:00",
+      "openrouter_supported_parameters": [
+        "include_reasoning",
+        "max_completion_tokens",
+        "max_tokens",
+        "reasoning",
+        "reasoning_effort",
+        "response_format",
+        "seed",
+        "structured_outputs",
+        "tool_choice",
+        "tools",
+        "verbosity"
+      ]
     }
   ],
   "trace_probe": {
     "id": "anthropic/claude-sonnet-4.5",
     "usd_per_1k_input": 0.003,
-    "usd_per_1k_output": 0.015,
+    "usd_per_1k_output": 0.015000000000000001,
     "note": "Secondary process measure on thinking-tier lies whose provider returns a trace: does the trace refer to the audience's beliefs? Separate blind pass; the trace never enters the cue grader (invariant 5).",
     "temperature": 0.0,
     "reasoning": {
       "enabled": false
     },
-    "max_output_tokens": 400
+    "max_output_tokens": 400,
+    "price_verified_at": "2026-10-05T16:21:17+00:00",
+    "openrouter_supported_parameters": [
+      "include_reasoning",
+      "max_completion_tokens",
+      "max_tokens",
+      "reasoning",
+      "response_format",
+      "stop",
+      "structured_outputs",
+      "temperature",
+      "tool_choice",
+      "tools",
+      "top_k",
+      "top_p"
+    ]
   },
   "alternatives_considered": {
     "open": [
