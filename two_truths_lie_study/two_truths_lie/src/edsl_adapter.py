@@ -862,7 +862,8 @@ def _perfect_lie_build_job(user_prompt: str, system_prompt: str, model_name: str
                            question_name: str = "story", skip_api_key_check: bool = False,
                            reasoning: Optional[Dict] = None, max_output_tokens: Optional[int] = None,
                            role: str = "liar", run_namespace: str = "", attempt: int = 0,
-                           provider: Optional[Dict] = None, system_role: bool = True):
+                           provider: Optional[Dict] = None, system_role: bool = True,
+                           draw_key: str = ""):
     """Build (but do not run) the EDSL job for one call and verify its rendered prompts.
 
     reasoning: OpenRouter's unified `reasoning` request field for this cell's budget level
@@ -888,6 +889,12 @@ def _perfect_lie_build_job(user_prompt: str, system_prompt: str, model_name: str
     else:
         model = Model(model_name, **model_kwargs)
     model.parameters["replicate"] = replicate
+    # draw_key separates draws whose prompts are identical by design: in `none` and
+    # `placebo` the liar sees the same input for both targets of a pair, and without this
+    # the second lie is the first one served from cache (found in the C1 pilot: all 48
+    # such units held one lie twice, forcing T = 0). Cache-key only; never sent.
+    if draw_key:
+        model.parameters["draw"] = draw_key
     if run_namespace:
         model.parameters["run_namespace"] = run_namespace
     if attempt:
@@ -1023,7 +1030,7 @@ class PerfectLieAdapter:
                     temperature: float, replicate: int, run_namespace: str,
                     reasoning: Optional[Dict] = None, max_output_tokens: Optional[int] = None,
                     attempt: int = 0, cache=None, provider: Optional[Dict] = None,
-                    system_role: bool = True) -> Dict:
+                    system_role: bool = True, draw_key: str = "") -> Dict:
         """Run one live call locally. Never invoked by --dry-run or by the offline tests' render paths."""
         qname = {"liar": "story", "target": "verdict", "grader": "annotation", "trace_probe": "probe"}[role]
         job, u, s = _perfect_lie_build_job(user_prompt, system_prompt, model_name, temperature, replicate,
@@ -1031,7 +1038,8 @@ class PerfectLieAdapter:
                                            max_output_tokens=max_output_tokens, role=role,
                                            run_namespace=run_namespace, attempt=attempt,
                                            skip_api_key_check=self.service_name is None,
-                                           provider=provider, system_role=system_role)
+                                           provider=provider, system_role=system_role,
+                                           draw_key=draw_key)
         start = time.time()
         kwargs = dict(PERFECT_LIE_RUN_FLAGS)
         if cache is not None:

@@ -279,7 +279,8 @@ class Run:
                                            model_name=cell.model_id, temperature=cell.temperature,
                                            replicate=cell.replicate, run_namespace=self.namespace,
                                            reasoning=cell.reasoning, max_output_tokens=cell.max_output_tokens,
-                                           provider=cell.provider, system_role=cell.system_role)
+                                           provider=cell.provider, system_role=cell.system_role,
+                                           draw_key=f"target={cell.target_id}")
         except Exception:
             await self._charge_failed_call(self.liar_by_id[cell.model_id], cell.max_output_tokens, rec)
             raise

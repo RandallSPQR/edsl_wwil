@@ -629,11 +629,12 @@ class FakeAdapter:
 
     async def acall(self, *, role, user_prompt, system_prompt, model_name, temperature, replicate,
                     run_namespace, reasoning=None, max_output_tokens=None, attempt=0, cache=None,
-                    provider=None, system_role=True):
+                    provider=None, system_role=True, draw_key=""):
         import json
         self.calls.append({"role": role, "user_prompt": user_prompt, "system_prompt": system_prompt,
                            "attempt": attempt, "namespace": run_namespace, "model": model_name,
-                           "provider": provider, "system_role": system_role})
+                           "provider": provider, "system_role": system_role, "draw_key": draw_key,
+                           "replicate": replicate})
         served = (provider.get("only") or [None])[0] if provider else "SomeProvider"
         if self.serve_wrong_provider and provider:
             served = "SomewhereElse"
@@ -1031,3 +1032,40 @@ def test_grader_self_preference_flags_a_grader_lenient_on_its_own_family():
     assert rows[("google", "google")]["own_family"] is True
     assert rows[("google", "google")]["disagreement_with_others"] == 0.75
     assert rows[("google", "meta")]["disagreement_with_others"] == 0.0
+
+
+
+def test_both_lies_of_a_unit_are_independent_draws_in_none_and_placebo(instrument):
+    """C1 pilot bug: in `none` and `placebo` both targets of a pair give the liar identical
+    input, so the second lie came from cache and T was forced to 0. The two lies of a unit
+    must have different cache keys, and actually be two executions."""
+    pytest.importorskip("edsl")
+    import asyncio
+    os.environ["EDSL_RUNNING_IN_PYTEST"] = "True"
+    from edsl import Cache
+    from src.edsl_adapter import PerfectLieAdapter
+    row = instrument.design[0]
+    cat = _category(instrument, row.prompt_id)
+    ad, cache = PerfectLieAdapter(service_name=None), Cache()
+    for cond in ("none", "placebo"):
+        lps = [build_liar_prompts(cond, row, t, instrument.personas, cat) for t in row.targets]
+        assert lps[0].system_prompt == lps[1].system_prompt and lps[0].user_prompt == lps[1].user_prompt
+        before = len(cache)
+        for t, lp in zip(row.targets, lps):
+            asyncio.run(ad.acall(role="liar", user_prompt=lp.user_prompt, system_prompt=lp.system_prompt,
+                                 model_name="test", temperature=1.0, replicate=1, run_namespace="pilot",
+                                 cache=cache, draw_key=f"target={t}"))
+        assert len(cache) - before == 2, f"{cond}: the two lies of a unit collapsed into one cached draw"
+
+
+def test_runner_passes_a_distinct_draw_key_per_target(instrument, tmp_path):
+    import asyncio
+    from src.perfect_lie.runner import Run
+    m = _models()
+    cells = [c for c in _pilot_cells(instrument, m) if c.condition == "none"][:2]
+    assert {c.target_id for c in cells} == set(instrument.design[0].targets)
+    fake = FakeAdapter(instrument)
+    asyncio.run(Run(mode="pilot", run_dir=tmp_path / "d", cells=cells, instrument=instrument, models=m,
+                    adapter=fake, spend_cap_usd=100.0).run())
+    keys = {c["draw_key"] for c in fake.calls if c["role"] == "liar"}
+    assert keys == {f"target={t}" for t in instrument.design[0].targets}
