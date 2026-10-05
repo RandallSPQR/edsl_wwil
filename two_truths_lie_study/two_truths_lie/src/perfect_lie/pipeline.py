@@ -7,6 +7,7 @@ run) is added after the cost estimate is approved.
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional
@@ -35,6 +36,7 @@ class Cell:
     reasoning_level: str
     reasoning: Dict           # OpenRouter unified `reasoning` request field for this level
     max_output_tokens: int
+    temperature: float        # fixed per family, identical at every level
     replicate: int
 
     @property
@@ -55,7 +57,12 @@ def load_models(path: Optional[Path] = None) -> Dict:
 
 def validate_models(models: Dict) -> None:
     for m in models["liar_models"]:
+        if "temperature" not in m:
+            raise ValueError(f"{m['id']}: a single family-level temperature is required")
         levels = m["levels"]
+        for name, lv in levels.items():
+            if "temperature" in lv:
+                raise ValueError(f"{m['id']}/{name}: temperature must not vary by reasoning level")
         if "off" not in levels:
             raise ValueError(f"{m['id']}: every family needs an `off` level (Tier 1)")
         unknown = set(levels) - set(REASONING_LEVELS)
@@ -75,6 +82,9 @@ def validate_models(models: Dict) -> None:
     roles = [g["role"] for g in models["graders"]]
     if roles.count("primary") != 1:
         raise ValueError("exactly one grader must have role=primary")
+    for e in [models["target_model"], models.get("trace_probe") or {}] + list(models["graders"]):
+        if e and ("temperature" not in e or "max_output_tokens" not in e):
+            raise ValueError(f"{e.get('id')}: temperature and max_output_tokens are required")
 
 
 def enumerate_cells(
@@ -102,7 +112,8 @@ def enumerate_cells(
                                 j1=row.j1, j2=row.j2, target_id=target_id, placebo_id=row.placebo,
                                 condition=condition, model_id=m["id"], model_family=m["family"],
                                 reasoning_level=level, reasoning=dict(lv["reasoning"]),
-                                max_output_tokens=int(lv["max_output_tokens"]), replicate=replicate,
+                                max_output_tokens=int(lv["max_output_tokens"]),
+                                temperature=float(m["temperature"]), replicate=replicate,
                             )
 
 
@@ -154,7 +165,7 @@ def _usd(price: Dict, in_tok: int, out_tok: int) -> float:
     return in_tok / 1000 * price["usd_per_1k_input"] + out_tok / 1000 * price["usd_per_1k_output"]
 
 
-def estimate_cost(instrument: Instrument, models: Dict, cells: List[Cell]) -> CostEstimate:
+def estimate_cost(instrument: Instrument, models: Dict, cells: List[Cell], liar_only: bool = False) -> CostEstimate:
     ta = models["token_assumptions"]
     w2t = ta["words_to_tokens"]
     liar_by_id = {m["id"]: m for m in models["liar_models"]}
@@ -207,6 +218,13 @@ def estimate_cost(instrument: Instrument, models: Dict, cells: List[Cell]) -> Co
         line.usd = _usd(liar_by_id[mid], line.input_tokens, line.output_tokens)
 
     target_line = CostLine("target", target["id"], len(cells), target_in, target_out, _usd(target, target_in, target_out))
+    if liar_only:
+        n_units = len({c.unit_key for c in cells})
+        return CostEstimate(
+            n_cells=len(cells), n_units=n_units, n_cells_by_tier=dict(sorted(tier_counts.items())),
+            gameplay=list(liar_lines.values()), grader=[],
+            price_source=models.get("price_source", ""), price_fetched_at=models.get("price_fetched_at"),
+        )
 
     grader_lines = []
     for g in models["graders"]:
@@ -264,24 +282,59 @@ def priced_entries(models: Dict) -> List[Dict]:
         + ([models["trace_probe"]] if models.get("trace_probe") else [])
 
 
-def preflight(models: Dict, prompts_raw: Dict, mode: str) -> List[str]:
-    """Return the list of unmet requirements for `mode` in {"dry-run", "pilot", "full"}.
+def preflight(models: Dict, prompts_raw: Dict, mode: str, env: Optional[Dict] = None) -> List[str]:
+    """Return the list of unmet requirements for `mode` in {"dry-run", "smoke", "pilot", "full"}.
 
-    The full run refuses while any price is unverified or any fact prompt lacks pilot
-    evidence of fabricability. Price verification is checked per entry, not only at the
-    file level, so a stale entry cannot hide behind a file-level timestamp.
+    Every live mode needs the OpenRouter key and verified prices (the runtime spend cap is
+    computed from them). The full run additionally needs pilot evidence that every fact
+    prompt fabricates. Price verification is checked per entry, not only at the file
+    level, so a stale entry cannot hide behind a file-level timestamp.
     """
     problems: List[str] = []
     if mode == "dry-run":
         return problems
+    env = os.environ if env is None else env
+    key_var = models.get("env_key", "OPEN_ROUTER_API_KEY")
+    if not env.get(key_var):
+        problems.append(f"{key_var} is not set in this environment")
+    if not models.get("price_fetched_at") or "UNVERIFIED" in str(models.get("price_source", "")):
+        problems.append("model prices are UNVERIFIED: run `run_perfect_lie.py --refresh-prices` first")
+    unverified = []
+    for e in priced_entries(models):
+        if not e.get("price_verified_at") and e["id"] not in unverified:
+            unverified.append(e["id"])
+    for mid in unverified:
+        problems.append(f"price for {mid!r} has no price_verified_at; refresh prices")
     if mode == "full":
-        if not models.get("price_fetched_at") or "UNVERIFIED" in str(models.get("price_source", "")):
-            problems.append("model prices are UNVERIFIED: run `run_perfect_lie.py --refresh-prices` first")
-        for e in priced_entries(models):
-            if not e.get("price_verified_at"):
-                problems.append(f"price for {e['id']!r} has no price_verified_at; refresh prices")
         for p in prompts_raw["prompts"]:
             fab = p.get("fabricability") or {}
             if fab.get("status") != "verified_in_pilot" or not fab.get("evidence"):
                 problems.append(f"prompt {p['id']!r}: fabricability not verified in pilot (status={fab.get('status')!r})")
     return problems
+
+
+SMOKE_CONDITIONS = ("full", "none", "placebo", "partial")
+
+
+def smoke_cells(instrument: Instrument, models: Dict, per_level: int = 4) -> List[Cell]:
+    """A few liar cells per family x level, on the first design row, replicate 1.
+
+    Conditions cycle full, none, placebo, partial so the longest private block is always
+    included and `none` lies feed the viability screen for every family.
+    """
+    row = instrument.design[0]
+    out: List[Cell] = []
+    all_cells = list(enumerate_cells(instrument, models, replicates=(1,)))
+    for m in models["liar_models"]:
+        for level in m["levels"]:
+            picked = 0
+            for cond in SMOKE_CONDITIONS * 2:
+                if picked >= per_level:
+                    break
+                target = row.targets[picked % 2]
+                match = [c for c in all_cells if c.prompt_id == row.prompt_id and c.model_id == m["id"]
+                         and c.reasoning_level == level and c.condition == cond and c.target_id == target]
+                if match and match[0] not in out:
+                    out.append(match[0])
+                    picked += 1
+    return out

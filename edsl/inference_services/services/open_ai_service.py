@@ -237,6 +237,11 @@ class OpenAIService(InferenceServiceABC):
                     reasoning = self.parameters.get("reasoning") if isinstance(self.parameters, dict) else None
                     if reasoning:
                         params["reasoning"] = dict(reasoning)
+                    # Do not send top_logprobs without logprobs: some upstream
+                    # providers reject the combination instead of ignoring it.
+                    if not params.get("logprobs"):
+                        params.pop("logprobs", None)
+                        params.pop("top_logprobs", None)
 
                 # Add additional service-specific filtering logic here as needed
                 # Example:

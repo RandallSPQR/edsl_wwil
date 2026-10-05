@@ -45,9 +45,10 @@ score establishes the arrow above.
    *Test:* serialize Eₜ for every condition of a fixed (prompt, pair, model, replicate); assert equality.
 
 2. **Placebo is yoked within each paired comparison.** For a given (prompt, pair, model,
-   replicate), both targets j₁ and j₂ receive the *same* irrelevant persona C in the placebo
+   replicate), both targets j₁ and j₂ receive the *same* third persona C in the placebo
    condition, with C ∉ {j₁, j₂}. Arbitrary sensitivity to private text can then move both
-   lies but cannot separate them by target identity.
+   lies but cannot separate them by target identity. C is a yoked control, not an irrelevant
+   one: it shares cues with a target in five of six pairs (table under Conditions).
    *Test:* for every pair, placebo private content is identical across j₁ and j₂ and names
    neither target's persona.
 
@@ -85,7 +86,8 @@ target".
   fabrication prompt as the existing TTAL fibber prompt (matched-prompt principle). The only
   addition is the private block described under Conditions.
 - **Target (j):** hears the story, states accept/reject and a confidence. Holds a persona.
-  The persona is not shown to the grader.
+  The persona is not shown to the grader. One fixed non-thinking model at temperature 0;
+  the answer is parsed strictly (exactly one VERDICT and one CONFIDENCE line).
 - **Grader (blind, larger model):** sees Eₜ plus the lie plus the global cue ontology.
   Outputs a cue vector cᵢ = (c₁, …, c_K) of booleans/counts and a confidence, as JSON.
   Non-thinking, temperature 0. Primary grader `anthropic/claude-sonnet-4.5` is
@@ -121,6 +123,24 @@ preregistration, neither its strongest nor weakest. Stored in `personas.json`. F
 | `full`    | all the target's beliefs |
 
 Placebo is length-matched to `full` (pad with neutral filler if persona lengths differ).
+
+**What the placebo shares with the targets.** C is not irrelevant to the targets. In five of
+six pairs it shares one to four cues with j₁ or j₂ (from `scoring.placebo_overlap`):
+
+| prompt | pair | C | shared with j₁ | shared with j₂ |
+|---|---|---|---|---|
+| science | P2/P3 | P5 | family_provenance, sensory_detail | direct_quotation |
+| history | P4/P5 | P1 | none | historical_anchor |
+| biology | P3/P4 | P6 | named_expert | emotional_appeal |
+| geography | P1/P2 | P4 | none | none |
+| technology | P5/P6 | P2 | family_provenance, sensory_detail | first_person_witness, humor |
+| culture | P6/P1 | P3 | named_expert | none |
+
+Because both lies in a pair receive the same C, a shared cue pushes C₁₁ and C₂₁ (or C₁₂ and
+C₂₂) together and cancels from T in expectation. It is not a bias. It does use up headroom:
+a cue already pushed by C under `placebo` has less room to move under `full`, so
+β_full is measured against a control that is partly on-target. The writeup describes C as a
+yoked control persona and reports this table.
 
 ### Factors and blocking
 - 6 fact prompts, reused from the TTAL fact database, chosen from those the baseline
@@ -252,13 +272,19 @@ against the hypothesis, and pilot-tuned stimuli are never described as untouched
   the Pydantic models, the fact database, and the existing fibber prompt.
 - Private block = liar's system prompt via EDSL agent traits. Eₜ = the survey/scenario text.
 - New modules only where existing ones don't fit: `personas.py`, `conditions.py`,
-  `grader.py`, `scoring.py`. Everything else inside existing files.
+  `grader.py`, `scoring.py`, `pipeline.py` (cells, cost, gates), `runner.py` (live
+  execution). Everything else inside existing files.
 - `design.json` holds the persona rotation table and the fixed placebo persona per pair.
   Generated once by a script, committed, never regenerated.
 - Results to JSON as before, one file per run, with a manifest (git SHA, model ids, replicates,
   cue/persona hashes, spend).
 - Tests for the four invariants (§2) before the pipeline.
-- Cost guard: `--dry-run` prints cell count and estimated spend; `--pilot` runs 1 model × 1 seed.
+- Cost guard: `--dry-run` prints cell count and estimated spend. Every live mode
+  (`--smoke`, `--pilot`, `--full`, `--resume`) refuses unless the OpenRouter key is set,
+  every price is verified, and `--confirm-spend` covers the estimate; it stops scheduling
+  new cells once actual spend reaches `--confirm-spend`.
+- Every live call runs locally (`PERFECT_LIE_RUN_FLAGS`): never through the Expected Parrot
+  proxy or remote execution, which would drop the `reasoning` field and the OpenRouter key.
 
 ---
 
@@ -268,7 +294,7 @@ against the hypothesis, and pilot-tuned stimuli are never described as untouched
 - [x] Read STUDY_DESIGN.md, FEATURE_ROADMAP.md, and the fibber prompt; list anything that conflicts with §2 and propose the smallest resolving change before coding
 - [x] Confirm OpenRouter key; resolve the four cheap model ids and the grader model id; log price per 1K tokens for each — *key not present in build env; model ids and UNVERIFIED prices in `data/perfect_lie/models.json`; run `--refresh-prices` before Phase 2*
 - [x] Pick 6 fact prompts the TTAL baseline already showed are fabricable — *per-category evasion data not in repo; all six baseline categories selected, see `prompts.json` notes*
-- [x] Put this file at repo root; link from README
+- [x] Put this file in the study directory (`two_truths_lie_study/PERFECT_LIE.md`, not the repo root); link from both READMEs
 
 ### Phase 1 — identification scaffolding (days 1–3)
 - [x] `cues.json`: global cue ontology, K ≈ 12–16, each with a one-line grader definition
@@ -287,11 +313,17 @@ against the hypothesis, and pilot-tuned stimuli are never described as untouched
 - [x] Test 5: thinking trace never reaches the cue grader
 - [x] Review round 1 (advisor): drop `(1|personaPair)` and `(1|replicate)` (prompt and pair confounded by design); grader parser fails closed on any non-boolean cue, non-integer count, out-of-range confidence, or key mismatch; `--refresh-prices` is atomic and stamps `price_verified_at` per entry, which `preflight` checks; pooled ordinal reasoning slope replaced by per-family contrasts
 
+- [x] Review round 3: pipeline written (`runner.py`: liar → target → both cue graders → trace probe, stage-by-stage checkpoint in `records.jsonl`, atomic `manifest.json`, resume refuses if instrument or model hashes changed, runtime spend cap); `scoring.py` (T, saturation, co-firing, lexical D_cos, acceptance, fabricability); grader and trace-probe calls with strict parsing and cache-bypassing retries; local execution forced; run namespace in the cache key; temperature fixed per family; P6 and `direct_quotation` wording fixed
+
 ### Phase 2 — instrument development (days 4–7)
-- [ ] `--pilot`: 1 model, 1 replicate, R = off, all prompts/pairs/conditions (48 lies); then a 16-lie thinking smoke test per family to confirm the `reasoning` field is honoured (trace returned or thinking tokens billed) and to measure thinking-token usage per level
-- [ ] `grader.py`: rubric prompt over the global ontology; outputs full cue vector + confidence as JSON
-- [ ] `scoring.py`: T from the 2×2 matrix; D_cos; acceptance
+- [ ] `--refresh-prices` (needs network access to openrouter.ai, no key). Every live mode refuses until it has run
+- [ ] `--smoke`: 4 liar cells per family × level (44 lies). `--score` on the smoke run flags: reasoning tokens at a true `off`; no reasoning tokens at `low`/`high` (field ignored); `high` not above `low`; `finish_reason=length` (thinking ate the story); completion tokens above the cap (`max_completion_tokens` not respected); trace kind per family (expect `summary` or `encrypted` from gpt-5, so its trace-probe sample may be thin); any lie failing the viability screen. Fix and rerun before the pilot
+- [ ] `--pilot`: pilot liar (`models.json` → `pilot_liar`, claude-sonnet-4.5 at off), 1 replicate, all prompts/pairs/conditions (48 lies), every stage
+- [x] `grader.py`: rubric prompt over the global ontology; outputs full cue vector + confidence as JSON
+- [x] `scoring.py`: T from the 2×2 matrix; D_cos (lexical stand-in until an embedding model is chosen); acceptance
 - [ ] Hand-check 30 grader outputs; if cue agreement < 85%, revise cue definitions or rubric
+- [ ] **Cross-pair co-firing** (`scoring.cofiring_report`, part of the hand-check): for each pair, how often a j₁ cue and a j₂ cue fire in the same lie. Known risks: `named_expert` (P6) with `institutional_authority` (P1) on culture ("Dr. X at Harvard"); `named_expert` (P6) with `direct_quotation` (P5) on technology. Co-firing moves C₁₁ and C₁₂ together and pulls T toward zero; tighten definitions or reassign beliefs before the freeze
+- [ ] Choose the embedding model for D_cos, or preregister the lexical version
 - [ ] Compute p₀(c) = P(c = 1 | none) for every cue on the pilot lies; flag cues with p₀ > 0.75 as saturated; if a persona loses a cue to saturation, replace the belief (not the cue's mapping) and re-check pair disjointness
 - [ ] **Fabricability gate.** For each of the 6 prompts, all pilot lies under `none` must be viable fabrications (no refusal, no breaking character, within the word range). A category that repeatedly fails is replaced, the replacement documented in `prompts.json`, and `fabricability.status` set to `verified_in_pilot` with evidence for all six. `--full` refuses to run otherwise
 - [ ] Run `--refresh-prices` from a machine that can reach openrouter.ai; `--full` refuses to run while prices are UNVERIFIED
@@ -386,15 +418,35 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
    the standard sampling fields. *Resolution:* a four-line addition to EDSL's
    `_filter_parameters_for_service` forwards `model.parameters["reasoning"]` for the
    `open_router` service; the adapter stores the level's payload there, so it also enters
-   the cache key. The output cap is sent as `max_tokens` from the level's
-   `max_output_tokens`. Whether OpenRouter honours the field for each provider is checked in
-   the Phase 2 thinking smoke test, not assumed.
-10. **Prices are from memory.** `--full` is gated on `--refresh-prices` having run: the
+   the cache key. The output cap is the level's `max_output_tokens`, which EDSL sends as
+   `max_completion_tokens`. Whether OpenRouter honours both fields for each provider is
+   checked in the Phase 2 smoke test, not assumed.
+10. **Prices are from memory.** Every live mode is gated on `--refresh-prices` having run: the
    file-level `price_fetched_at` must be set AND every priced entry (liars, target, graders,
    trace probe) must carry its own `price_verified_at`. The refresh is atomic: it writes
    nothing unless every model id resolves on OpenRouter, so a partial refresh cannot leave
    some entries on remembered prices behind a verified-looking file.
 
-Not conflicts, but recorded: EDSL sends `max_completion_tokens`, `logprobs`, and penalty
-parameters to every OpenRouter model; some providers reject these. Fix in
-`_filter_parameters_for_service` if the Phase 2 pilot shows it.
+11. **Live calls would have run on Expected Parrot's servers.** Found in review round 3.
+   The first live path passed `use_api_proxy=False` but left `disable_remote_inference` at
+   its default, which makes EDSL set `offload_execution=True`; with `EXPECTED_PARROT_API_KEY`
+   set, the whole job would run remotely, without the `reasoning` passthrough and without
+   the OpenRouter key, so every reasoning level would silently run at the provider default.
+   *Resolution:* one constant, `PERFECT_LIE_RUN_FLAGS`, passes `offload_execution=False` and
+   `disable_remote_inference=True` on every call. An integration test makes a real call
+   through the adapter with the Expected Parrot key set and remote execution trapped.
+12. **Pilot responses could leak into the full run through the cache.** A `none` cell has the
+   same prompts in pilot and full, so replicate 1 of the full run would have been served the
+   pilot's cached lie. *Resolution:* the run mode is a cache-key field (`run_namespace`);
+   retries after a malformed answer add an `attempt` field so they reach the model again.
+13. **Temperature would have changed with reasoning level.** Anthropic requires temperature 1
+   with thinking on, and gpt-5 accepts only 1, while EDSL sends whatever is set (the
+   OpenRouter id `openai/gpt-5` does not match EDSL's reasoning-model list). *Resolution:*
+   one temperature per family in `models.json`, 1.0 for every liar family, identical at
+   every level (tested).
+14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
+   headroom cost, and a wording correction for the writeup.
+
+Not conflicts, but recorded: EDSL sends `logprobs`, `top_logprobs`, and penalty parameters
+to every OpenRouter model. `top_logprobs` without `logprobs` is now dropped for the
+`open_router` service; penalties are left to the smoke test.
