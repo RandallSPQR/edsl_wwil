@@ -341,6 +341,11 @@ def main(argv=None) -> int:
     mode.add_argument("--refresh-prices", action="store_true", help="verify prices from OpenRouter into models.json")
     mode.add_argument("--check-env", action="store_true", help="check the OpenRouter key setup; never prints the key")
     mode.add_argument("--classes", action="store_true", help="list model classes and their status")
+    mode.add_argument("--invalidate", type=Path, metavar="RUN_DIR",
+                      help="mark cells for regeneration (filter with --conditions, --models, --status); no model calls")
+    ap.add_argument("--conditions", nargs="*", help="--invalidate: only these conditions")
+    ap.add_argument("--status", nargs="*", help="--invalidate: only cells whose current status is one of these")
+    ap.add_argument("--reason", default="", help="--invalidate: why, recorded in each record")
     mode.add_argument("--export-replay", type=Path, metavar="RUN_DIR", help="export open-weight lies for pod replay")
     ap.add_argument("--class", dest="class_id", default="C1", help="model class to run (default C1)")
     ap.add_argument("--tier", choices=sorted(TIERS), default="all", help="tier1 = reasoning off only; tier2 = low+high")
@@ -360,6 +365,16 @@ def main(argv=None) -> int:
         return list_classes()
     if args.export_replay:
         return export_replay(args.export_replay)
+    if args.invalidate:
+        from src.perfect_lie.runner import invalidate_cells
+        if not args.reason:
+            raise SystemExit("--invalidate needs --reason")
+        pred = lambda r: ((not args.conditions or r["condition"] in args.conditions)
+                          and (not args.models or r["model_id"] in args.models)
+                          and (not args.status or r.get("status") in args.status))
+        n = invalidate_cells(args.invalidate, pred, args.reason)
+        print(f"invalidated {n} cells in {args.invalidate}; regenerate with --resume")
+        return 0
     if args.refresh_prices:
         refresh_prices(models_path)
         return 0

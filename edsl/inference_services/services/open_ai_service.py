@@ -238,7 +238,7 @@ class OpenAIService(InferenceServiceABC):
                     # (thinking budget) and `provider` (routing, e.g. a bf16 pin). The
                     # OpenAI client rejects unknown keyword arguments, so they go through
                     # extra_body, which the client merges into the JSON request body.
-                    for field in ("reasoning", "provider"):
+                    for field in ("reasoning", "provider", "response_format"):
                         value = self.parameters.get(field) if isinstance(self.parameters, dict) else None
                         if value:
                             extra = dict(params.get("extra_body") or {})

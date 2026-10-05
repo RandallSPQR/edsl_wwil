@@ -863,7 +863,7 @@ def _perfect_lie_build_job(user_prompt: str, system_prompt: str, model_name: str
                            reasoning: Optional[Dict] = None, max_output_tokens: Optional[int] = None,
                            role: str = "liar", run_namespace: str = "", attempt: int = 0,
                            provider: Optional[Dict] = None, system_role: bool = True,
-                           draw_key: str = ""):
+                           draw_key: str = "", response_format: Optional[Dict] = None):
     """Build (but do not run) the EDSL job for one call and verify its rendered prompts.
 
     reasoning: OpenRouter's unified `reasoning` request field for this cell's budget level
@@ -903,6 +903,8 @@ def _perfect_lie_build_job(user_prompt: str, system_prompt: str, model_name: str
         model.parameters["reasoning"] = dict(reasoning)
     if provider:
         model.parameters["provider"] = dict(provider)
+    if response_format:
+        model.parameters["response_format"] = dict(response_format)
 
     if system_role:
         traits = dict(PERFECT_LIE_ROLE_TRAITS[role])
@@ -1030,7 +1032,8 @@ class PerfectLieAdapter:
                     temperature: float, replicate: int, run_namespace: str,
                     reasoning: Optional[Dict] = None, max_output_tokens: Optional[int] = None,
                     attempt: int = 0, cache=None, provider: Optional[Dict] = None,
-                    system_role: bool = True, draw_key: str = "") -> Dict:
+                    system_role: bool = True, draw_key: str = "",
+                    response_format: Optional[Dict] = None) -> Dict:
         """Run one live call locally. Never invoked by --dry-run or by the offline tests' render paths."""
         qname = {"liar": "story", "target": "verdict", "grader": "annotation", "trace_probe": "probe"}[role]
         job, u, s = _perfect_lie_build_job(user_prompt, system_prompt, model_name, temperature, replicate,
@@ -1039,7 +1042,7 @@ class PerfectLieAdapter:
                                            run_namespace=run_namespace, attempt=attempt,
                                            skip_api_key_check=self.service_name is None,
                                            provider=provider, system_role=system_role,
-                                           draw_key=draw_key)
+                                           draw_key=draw_key, response_format=response_format)
         start = time.time()
         kwargs = dict(PERFECT_LIE_RUN_FLAGS)
         if cache is not None:

@@ -29,7 +29,8 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from .conditions import build_liar_prompts, target_system_prompt, target_user_prompt
-from .grader import build_trace_probe_input, grader_input_from_record, parse_grader_output, RUBRIC_PREAMBLE, RUBRIC_OUTPUT
+from .grader import (build_trace_probe_input, grader_input_from_record, grader_response_format,
+                     parse_grader_output, RUBRIC_PREAMBLE, RUBRIC_OUTPUT)
 from .personas import Instrument, file_sha256
 from .pipeline import Cell
 from .scoring import parse_target_output
@@ -299,7 +300,7 @@ class Run:
                    liar_rendered_system_prompt=out.get("system_prompt"))
 
     async def _call_parsed(self, *, role: str, entry: Dict, system_prompt: str, user_prompt: str,
-                           parse, rec: Dict, label: str):
+                           parse, rec: Dict, label: str, response_format: Optional[Dict] = None):
         """Call and parse strictly; a malformed answer is retried with a new attempt id so the
         retry reaches the model instead of the cached malformed answer."""
         last_err = None
@@ -310,14 +311,17 @@ class Run:
                                            reasoning=entry.get("reasoning"),
                                            max_output_tokens=entry.get("max_output_tokens"), attempt=attempt,
                                            provider=entry.get("provider"),
-                                           system_role=entry.get("system_role", True))
+                                           system_role=entry.get("system_role", True),
+                                           response_format=response_format)
             rec["cost_usd"] = rec.get("cost_usd", 0.0) + await self._charge(entry, out["usage"])
             check_pin(entry.get("provider"), out.get("served_provider"), f"{label} {entry['id']}")
             try:
                 return parse(out["text"]), out, attempt
             except ValueError as e:
                 last_err = e
-                rec.setdefault("parse_failures", []).append({"call": label, "attempt": attempt, "error": str(e)[:500]})
+                rec.setdefault("parse_failures", []).append({
+                    "call": label, "attempt": attempt, "error": str(e)[:500],
+                    "finish_reason": out.get("finish_reason"), "raw_text": str(out.get("text"))[:1500]})
         raise ValueError(f"{label}: no well-formed answer after {MAX_PARSE_ATTEMPTS} attempts: {last_err}")
 
     async def _target(self, cell: Cell, rec: Dict) -> None:
@@ -341,8 +345,10 @@ class Run:
         for g in self.models["graders"]:
             parsed, out, attempt = await self._call_parsed(
                 role="grader", entry=g, system_prompt=gi.system_prompt, user_prompt=gi.user_prompt,
-                parse=lambda txt: parse_grader_output(txt, cue_order), rec=rec, label=f"grader[{g['role']}]")
-            grades[g["role"]] = {**parsed, "model": g["id"], "attempt": attempt, "usage": out["usage"]}
+                parse=lambda txt: parse_grader_output(txt, cue_order), rec=rec, label=f"grader[{g['role']}]",
+                response_format=grader_response_format(cue_order))
+            grades[g["role"]] = {**parsed, "model": g["id"], "attempt": attempt, "usage": out["usage"],
+                                 "output_format": "json_schema"}
         rec["grades"] = grades
 
     async def _trace_probe(self, rec: Dict) -> None:
@@ -439,3 +445,25 @@ def smoke_report(records: List[Dict], models: Dict) -> List[Dict]:
                 and hi["median_reasoning_tokens"] <= lo["median_reasoning_tokens"]:
             hi["flags"].append("high does not use more reasoning than low")
     return rows
+
+
+def invalidate_cells(run_dir: Path, predicate, reason: str) -> int:
+    """Mark matching cells for regeneration from the liar stage. Appends one record per cell
+    (append-only history; the last record wins on load), keeps the cell's cumulative cost so
+    the spend cap stays honest, and clears every downstream result."""
+    keep = ("prompt_id", "category", "j1", "j2", "target_id", "placebo_id", "condition", "model_id",
+            "model_family", "reasoning_level", "reasoning", "max_output_tokens", "temperature", "replicate",
+            "provider", "system_role", "class_id", "cell_id", "run_namespace", "mode")
+    n = 0
+    path = Path(run_dir) / "records.jsonl"
+    current = load_records(run_dir)
+    with path.open("a") as f:
+        for r in current:
+            if not predicate(r):
+                continue
+            new = {k: r[k] for k in keep if k in r}
+            new.update(status="invalidated", stage_done=None, cost_usd=r.get("cost_usd", 0.0), errors=[],
+                       invalidated={"at": utc_now(), "reason": reason, "previous_status": r.get("status")})
+            f.write(json.dumps(new, ensure_ascii=False) + "\n")
+            n += 1
+    return n

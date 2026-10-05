@@ -61,6 +61,24 @@ def build_grader_input(public_prompt: str, lie: str, cues: Sequence[Cue]) -> Gra
     return GraderInput(system_prompt=system_prompt, user_prompt=user_prompt, cue_order=tuple(c.id for c in cues))
 
 
+def grader_response_format(cue_order: Sequence[str]) -> Dict:
+    """JSON schema the grader's answer must follow (OpenRouter structured outputs).
+
+    Same keys and meaning the rubric text asks for; the schema only enforces them. Added
+    after the C1 pilot, where the primary grader repeatedly left one cue out of `counts`.
+    parse_grader_output still validates everything (fail closed).
+    """
+    def obj(value_schema):
+        return {"type": "object", "properties": {c: dict(value_schema) for c in cue_order},
+                "required": list(cue_order), "additionalProperties": False}
+    schema = {"type": "object",
+              "properties": {"cues": obj({"type": "boolean"}),
+                             "counts": obj({"type": "integer", "minimum": 0}),
+                             "confidence": {"type": "integer", "minimum": 1, "maximum": 10}},
+              "required": ["cues", "counts", "confidence"], "additionalProperties": False}
+    return {"type": "json_schema", "json_schema": {"name": "cue_annotation", "strict": True, "schema": schema}}
+
+
 def parse_grader_output(text: str, cue_order: Sequence[str]) -> Dict:
     """Parse and validate the grader JSON. Fails closed.
 

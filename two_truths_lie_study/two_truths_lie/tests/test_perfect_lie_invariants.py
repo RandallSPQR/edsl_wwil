@@ -605,8 +605,11 @@ def test_saturation_flags_cues_above_threshold():
 
 def test_viability_screen():
     from src.perfect_lie.scoring import lie_viability
-    good = " ".join(["word"] * 300)
+    good = " ".join(["It was the winter of the flood, and my grandmother kept the ledger in the kitchen."] * 20)
     assert lie_viability({"lie": good}) == []
+    salad = good + " " + " ".join("bbit safer INT Mexican job gym pays youngsters men surgery anch hobbies imagined "
+                                  "feasibility upcoming respect testimon wax artery violently commuter rabbits".split() * 8)
+    assert "degenerate_text" in lie_viability({"lie": salad})
     assert "refusal_or_disclaimer" in lie_viability({"lie": "I can't write a false story. " + good})
     assert any(r.startswith("too_short") for r in lie_viability({"lie": "short"}))
     assert "truncated_by_output_cap" in lie_viability({"lie": good, "liar_finish_reason": "length"})
@@ -629,12 +632,12 @@ class FakeAdapter:
 
     async def acall(self, *, role, user_prompt, system_prompt, model_name, temperature, replicate,
                     run_namespace, reasoning=None, max_output_tokens=None, attempt=0, cache=None,
-                    provider=None, system_role=True, draw_key=""):
+                    provider=None, system_role=True, draw_key="", response_format=None):
         import json
         self.calls.append({"role": role, "user_prompt": user_prompt, "system_prompt": system_prompt,
                            "attempt": attempt, "namespace": run_namespace, "model": model_name,
                            "provider": provider, "system_role": system_role, "draw_key": draw_key,
-                           "replicate": replicate})
+                           "replicate": replicate, "response_format": response_format})
         served = (provider.get("only") or [None])[0] if provider else "SomeProvider"
         if self.serve_wrong_provider and provider:
             served = "SomewhereElse"
@@ -652,7 +655,7 @@ class FakeAdapter:
                 self._failed.add(system_prompt)
                 raise RuntimeError("simulated provider error")
             usage["completion_tokens"] = self.liar_tokens
-            return {"text": " ".join(["story"] * 300), "usage": usage, "finish_reason": "stop",
+            return {"text": " ".join(["the story of a town that was built on a river"] * 30), "usage": usage, "finish_reason": "stop",
                     "thinking_trace": "TRACE-SENTINEL the judge trusts relatives", "thinking_trace_kind": "text"}
         if role == "target":
             return {"text": "VERDICT: ACCEPT\nCONFIDENCE: 6", "usage": usage, "finish_reason": "stop"}
@@ -1069,3 +1072,69 @@ def test_runner_passes_a_distinct_draw_key_per_target(instrument, tmp_path):
                     adapter=fake, spend_cap_usd=100.0).run())
     keys = {c["draw_key"] for c in fake.calls if c["role"] == "liar"}
     assert keys == {f"target={t}" for t in instrument.design[0].targets}
+
+
+
+def test_grader_schema_requires_every_cue_and_fails_closed_anyway(instrument):
+    """C1 pilot: the primary grader left `emotional_appeal` out of `counts`. The schema
+    requires every cue; the parser still rejects anything malformed."""
+    from src.perfect_lie.grader import grader_response_format
+    ids = [c.id for c in instrument.cues]
+    rf = grader_response_format(ids)
+    sch = rf["json_schema"]["schema"]
+    assert rf["json_schema"]["strict"] is True and sch["additionalProperties"] is False
+    for key in ("cues", "counts"):
+        assert sch["properties"][key]["required"] == ids
+        assert sch["properties"][key]["additionalProperties"] is False
+    assert sch["properties"]["cues"]["properties"][ids[0]]["type"] == "boolean"
+    assert sch["properties"]["counts"]["properties"][ids[0]] == {"type": "integer", "minimum": 0}
+
+
+def test_graders_are_called_with_the_schema(instrument, tmp_path):
+    import asyncio
+    from src.perfect_lie.runner import Run, load_records
+    m = _models()
+    fake = FakeAdapter(instrument)
+    asyncio.run(Run(mode="pilot", run_dir=tmp_path / "g", cells=_pilot_cells(instrument, m, n=1), instrument=instrument,
+                    models=m, adapter=fake, spend_cap_usd=100.0).run())
+    grader_calls = [c for c in fake.calls if c["role"] == "grader"]
+    assert grader_calls and all(c["response_format"]["type"] == "json_schema" for c in grader_calls)
+    assert all(c["response_format"] is None for c in fake.calls if c["role"] != "grader")
+    r = load_records(tmp_path / "g")[0]
+    assert all(g["output_format"] == "json_schema" for g in r["grades"].values())
+
+
+def test_schema_reaches_openrouter_request_body():
+    pytest.importorskip("edsl")
+    os.environ["EDSL_RUNNING_IN_PYTEST"] = "True"
+    from src.edsl_adapter import _perfect_lie_build_job
+    from src.perfect_lie.grader import grader_response_format
+    rf = grader_response_format(["a", "b"])
+    job, _, _ = _perfect_lie_build_job("U", "S", "anthropic/claude-sonnet-4.5", 0.0, 1, "open_router",
+                                       skip_api_key_check=True, role="grader", response_format=rf)
+    m = job.models[0]
+    params = m._filter_parameters_for_service({"model": m.model, "messages": []})
+    assert params["extra_body"]["response_format"] == rf
+
+
+def test_invalidate_regenerates_from_liar_and_keeps_cost(instrument, tmp_path):
+    import asyncio
+    from src.perfect_lie.runner import Run, invalidate_cells, load_records
+    m = _models()
+    cells = [c for c in _pilot_cells(instrument, m) if c.condition in ("none", "full")][:4]
+    fake = FakeAdapter(instrument)
+    mk = lambda: Run(mode="pilot", run_dir=tmp_path / "i", cells=cells, instrument=instrument, models=m,
+                     adapter=fake, spend_cap_usd=100.0)
+    asyncio.run(mk().run())
+    before = {r["cell_id"]: r["cost_usd"] for r in load_records(tmp_path / "i")}
+    n = invalidate_cells(tmp_path / "i", lambda r: r["condition"] == "none", "test")
+    assert n == sum(c.condition == "none" for c in cells) and n > 0
+    inv = [r for r in load_records(tmp_path / "i") if r["status"] == "invalidated"]
+    assert all("lie" not in r and "targets" not in r and "grades" not in r for r in inv)
+    assert all(r["cost_usd"] == before[r["cell_id"]] for r in inv)
+    liar_calls_before = sum(c["role"] == "liar" for c in fake.calls)
+    mf = asyncio.run(mk().run())
+    assert mf["n_complete"] == len(cells)
+    assert sum(c["role"] == "liar" for c in fake.calls) - liar_calls_before == n
+    after = {r["cell_id"]: r["cost_usd"] for r in load_records(tmp_path / "i")}
+    assert all(after[k] > before[k] for k in after if k in {r["cell_id"] for r in inv})

@@ -248,6 +248,21 @@ REFUSAL_PATTERNS = re.compile(
     r"(?:not|isn't) (?:a )?true story)\b", re.IGNORECASE)
 
 
+_STOPWORDS = frozenset("the a an and of to in was is that it for on with as by at his her their this from be were had".split())
+
+
+def degenerate_tail(text: str, window: int = 150, min_stop_rate: float = 0.15) -> bool:
+    """True when the end of a text has collapsed into word salad.
+
+    English prose runs at roughly 35-50% of these function words; the degenerate Llama 3.1
+    8B lies in the C1 pilot ended in strings of unrelated content words, far below 15%.
+    """
+    words = re.findall(r"[A-Za-z']+", text)[-window:]
+    if len(words) < 50:
+        return False
+    return sum(w.lower() in _STOPWORDS for w in words) / len(words) < min_stop_rate
+
+
 def lie_viability(record: Dict, word_min: int = 250, word_max: int = 500, slack: float = 0.2) -> List[str]:
     """Reasons a lie is not a viable fabrication; empty list means viable.
 
@@ -265,6 +280,8 @@ def lie_viability(record: Dict, word_min: int = 250, word_max: int = 500, slack:
         reasons.append(f"too_long({words})")
     if record.get("liar_finish_reason") == "length":
         reasons.append("truncated_by_output_cap")
+    if degenerate_tail(text):
+        reasons.append("degenerate_text")
     return reasons
 
 
