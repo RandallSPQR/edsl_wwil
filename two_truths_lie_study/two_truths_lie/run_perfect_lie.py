@@ -247,14 +247,16 @@ def check_env() -> int:
     return 0 if not problems else 6
 
 
-def score(run_dir: Path) -> int:
+def score(run_dir: Path, only_models=None) -> int:
     from src.perfect_lie.runner import load_records, smoke_report
     from src.perfect_lie import scoring
     ins = load_instrument()
     mf = json.loads((run_dir / "manifest.json").read_text())
     models = select_class(load_models(), mf.get("class_id") or "C3")
     recs = load_records(run_dir)
-    out = {"run_dir": str(run_dir), "mode": mf["mode"], "n_records": len(recs)}
+    if only_models:
+        recs = [r for r in recs if r["model_id"] in only_models]
+    out = {"run_dir": str(run_dir), "mode": mf["mode"], "n_records": len(recs), "liar_models": only_models or "all"}
     if mf["mode"] == "smoke":
         out["smoke"] = smoke_report(recs, models)
         for row in out["smoke"]:
@@ -300,8 +302,9 @@ def score(run_dir: Path) -> int:
         print("\ntop cross-pair co-firing (phi):")
         for r in out["cofiring_top"][:8]:
             print(f"  {r['prompt_id']:12s} {r['cue_j1']}/{r['cue_j2']}  phi={r['phi']:.2f}  joint={r['p_joint']:.2f}")
-    (run_dir / "score.json").write_text(json.dumps(out, indent=2, default=str) + "\n")
-    print(f"\nwrote {run_dir / 'score.json'}")
+    name = "score.json" if not only_models else "score_" + "_".join(m.split("/")[-1] for m in only_models) + ".json"
+    (run_dir / name).write_text(json.dumps(out, indent=2, default=str) + "\n")
+    print(f"\nwrote {run_dir / name}")
     return 0
 
 
@@ -379,7 +382,7 @@ def main(argv=None) -> int:
         refresh_prices(models_path)
         return 0
     if args.score:
-        return score(args.score)
+        return score(args.score, args.models)
     if args.record_fabricability:
         return record_fabricability(args.record_fabricability)
 
