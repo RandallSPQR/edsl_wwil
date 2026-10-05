@@ -899,7 +899,8 @@ def test_every_class_crosses_liars_with_targets_and_proposed_classes_cannot_pilo
     full = load_models()
     for cid, c in full["classes"].items():
         assert {m["id"] for m in c["liar_models"]} <= {t["id"] for t in c["target_models"]}, cid
-    assert all(c["status"] == "proposed" for c in full["classes"].values()), "no class is approved yet"
+    # Owner approved C1 on 2026-10-05; every other class stays proposed until the owner says otherwise.
+    assert {cid for cid, c in full["classes"].items() if c["status"] == "approved"} == {"C1"}
 
 
 def test_validation_rejects_open_pin_without_bf16():

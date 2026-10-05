@@ -179,7 +179,7 @@
   "classes": {
     "C1": {
       "name": "Small, 2024 to early 2025, non-thinking",
-      "status": "proposed",
+      "status": "approved",
       "liar_models": [
         {
           "id": "meta-llama/llama-3.1-8b-instruct",
@@ -529,7 +529,11 @@
           ]
         }
       ],
-      "note": "Open pair chosen by the owner (probes exist for both). Closed partners proposed. No Anthropic model of this size or age is still served."
+      "note": "Open pair chosen by the owner (probes exist for both). Closed partners proposed. No Anthropic model of this size or age is still served.",
+      "approved": {
+        "by": "owner",
+        "on": "2026-10-05"
+      }
     },
     "C2": {
       "name": "Mid-size, 2025, non-thinking",
