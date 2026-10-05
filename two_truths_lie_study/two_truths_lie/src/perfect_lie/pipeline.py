@@ -296,7 +296,10 @@ def preflight(models: Dict, prompts_raw: Dict, mode: str, env: Optional[Dict] = 
     env = os.environ if env is None else env
     key_var = models.get("env_key", "OPEN_ROUTER_API_KEY")
     if not env.get(key_var):
-        problems.append(f"{key_var} is not set in this environment")
+        misnamed = [n for n in ("OPENROUTER_API_KEY", "OPENROUTER_KEY", "OPEN_ROUTER_KEY") if env.get(n)]
+        hint = f" ({misnamed[0]} is set, but EDSL reads {key_var}; rename it)" if misnamed else \
+            " (put it in two_truths_lie/.env or the environment; check with --check-env)"
+        problems.append(f"{key_var} is not set in this environment{hint}")
     if not models.get("price_fetched_at") or "UNVERIFIED" in str(models.get("price_source", "")):
         problems.append("model prices are UNVERIFIED: run `run_perfect_lie.py --refresh-prices` first")
     unverified = []

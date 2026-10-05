@@ -725,3 +725,28 @@ def test_smoke_report_flags_ignored_reasoning_and_truncation(instrument, tmp_pat
     # The fake reports zero reasoning tokens everywhere: every thinking level must be flagged.
     assert any("reasoning field ignored" in f for f in by[("anthropic/claude-sonnet-4.5", "high")]["flags"])
     assert not any("reasoning" in f for f in by[("anthropic/claude-sonnet-4.5", "off")]["flags"])
+
+
+def test_preflight_names_the_common_misnamed_key():
+    from src.perfect_lie.pipeline import load_models, preflight
+    import json
+    from src.perfect_lie import DATA_DIR
+    prompts = json.loads((DATA_DIR / "prompts.json").read_text())
+    problems = preflight(load_models(), prompts, "pilot", env={"OPENROUTER_API_KEY": "sk-or-v1-x"})
+    assert any("rename it" in p for p in problems)
+
+
+def test_run_script_loads_env_file_before_gates(tmp_path, monkeypatch):
+    """A key that exists only in two_truths_lie/.env must be visible to preflight."""
+    import importlib, sys
+    monkeypatch.delenv("OPEN_ROUTER_API_KEY", raising=False)
+    import run_perfect_lie
+    env_file = tmp_path / ".env"
+    env_file.write_text('OPEN_ROUTER_API_KEY="sk-or-v1-test-only"\n')
+    monkeypatch.setattr(run_perfect_lie, "ENV_FILE", env_file)
+    from dotenv import load_dotenv
+    load_dotenv(run_perfect_lie.ENV_FILE, override=False)
+    assert os.environ.get("OPEN_ROUTER_API_KEY") == "sk-or-v1-test-only"
+    monkeypatch.delenv("OPEN_ROUTER_API_KEY", raising=False)
+    src = open(run_perfect_lie.__file__).read()
+    assert src.index("load_dotenv(ENV_FILE") < src.index("def main(")

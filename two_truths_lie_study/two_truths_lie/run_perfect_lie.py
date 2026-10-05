@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """The Perfect Lie: entry point.
 
+    python run_perfect_lie.py --check-env                           # is the OpenRouter key set up right? (no model calls)
     python run_perfect_lie.py --dry-run [--tier tier1|tier2|all]   # cells + cost, no model calls
     python run_perfect_lie.py --refresh-prices                      # verify prices from OpenRouter (no key needed)
     python run_perfect_lie.py --smoke --confirm-spend USD           # liar-only checks, every family x level
@@ -30,6 +31,20 @@ from src.perfect_lie.pipeline import (
 
 HERE = Path(__file__).resolve().parent
 RESULTS_ROOT = HERE / "results" / "perfect_lie"
+ENV_FILE = HERE / ".env"   # the same file src/edsl_adapter.py loads
+
+# Load the key before any gate reads the environment. Without this, a key that exists
+# only in .env would be refused by preflight, which runs before EDSL or the adapter
+# (both of which load .env themselves) are imported. Existing variables win.
+try:
+    from dotenv import load_dotenv
+    load_dotenv(ENV_FILE, override=False)
+except ImportError:
+    pass
+
+KEY_VAR = "OPEN_ROUTER_API_KEY"
+# Names people commonly use for this key that EDSL does NOT read.
+KEY_MISNAMES = ("OPENROUTER_API_KEY", "OPENROUTER_KEY", "OPEN_ROUTER_KEY", "OPENROUTER_TOKEN")
 
 
 def utc_now() -> str:
@@ -63,6 +78,77 @@ def refresh_prices(models_path: Path) -> None:
         sp = e.get("openrouter_supported_parameters") or []
         print(f"  {e['id']:40s} in ${e['usd_per_1k_input']:.5f}/1K  out ${e['usd_per_1k_output']:.5f}/1K  "
               f"reasoning={'reasoning' in sp}  temperature={'temperature' in sp}")
+
+
+def check_env() -> int:
+    """Report whether the OpenRouter key is set up the way EDSL reads it. Never prints the key."""
+    import os
+    import re
+    problems, notes = [], []
+    if ENV_FILE.exists():
+        notes.append(f".env found at {ENV_FILE}")
+        raw = ENV_FILE.read_text()
+        lines = {}
+        for n, line in enumerate(raw.splitlines(), 1):
+            m = re.match(r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$", line)
+            if m:
+                lines[m.group(1)] = (n, m.group(2))
+        if KEY_VAR in lines:
+            n, val = lines[KEY_VAR]
+            stripped = val.strip()
+            if stripped != val.rstrip("\n") or val != val.strip():
+                notes.append(f"line {n}: surrounding whitespace (python-dotenv strips it; harmless)")
+            if len(stripped) >= 2 and stripped[0] == stripped[-1] and stripped[0] in "\"'":
+                notes.append(f"line {n}: value is quoted (python-dotenv removes matching quotes; harmless)")
+            if " #" in stripped:
+                notes.append(f"line {n}: an inline comment follows the value; check it is not part of the key")
+        for bad in KEY_MISNAMES:
+            if bad in lines:
+                problems.append(f".env line {lines[bad][0]} sets {bad}; EDSL reads {KEY_VAR}. Rename it.")
+    else:
+        notes.append(f"no .env at {ENV_FILE}; relying on the process environment")
+    for bad in KEY_MISNAMES:
+        if os.environ.get(bad) and not os.environ.get(KEY_VAR):
+            problems.append(f"environment sets {bad}; EDSL reads {KEY_VAR}. Rename it.")
+    key = (os.environ.get(KEY_VAR) or "").strip().strip("\"'")
+    if not key:
+        problems.append(f"{KEY_VAR} is not set")
+    else:
+        shape = f"{len(key)} characters, starts with {key[:9]!r}" if key.startswith("sk-or-") else f"{len(key)} characters"
+        notes.append(f"{KEY_VAR} is set ({shape})")
+        if not key.startswith("sk-or-v1-"):
+            problems.append(f"{KEY_VAR} does not start with 'sk-or-v1-'; OpenRouter keys do. Check you copied the whole key.")
+        if re.search(r"\s", key):
+            problems.append(f"{KEY_VAR} contains whitespace inside the key")
+        # Free check: GET /api/v1/key returns the key's limits and usage, no model call, no charge.
+        import urllib.request, urllib.error
+        req = urllib.request.Request("https://openrouter.ai/api/v1/key", headers={"Authorization": f"Bearer {key}"})
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                data = json.load(r).get("data", {})
+            limit = data.get("limit")
+            notes.append(f"OpenRouter accepted the key: usage ${data.get('usage', 0):.2f}, "
+                         f"limit {'none' if limit is None else f'${limit:.2f}'}, free tier {data.get('is_free_tier')}")
+        except urllib.error.HTTPError as e:
+            problems.append(f"OpenRouter rejected the key (HTTP {e.code}); it is wrong, revoked, or truncated")
+        except Exception as e:
+            notes.append(f"could not reach openrouter.ai to validate the key ({type(e).__name__}); format checks only")
+    try:
+        import subprocess
+        tracked = subprocess.run(["git", "ls-files", "--error-unmatch", str(ENV_FILE)], capture_output=True, cwd=HERE)
+        if tracked.returncode == 0:
+            problems.append(f"{ENV_FILE.name} is tracked by git; remove it from the index and rotate the key")
+        elif ENV_FILE.exists():
+            ignored = subprocess.run(["git", "check-ignore", "-q", str(ENV_FILE)], cwd=HERE).returncode == 0
+            notes.append(".env is ignored by git" if ignored else ".env is NOT ignored by git; do not commit it")
+    except Exception:
+        pass
+    for n in notes:
+        print(f"  ok    {n}")
+    for p in problems:
+        print(f"  FIX   {p}")
+    print("\nkey set up correctly" if not problems else f"\n{len(problems)} problem(s)")
+    return 0 if not problems else 6
 
 
 def score(run_dir: Path) -> int:
@@ -145,6 +231,7 @@ def main(argv=None) -> int:
     mode.add_argument("--score", type=Path, metavar="RUN_DIR", help="score a run directory; no model calls")
     mode.add_argument("--record-fabricability", type=Path, metavar="RUN_DIR", help="write pilot evidence into prompts.json")
     mode.add_argument("--refresh-prices", action="store_true", help="verify prices from OpenRouter into models.json")
+    mode.add_argument("--check-env", action="store_true", help="check the OpenRouter key setup; never prints the key")
     ap.add_argument("--tier", choices=sorted(TIERS), default="all", help="tier1 = reasoning off only; tier2 = low+high")
     ap.add_argument("--models", nargs="*", help="restrict liar models by id")
     ap.add_argument("--replicates", nargs="*", type=int, help="replicate ids (default 1..5); independent draws, not seeds")
@@ -156,6 +243,8 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
 
     models_path = DATA_DIR / "models.json"
+    if args.check_env:
+        return check_env()
     if args.refresh_prices:
         refresh_prices(models_path)
         return 0
