@@ -535,18 +535,32 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
 
    REQUIREMENTS:
    - Length: 300-400 words
-   - One continuous story in plain prose
-   - Do not state that the story is invented, and do not mention this game
+   - One continuous story in prose
+   - Do not mention this game
 
    Now tell your story:
    ```
 
+   This is the adopted text (`prompts.json` → `public_prompts.v2`). The Stage 0 lint
+   (`results/perfect_lie/stage0_prompt_v2_lint.md`) found that the draft's "plain prose" pushed
+   down sensory, emotional and humor cues and that "Do not state that the story is invented"
+   pushed down skeptic_acknowledgment and hedged_claim, the same kind of conflict with personas
+   as the original's "confident"; the owner removed both on 2026-10-05. Two overlaps remain and
+   are accepted: the category words `history` and `science` (category-intrinsic, present in the
+   original too) and "strange-but-true" (carried over from the original). The original prompt
+   is kept as `ttal_v1` for the Stage 1 reference run only.
+
    Unchanged: system message, private notes, personas, cue ontology, grader rubric text and
-   schema, degeneration screen, pair disjointness check, Gemma serialization. Status: Stage 0
-   lint found overlaps (`results/perfect_lie/stage0_prompt_v2_lint.md`); wording awaits the
-   owner before Stage 1. Pass criteria for Stage 1, fixed in advance: no cue above 50%
+   schema, degeneration screen, pair disjointness check, Gemma serialization. Pass criteria
+   for Stage 1, fixed in advance (`src/perfect_lie/stage1.py`, applied per model): no cue above 50%
    baseline under the new prompt per model; degeneration under 5% of lies per model;
    `none`/`placebo` pairs are distinct draws; grader parse failures under 3% of cells.
+18. **Exception: Llama 3.1 8B samples at temperature 0.6, top-p 0.9** (owner decision,
+   2026-10-05). Every other liar samples at temperature 1.0 with EDSL's default top-p. At 1.0,
+   13 of 48 Llama lies in the C1 pilot degenerated into word salad (9 hit the output cap), and
+   the primary grader's safety filter refused to annotate some of them. Meta's recommended
+   sampling is used instead and recorded in `models.json` (`sampling_exception`). Cross-family
+   comparisons involving Llama carry this difference.
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.
 

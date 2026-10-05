@@ -186,7 +186,7 @@
           "family": "meta",
           "weights": "open",
           "released": "2024-07",
-          "temperature": 1.0,
+          "temperature": 0.6,
           "reasoning_capable": false,
           "system_role": true,
           "true_off_available": true,
@@ -232,7 +232,9 @@
           ],
           "pinned_endpoints_verified": [
             "CoreWeave:bf16"
-          ]
+          ],
+          "top_p": 0.9,
+          "sampling_exception": "Owner decision 2026-10-05: Meta's recommended sampling for Llama 3.1 (temperature 0.6, top-p 0.9) instead of the liar default 1.0. At 1.0, 13 of 48 C1 pilot lies degenerated into word salad. Recorded exception; fixed at every reasoning level."
         },
         {
           "id": "google/gemma-3-27b-it",

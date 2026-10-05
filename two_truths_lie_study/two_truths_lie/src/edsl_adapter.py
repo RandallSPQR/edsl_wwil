@@ -863,7 +863,8 @@ def _perfect_lie_build_job(user_prompt: str, system_prompt: str, model_name: str
                            reasoning: Optional[Dict] = None, max_output_tokens: Optional[int] = None,
                            role: str = "liar", run_namespace: str = "", attempt: int = 0,
                            provider: Optional[Dict] = None, system_role: bool = True,
-                           draw_key: str = "", response_format: Optional[Dict] = None):
+                           draw_key: str = "", response_format: Optional[Dict] = None,
+                           top_p: Optional[float] = None):
     """Build (but do not run) the EDSL job for one call and verify its rendered prompts.
 
     reasoning: OpenRouter's unified `reasoning` request field for this cell's budget level
@@ -880,6 +881,8 @@ def _perfect_lie_build_job(user_prompt: str, system_prompt: str, model_name: str
     reach the model again instead of the cached malformed answer.
     """
     model_kwargs = dict(temperature=temperature)
+    if top_p is not None:
+        model_kwargs["top_p"] = float(top_p)
     if max_output_tokens is not None:
         model_kwargs["max_tokens"] = int(max_output_tokens)
     if skip_api_key_check:
@@ -1033,7 +1036,7 @@ class PerfectLieAdapter:
                     reasoning: Optional[Dict] = None, max_output_tokens: Optional[int] = None,
                     attempt: int = 0, cache=None, provider: Optional[Dict] = None,
                     system_role: bool = True, draw_key: str = "",
-                    response_format: Optional[Dict] = None) -> Dict:
+                    response_format: Optional[Dict] = None, top_p: Optional[float] = None) -> Dict:
         """Run one live call locally. Never invoked by --dry-run or by the offline tests' render paths."""
         qname = {"liar": "story", "target": "verdict", "grader": "annotation", "trace_probe": "probe"}[role]
         job, u, s = _perfect_lie_build_job(user_prompt, system_prompt, model_name, temperature, replicate,
@@ -1042,7 +1045,8 @@ class PerfectLieAdapter:
                                            run_namespace=run_namespace, attempt=attempt,
                                            skip_api_key_check=self.service_name is None,
                                            provider=provider, system_role=system_role,
-                                           draw_key=draw_key, response_format=response_format)
+                                           draw_key=draw_key, response_format=response_format,
+                                           top_p=top_p)
         start = time.time()
         kwargs = dict(PERFECT_LIE_RUN_FLAGS)
         if cache is not None:
@@ -1057,7 +1061,7 @@ class PerfectLieAdapter:
             "reasoning": reasoning, "max_output_tokens": max_output_tokens,
             "attempt": attempt, "run_namespace": run_namespace,
             "system_prompt": s, "user_prompt": u, "delivered_messages": delivered_messages(u, s),
-            "provider_pin": provider, "system_role": system_role,
+            "provider_pin": provider, "system_role": system_role, "top_p": top_p,
         })
         return out
 

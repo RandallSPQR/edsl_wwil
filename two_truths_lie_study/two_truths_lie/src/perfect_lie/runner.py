@@ -28,7 +28,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from .conditions import build_liar_prompts, target_system_prompt, target_user_prompt
+from .conditions import build_liar_prompts, prompt_word_range, target_system_prompt, target_user_prompt
 from .grader import (build_trace_probe_input, grader_input_from_record, grader_response_format,
                      parse_grader_output, RUBRIC_PREAMBLE, RUBRIC_OUTPUT)
 from .personas import Instrument, file_sha256
@@ -57,8 +57,11 @@ def utc_now() -> str:
 
 
 def cell_id(cell: Cell, namespace: str) -> str:
-    return "|".join([namespace, cell.prompt_id, cell.j1, cell.j2, cell.target_id, cell.condition,
-                     cell.model_id, cell.reasoning_level, f"r{cell.replicate}"])
+    parts = [namespace, cell.prompt_id, cell.j1, cell.j2, cell.target_id, cell.condition,
+             cell.model_id, cell.reasoning_level, f"r{cell.replicate}"]
+    if cell.prompt_version and cell.prompt_version != "ttal_v1":
+        parts.append(f"p={cell.prompt_version}")
+    return "|".join(parts)
 
 
 def _price(entry: Dict, usage: Dict) -> float:
@@ -274,14 +277,14 @@ class Run:
 
     async def _liar(self, cell: Cell, rec: Dict) -> None:
         lp = build_liar_prompts(cell.condition, self.design_by_prompt[cell.prompt_id], cell.target_id,
-                                self.instrument.personas, cell.category)
+                                self.instrument.personas, cell.category, cell.prompt_version or None)
         try:
             out = await self.adapter.acall(role="liar", user_prompt=lp.user_prompt, system_prompt=lp.system_prompt,
                                            model_name=cell.model_id, temperature=cell.temperature,
                                            replicate=cell.replicate, run_namespace=self.namespace,
                                            reasoning=cell.reasoning, max_output_tokens=cell.max_output_tokens,
                                            provider=cell.provider, system_role=cell.system_role,
-                                           draw_key=f"target={cell.target_id}")
+                                           draw_key=f"target={cell.target_id}", top_p=cell.top_p)
         except Exception:
             await self._charge_failed_call(self.liar_by_id[cell.model_id], cell.max_output_tokens, rec)
             raise
@@ -297,6 +300,7 @@ class Run:
                    liar_system_role=cell.system_role,
                    # Exactly what the model received, for replay through the same weights on the pod.
                    liar_delivered_messages=out.get("delivered_messages"),
+                   lie_word_range=list(prompt_word_range(cell.prompt_version or None)),
                    liar_rendered_system_prompt=out.get("system_prompt"))
 
     async def _call_parsed(self, *, role: str, entry: Dict, system_prompt: str, user_prompt: str,

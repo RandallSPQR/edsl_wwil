@@ -42,6 +42,8 @@ class Cell:
     provider: Optional[Dict] = None   # OpenRouter provider routing (pin), None = default routing
     system_role: bool = True          # False: private block folded into the user turn (Gemma)
     class_id: str = ""
+    prompt_version: str = ""          # public prompt version (prompts.json); "" = active
+    top_p: Optional[float] = None     # sampling exception (Llama 3.1 8B); None = EDSL default
 
     @property
     def unit_key(self) -> tuple:
@@ -131,14 +133,18 @@ def enumerate_cells(
     replicates=DEFAULT_REPLICATES,
     liar_model_ids: Optional[List[str]] = None,
     levels=REASONING_LEVELS,
+    prompt_version: Optional[str] = None,
+    conditions=CONDITIONS,
 ) -> Iterator[Cell]:
+    from .conditions import active_prompt_version
+    prompt_version = prompt_version or active_prompt_version()
     liars = models["liar_models"]
     if liar_model_ids is not None:
         liars = [m for m in liars if m["id"] in liar_model_ids]
     cat_by_prompt = {p.id: p.category for p in instrument.prompts}
     for row in instrument.design:
         for target_id in row.targets:
-            for condition in CONDITIONS:
+            for condition in [c for c in CONDITIONS if c in conditions]:
                 for m in liars:
                     for level in levels:
                         lv = m["levels"].get(level)
@@ -156,6 +162,8 @@ def enumerate_cells(
                                 provider=dict(m["provider"]) if m.get("provider") else None,
                                 system_role=bool(m.get("system_role", True)),
                                 class_id=models.get("class_id", ""),
+                                prompt_version=prompt_version,
+                                top_p=m.get("top_p"),
                             )
 
 
@@ -232,10 +240,10 @@ def estimate_cost(instrument: Instrument, models: Dict, cells: List[Cell], liar_
 
     for c in cells:
         tier_counts[c.tier] = tier_counts.get(c.tier, 0) + 1
-        key = (c.prompt_id, c.condition, c.target_id)
+        key = (c.prompt_id, c.condition, c.target_id, c.prompt_version)
         if key not in sys_cache:
             lp = build_liar_prompts(c.condition, design_by_prompt[c.prompt_id], c.target_id,
-                                    instrument.personas, cat_by_prompt[c.prompt_id])
+                                    instrument.personas, cat_by_prompt[c.prompt_id], c.prompt_version or None)
             sys_cache[key] = _tokens(lp.system_prompt, w2t)
             user_cache[c.prompt_id] = _tokens(lp.user_prompt, w2t)
         in_tok = sys_cache[key] + user_cache[c.prompt_id]

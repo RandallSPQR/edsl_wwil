@@ -57,9 +57,35 @@ class LiarPrompts:
     user_prompt: str
 
 
-def public_user_prompt(category: str, word_min: int = 250, word_max: int = 500) -> str:
-    """E_t for the liar: the unchanged TTAL fibber prompt, baseline strategy."""
-    return FibberPrompt(category=category, strategy="baseline", word_min=word_min, word_max=word_max).render()
+def _prompt_config() -> Dict:
+    import json
+    from . import DATA_DIR
+    return json.loads((DATA_DIR / "prompts.json").read_text())
+
+
+def active_prompt_version() -> str:
+    return _prompt_config().get("active_public_prompt", "ttal_v1")
+
+
+def prompt_word_range(version: Optional[str] = None) -> Tuple[int, int]:
+    cfg = _prompt_config().get("public_prompts", {})
+    v = cfg.get(version or active_prompt_version(), {})
+    return int(v.get("word_min", 250)), int(v.get("word_max", 500))
+
+
+def public_user_prompt(category: str, version: Optional[str] = None) -> str:
+    """E_t for the liar. Only the category varies.
+
+    ttal_v1: the original TTAL fibber prompt (baseline strategy), kept for the Stage 1
+    reference run. v2: the owner's replacement (brief §8 item 17), active from 2026-10-05.
+    """
+    version = version or active_prompt_version()
+    if version == "ttal_v1":
+        return FibberPrompt(category=category, strategy="baseline", word_min=250, word_max=500).render()
+    cfg = _prompt_config()["public_prompts"]
+    if version not in cfg or "template" not in cfg[version]:
+        raise ValueError(f"unknown public prompt version {version!r}")
+    return cfg[version]["template"].format(category=category)
 
 
 def _belief_lines(beliefs) -> str:
@@ -119,8 +145,7 @@ def build_liar_prompts(
     target_id: str,
     personas: Dict[str, Persona],
     category: str,
-    word_min: int = 250,
-    word_max: int = 500,
+    prompt_version: Optional[str] = None,
 ) -> LiarPrompts:
     """Assemble (system_prompt, user_prompt) for one cell."""
     if target_id not in row.targets:
@@ -133,7 +158,7 @@ def build_liar_prompts(
         prompt_id=row.prompt_id,
         target_id=target_id,
         system_prompt=SYSTEM_SCAFFOLD + note,
-        user_prompt=public_user_prompt(category, word_min, word_max),
+        user_prompt=public_user_prompt(category, prompt_version),
     )
 
 

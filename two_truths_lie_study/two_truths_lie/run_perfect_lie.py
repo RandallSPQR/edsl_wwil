@@ -346,7 +346,10 @@ def main(argv=None) -> int:
     mode.add_argument("--classes", action="store_true", help="list model classes and their status")
     mode.add_argument("--invalidate", type=Path, metavar="RUN_DIR",
                       help="mark cells for regeneration (filter with --conditions, --models, --status); no model calls")
-    ap.add_argument("--conditions", nargs="*", help="--invalidate: only these conditions")
+    ap.add_argument("--conditions", nargs="*", help="--pilot/--invalidate: only these conditions")
+    ap.add_argument("--prompt-version", help="public prompt version for a new run (prompts.json; default: active)")
+    mode.add_argument("--stage1-report", nargs=2, type=Path, metavar=("NEW_RUN_DIR", "REF_RUN_DIR"),
+                      help="Stage 1 pass criteria: new-prompt control cells vs original-prompt reference; no model calls")
     ap.add_argument("--status", nargs="*", help="--invalidate: only cells whose current status is one of these")
     ap.add_argument("--reason", default="", help="--invalidate: why, recorded in each record")
     mode.add_argument("--export-replay", type=Path, metavar="RUN_DIR", help="export open-weight lies for pod replay")
@@ -368,6 +371,18 @@ def main(argv=None) -> int:
         return list_classes()
     if args.export_replay:
         return export_replay(args.export_replay)
+    if args.stage1_report:
+        from src.perfect_lie.runner import load_records
+        from src.perfect_lie.stage1 import evaluate, render_markdown
+        from src.perfect_lie.conditions import prompt_word_range
+        new_dir, ref_dir = args.stage1_report
+        cue_ids = [c.id for c in load_instrument().cues]
+        res = evaluate(load_records(new_dir), load_records(ref_dir), cue_ids, prompt_word_range("v2"))
+        md = render_markdown(res, cue_ids, str(new_dir), str(ref_dir))
+        (new_dir / "stage1_report.md").write_text(md)
+        (new_dir / "stage1_report.json").write_text(json.dumps(res, indent=2, default=str) + "\n")
+        print(md)
+        return 0
     if args.invalidate:
         from src.perfect_lie.runner import invalidate_cells
         if not args.reason:
@@ -416,7 +431,9 @@ def main(argv=None) -> int:
     elif run_mode == "pilot":
         # Every liar in the class, reasoning off, one replicate: the fabricability gate has to
         # hold for each model, and the weakest model is where it is most likely to fail.
-        cells = list(enumerate_cells(instrument, models, replicates=(1,), liar_model_ids=liar_ids, levels=("off",)))
+        cells = list(enumerate_cells(instrument, models, replicates=(1,), liar_model_ids=liar_ids, levels=("off",),
+                                     prompt_version=args.prompt_version,
+                                     conditions=tuple(args.conditions) if args.conditions else ("none", "placebo", "partial", "full")))
     else:
         cells = list(enumerate_cells(instrument, models, replicates=replicates, liar_model_ids=liar_ids, levels=levels))
 

@@ -272,6 +272,8 @@ def lie_viability(record: Dict, word_min: int = 250, word_max: int = 500, slack:
     reasons = []
     text = record.get("lie") or ""
     words = len(text.split())
+    if record.get("lie_word_range"):  # the prompt version's own range, recorded per lie
+        word_min, word_max = record["lie_word_range"]
     if REFUSAL_PATTERNS.search(text):
         reasons.append("refusal_or_disclaimer")
     if words < word_min * (1 - slack):
