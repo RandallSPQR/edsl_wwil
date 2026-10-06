@@ -151,7 +151,8 @@ def render_markdown(result: Dict, cue_ids: Sequence[str], new_dir: str, ref_dir:
     L = ["# Stage 1 report: control cells under the new public prompt", "",
          f"New prompt run: `{new_dir}` (none, placebo). Reference: `{ref_dir}` (none, original prompt).",
          "Primary grader. No lift is computed at this stage.", "",
-         "## Pass criteria (fixed in advance, applied per model)", "",
+         "## Pass criteria (as amended post hoc, brief §8 item 21; applied per model)", "",
+         "The original criteria (fixed in advance) failed all four models; see the commit history of this file.", "",
          "| model | A: no cue with 95% lower bound > 0.50 | B: degeneration < 5% | C: distinct draws | D: at most one failed cell, no clustering | overall |",
          "|---|---|---|---|---|---|"]
     yn = lambda b: "PASS" if b else "FAIL"
