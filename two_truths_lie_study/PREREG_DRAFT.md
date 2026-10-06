@@ -1,7 +1,8 @@
-# The Perfect Lie: pre-registration (DRAFT, revision 3, for owner approval)
+# The Perfect Lie: pre-registration (revision 3, instrument frozen)
 
-Status: **draft, not registered.** The full run stays locked (`run_locks.json`) until the owner
-approves this draft and the instrument is frozen. No number here comes from Stage 2, which was a
+Status: **instrument frozen on 2026-10-06** at rubric v0.6. The owner's pre-committed rule (brief §8
+item 26) was applied mechanically. The hashes in section 2 are the frozen instrument. The full run
+stays locked (`run_locks.json`) until the owner unlocks it. No number here comes from Stage 2, which was a
 reachability check only.
 
 Revision 3 applies the owner's decisions of 2026-10-06 on revision 2:
@@ -39,7 +40,7 @@ from the private note.
 | Elicitation | Post-story stated B-hat in every condition (item 22). |
 | Exclusions, fixed | Confessed lies and their units; failed cells (item 21); units whose placebo-net cue set is empty (section 3). Degenerate lies are reported, not excluded. |
 
-**Instrument hashes (sha256), to be re-verified at freeze:**
+**Frozen instrument hashes (sha256), re-verified at freeze on 2026-10-06:**
 
 | file | hash |
 |---|---|
@@ -188,8 +189,14 @@ All other scorable cues stay clear of the rule. Two points matter for reading th
 - **Test-retest (item 25).** Re-run under the unchanged old rubric with a fresh cache, the Google
   grader changes up to 8% of its labels at temperature 0. institutional_authority's drop under v0.6
   is within that noise. emotional_appeal's is not: v0.6 lowered its prevalence in both gating
-  graders (0.51 / 0.49 to 0.41 / 0.41). A v0.7 fix touching only emotional_appeal is proposed in
-  `results/perfect_lie/prefreeze_checks/report.md`, pending the owner's choice.
+  graders (0.51 / 0.49 to 0.41 / 0.41).
+- **v0.7 tried and not adopted (item 26).** A v0.7 rubric changed only emotional_appeal. It
+  improved that cue's primary-versus-Google agreement (kappa 0.65 to 0.67, AC1 0.67 to 0.73).
+  But it moved the Google grader's labels on other cues by more than the 8% noise band:
+  hedged_claim 0.126, mechanism_explanation 0.095 and institutional_authority 0.084. Under the
+  pre-committed rule, **v0.6 is frozen**, and there will be no further rubric iterations.
+  emotional_appeal is left to the interim gate. The primary grader's own test-retest under v0.7
+  stayed at or below 0.032 on every cue (report in `results/perfect_lie/rubric_v07/report.md`).
 
 **Worst case**, all four v0.6 at-risk cues excluded:
 - No persona falls below two scorable cues: P1 keeps 2, P2 keeps 3, P3 keeps 2, P5 keeps 2 and
@@ -330,8 +337,8 @@ item below as well (lift by category, the IV estimate and the descriptive T).
   agreement is not.
 - **The Google grader is not deterministic at temperature 0** (item 25). Its run-to-run label
   change reaches 8% on some cues, which caps how high primary-versus-Google agreement can go and
-  leaves the gate little headroom on those cues. The primary grader's own test-retest is not
-  measured.
+  leaves the gate little headroom on those cues. The primary grader is far steadier: run to run it
+  changed at most 3.2% of labels on any cue (item 26).
 - **The effect-size assumption comes from a different prompt** (section 9).
 - **Holm-adjusted equivalence makes flat calls slow.** No model is expected to stop flat at the
   interim, and a weak true effect most often ends inconclusive (section 9).
@@ -351,11 +358,8 @@ Settled in revision 3 (2026-10-06):
    no further extension.
 4. Limitation added: no grader shares the Llama liar's family.
 5. The balanced first-15-replicate window applies to all secondary analyses (section 10).
+6. Pre-freeze checks done (item 25). Rubric v0.7 was evaluated under a rule fixed before grading
+   (item 26). The rule chose **v0.6**, and the instrument is frozen at the section 2 hashes. There
+   will be no further rubric iterations.
 
-Open, for approval:
-- The two pre-freeze checks are done (item 25). The remaining choice is the rubric to freeze:
-  v0.7 (emotional_appeal fix, verified by a regrade of about $1.40-$1.90 under a $5 cap), or v0.6
-  as it is, leaving emotional_appeal to the interim gate. If v0.7 is chosen, the cues.json hashes in
-  section 2 change.
-- Then approval of this draft and the instrument hashes. On approval the instrument is frozen. The
-  full run stays locked until the owner unlocks it separately.
+The full run and the trace probe stay locked until the owner unlocks them in `run_locks.json`.

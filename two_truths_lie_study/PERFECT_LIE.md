@@ -745,6 +745,14 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
      the primary grader's retest rate.
    - **No further rubric iterations** whatever the outcome. After the freeze the full run stays
      locked until the owner unlocks it.
+   - **Outcome (2026-10-06; report in `results/perfect_lie/rubric_v07/report.md`): freeze v0.6.**
+     - The runs: 475 of 475 gradings, $3.37 combined, cap not breached.
+     - A met: emotional_appeal primary vs Google 0.652 / 0.674 to 0.672 / 0.734.
+     - B not met, on the Google grader: hedged_claim 0.126, mechanism_explanation 0.095,
+       institutional_authority 0.084. The primary grader's largest change on another cue was 0.063.
+     - `cues.json` is restored byte-for-byte to v0.6 (sha256 aee8391e…). The v0.7 file is kept for
+       the record as `rubric_v07/cues_v07_not_frozen.json`.
+     - Primary test-retest under v0.7: at most 0.032 on any cue.
 
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.
