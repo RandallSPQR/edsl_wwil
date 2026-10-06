@@ -55,6 +55,7 @@ import os as _os
 _os.environ.setdefault("EDSL_API_TIMEOUT", "900")
 
 LOCKS_PATH = DATA_DIR / "run_locks.json"
+FULL_RUN_CONDITIONS = ("none", "placebo", "full")
 
 
 def run_locks() -> dict:
@@ -453,7 +454,9 @@ def main(argv=None) -> int:
                                      prompt_version=args.prompt_version,
                                      conditions=tuple(args.conditions) if args.conditions else ("none", "placebo", "partial", "full")))
     else:
-        cells = list(enumerate_cells(instrument, models, replicates=replicates, liar_model_ids=liar_ids, levels=levels))
+        # The full run uses the pre-registered conditions (PREREG section 2): `partial` is dropped.
+        cells = list(enumerate_cells(instrument, models, replicates=replicates, liar_model_ids=liar_ids, levels=levels,
+                                     conditions=tuple(args.conditions) if args.conditions else FULL_RUN_CONDITIONS))
 
     probe_locked = run_locks().get("trace_probe", {}).get("locked", True)
     est = estimate_cost(instrument, models, cells, liar_only=(run_mode == "smoke"),

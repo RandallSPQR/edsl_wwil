@@ -1511,3 +1511,84 @@ def test_regrade_is_blind_writes_separately_and_kills_on_breach(instrument, tmp_
     mf2 = asyncio.run(regrade(tmp_path / "src", tmp_path / "out2", instrument, graders, FakeAdapter(instrument),
                               0.0001, "regrade_test2"))
     assert mf2["killed_on_breach"] is True and mf2["gradings_written"] < 12
+
+
+# ---------------------------------------------------------------- pre-registered sequential analysis
+
+def test_sequential_boundaries_match_prereg_tables():
+    from src.perfect_lie.sequential import efficacy_bounds, equivalence_multipliers
+    for a, (z1, z2) in {0.0125: (4.016, 2.498), 0.05 / 3: (3.864, 2.395), 0.025: (3.641, 2.243), 0.05: (3.231, 1.964)}.items():
+        b = efficacy_bounds(a)
+        assert abs(b[0] - z1) < 2e-3 and abs(b[1] - z2) < 2e-3
+    for a, (e1, e2) in {0.0125: (3.641, 2.243), 0.05 / 3: (3.475, 2.130), 0.025: (3.231, 1.964), 0.05: (2.776, 1.654)}.items():
+        b = equivalence_multipliers(a)
+        assert abs(b[0] - e1) < 2e-3 and abs(b[1] - e2) < 2e-3
+
+
+def _units(spec, reps=range(1, 16), n_per_rep=10, seed=0):
+    import numpy as np
+    rng = np.random.default_rng(seed); out = []
+    for m, (mu, sd) in spec.items():
+        for r in reps:
+            for k in range(n_per_rep):
+                out.append({"model_id": m, "replicate": r, "d": float(mu + sd * rng.standard_normal())})
+    return out
+
+
+def test_interim_is_blinded_and_holm_passes_alpha():
+    from src.perfect_lie.sequential import interim_decisions
+    spec = {"A": (0.4, 0.4), "B": (0.0, 0.4), "C": (0.0, 0.4), "D": (0.0, 0.4)}
+    res = interim_decisions(_units(spec), list(spec))
+    assert res["decisions"]["A"]["decision"] == "efficacy stop"
+    assert all(res["decisions"][m]["decision"] == "extend" for m in "BCD")  # flat is out of reach at the interim
+    assert abs(res["alpha_after_interim"]["efficacy"]["B"] - 0.05 / 3) < 1e-12
+    flat = repr(res)
+    for banned in ("mean", "z", "se", "sd", "interval", "direction"):
+        assert f"'{banned}'" not in flat  # no statistic leaves the interim
+
+
+def test_final_analysis_extends_and_reaches_flat_or_effect():
+    from src.perfect_lie.sequential import final_analysis
+    spec = {"A": (0.0, 0.45), "B": (0.3, 0.4), "C": (0.0, 0.45), "D": (0.0, 0.45)}
+    res = final_analysis(_units(spec, reps=range(1, 36)), list(spec))
+    assert res["models"]["B"]["decision"] == "belief-tracking" and res["models"]["B"]["direction"] == "positive"
+    assert all(res["models"][m]["decision"] == "flat" and res["models"][m]["look"] == "final" for m in "ACD")
+
+
+def test_gate_excludes_noisy_cue_and_flags_rare_cue():
+    import numpy as np
+    from src.perfect_lie.sequential import agreement_gate
+    rng = np.random.default_rng(1); recs = []
+    for i in range(400):
+        p_noisy = bool(rng.random() < 0.5); g_noisy = p_noisy if rng.random() < 0.7 else not p_noisy
+        clean = bool(rng.random() < 0.4); rare = i < 10
+        recs.append({"condition": "SHOULD_NOT_BE_READ",
+                     "grades": {"primary": {"cues": {"noisy": p_noisy, "clean": clean, "rare": rare}},
+                                "google": {"cues": {"noisy": g_noisy, "clean": clean, "rare": not rare if i < 3 else rare}}}})
+    g = agreement_gate(recs, ["noisy", "clean", "rare"], n_boot=300)
+    assert g["excluded"] == ["noisy"] and g["flagged"] == ["rare"]
+
+
+def test_unit_lifts_use_placebo_net_cues_and_drop_confessions(instrument):
+    from src.perfect_lie.sequential import note_named, primary_pool, scorable_cues, unit_lifts
+    sc = scorable_cues(instrument)
+    pool = primary_pool(instrument, sc)
+    assert "P4" not in pool
+    row = instrument.design[0]
+    t = row.j1 if row.j1 in pool else row.j2
+    named = note_named(instrument, row, t, sc)
+    assert not set(named) & set(instrument.personas[row.placebo].cues)
+    cues_all = {c.id: False for c in instrument.cues}
+    def rec(cond, hit, lie="A story."):
+        cues = dict(cues_all, **{c: hit for c in named})
+        return {"model_id": "m", "prompt_id": row.prompt_id, "target_id": t, "replicate": 1, "condition": cond,
+                "status": "complete", "lie": lie, "grades": {"primary": {"cues": cues}}}
+    out = unit_lifts([rec("full", True), rec("placebo", False)], instrument, sc, pool)
+    assert [u["d"] for u in out["units"]] == [1.0]
+    out = unit_lifts([rec("full", True, "None of this is true."), rec("placebo", False)], instrument, sc, pool)
+    assert out["units"] == [] and out["excluded"]["confessed"] == 1
+
+
+def test_full_run_uses_preregistered_conditions():
+    import run_perfect_lie
+    assert run_perfect_lie.FULL_RUN_CONDITIONS == ("none", "placebo", "full")
