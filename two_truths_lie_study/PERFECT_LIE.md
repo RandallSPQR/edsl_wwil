@@ -710,6 +710,19 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
      mostly in the Google grader: institutional_authority became at risk and emotional_appeal
      stayed at risk. Worst-case primary pool: 9 units per replicate per liar (was 5). Feeds
      PREREG_DRAFT revision 3.
+25. **Pre-freeze checks, 2026-10-06** (owner decision; blind to condition, no lift, combined kill
+   cap $5; report in `results/perfect_lie/prefreeze_checks/report.md`). $0.61 counted ($0.31 billed).
+   - gpt-5 under v0.6 vs primary (94 of 95 lies; one gpt-5 grading failed closed): direct_quotation
+     repaired on this pair too (0.84 / 0.86); at risk: historical_anchor, emotional_appeal (0.48 /
+     0.45), hedged_claim.
+   - Google test-retest under the old rubric (byte-identical to Stage 1's, fresh cache): run-to-run
+     label change up to 0.08 at temperature 0. institutional_authority's drop is noise (change to
+     v0.6 0.08-0.11, prevalence flat; primary vs the retest is already 0.73 / 0.76 on the old
+     rubric). emotional_appeal's drop is mostly rubric (change 0.15-0.21 vs noise 0.08; primary and
+     Google prevalence 0.51 / 0.49 to 0.41 / 0.41, gpt-5 unchanged at 0.67).
+   - Proposed, not applied: rubric v0.7 changing emotional_appeal only (narrator-voiced, judged
+     independently of hedged_claim and mundane_aftermath, five boundary examples). Alternative:
+     freeze v0.6 and let the interim gate decide.
 
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.

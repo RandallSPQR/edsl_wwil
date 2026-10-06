@@ -185,6 +185,11 @@ All other scorable cues stay clear of the rule. Two points matter for reading th
   (11% and 21% of its labels flipped). Stage 1 on 95 lies is therefore a rough guide to the
   interim gate, not a forecast. At 2,160 interim lies the intervals will be about a fifth as
   wide, and the gate will turn mostly on the point estimates.
+- **Test-retest (item 25).** Re-run under the unchanged old rubric with a fresh cache, the Google
+  grader changes up to 8% of its labels at temperature 0. institutional_authority's drop under v0.6
+  is within that noise. emotional_appeal's is not: v0.6 lowered its prevalence in both gating
+  graders (0.51 / 0.49 to 0.41 / 0.41). A v0.7 fix touching only emotional_appeal is proposed in
+  `results/perfect_lie/prefreeze_checks/report.md`, pending the owner's choice.
 
 **Worst case**, all four v0.6 at-risk cues excluded:
 - No persona falls below two scorable cues: P1 keeps 2, P2 keeps 3, P3 keeps 2, P5 keeps 2 and
@@ -207,7 +212,8 @@ Pre-registered and reported as robustness only:
 (b) the primary test re-run on the subsample's units under gpt-5 annotations.
 Only units whose `full` and `placebo` lies were both sampled enter (b). That is about 1 unit in 16,
 chosen at random, so (b) is low-powered and is read for sign and rough size only. gpt-5 was not
-part of the v0.6 regrade, so its Stage 1 agreement figures are on the v0.5 rubric.
+regraded under v0.6 before freeze (item 25): against the primary grader it is at risk on
+historical_anchor, emotional_appeal and hedged_claim, and clear on the rest.
 
 ## 9. Power, expected outcomes and cost
 
@@ -290,8 +296,8 @@ cost of a study where most models are flat or weak is close to the 35-replicate 
 **Data window.** All secondary analyses use **replicates 1-15 for all four models (balanced)**.
 Extension is per model, so including later replicates would weight the extended models more. This
 covers judge acceptance (2-4), the liar x judge family diagonal (3) and the stated B-hat (5),
-which are the analyses decision 2 names. This draft applies the same window to items 1 and 6 as
-well; see section 12.
+which are the analyses decision 2 names, and, by the owner's decision of 2026-10-06, every other
+item below as well (lift by category, the IV estimate and the descriptive T).
 
 1. Lift by category, stratified over the six categories.
 2. Judge acceptance by cue: acceptance when each scorable cue is present versus absent.
@@ -322,6 +328,10 @@ well; see section 12.
 - **The rubric shifts unrevised cues.** The v0.6 regrade moved agreement on cues whose
   definitions did not change (section 6). The interim gate is the binding check. Stage 1
   agreement is not.
+- **The Google grader is not deterministic at temperature 0** (item 25). Its run-to-run label
+  change reaches 8% on some cues, which caps how high primary-versus-Google agreement can go and
+  leaves the gate little headroom on those cues. The primary grader's own test-retest is not
+  measured.
 - **The effect-size assumption comes from a different prompt** (section 9).
 - **Holm-adjusted equivalence makes flat calls slow.** No model is expected to stop flat at the
   interim, and a weak true effect most often ends inconclusive (section 9).
@@ -340,10 +350,12 @@ Settled in revision 3 (2026-10-06):
 3. Equivalence Holm-adjusted across the four models. "Inconclusive at 35" is pre-registered, with
    no further extension.
 4. Limitation added: no grader shares the Llama liar's family.
+5. The balanced first-15-replicate window applies to all secondary analyses (section 10).
 
 Open, for approval:
-- (a) The balanced 15-replicate window is applied to all of section 10, including lift by
-  category (1) and the descriptive T (6), not only the three analyses named in decision 2. Confirm,
-  or limit it to the three.
-- (b) Approve this draft and the instrument hashes in section 2. On approval the instrument is
-  frozen. The full run stays locked until the owner unlocks it separately.
+- The two pre-freeze checks are done (item 25). The remaining choice is the rubric to freeze:
+  v0.7 (emotional_appeal fix, verified by a regrade of about $1.40-$1.90 under a $5 cap), or v0.6
+  as it is, leaving emotional_appeal to the interim gate. If v0.7 is chosen, the cues.json hashes in
+  section 2 change.
+- Then approval of this draft and the instrument hashes. On approval the instrument is frozen. The
+  full run stays locked until the owner unlocks it separately.

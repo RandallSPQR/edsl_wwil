@@ -1,0 +1,17 @@
+{
+  "source": "results/perfect_lie/stage1_v3_controls",
+  "namespace": "retest_google_v05_20261006",
+  "graders": [
+    "google/gemini-2.5-flash"
+  ],
+  "lies": 95,
+  "gradings_written": 95,
+  "gradings_planned": 95,
+  "spend_usd": 0.1319,
+  "spend_counted_usd": 0.1319,
+  "billed_delta_usd": 0.1047,
+  "cap_usd": 5.0,
+  "killed_on_breach": false,
+  "rubric_sha256": "e760d01b715a88ddecbae2adff6bf1de7fcdf94a29aa6f21b6bcebeaeba6d523",
+  "finished_at": "2026-10-06T16:09:35+00:00"
+}
