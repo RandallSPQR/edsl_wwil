@@ -474,7 +474,9 @@ def main(argv=None) -> int:
     if run_mode is None:
         return 0
 
-    problems = preflight(models, json.loads((DATA_DIR / "prompts.json").read_text()), run_mode)
+    fab_path = DATA_DIR / "fabricability_evidence.json"  # run control, not instrument (brief §8 item 28)
+    problems = preflight(models, json.loads((DATA_DIR / "prompts.json").read_text()), run_mode,
+                         fabricability_evidence=json.loads(fab_path.read_text()) if fab_path.exists() else None)
     locks = run_locks()
     if run_mode == "full" and locks.get("full_run", {}).get("locked", True):
         problems.insert(0, f"full run is LOCKED by the owner ({LOCKS_PATH.name}): {locks.get('full_run', {}).get('reason')}")

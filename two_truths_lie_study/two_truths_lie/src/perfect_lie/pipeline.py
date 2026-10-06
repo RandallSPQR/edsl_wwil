@@ -370,7 +370,8 @@ def priced_entries(models: Dict) -> List[Dict]:
     return liars + targets + list(models["graders"]) + ([models["trace_probe"]] if models.get("trace_probe") else [])
 
 
-def preflight(models: Dict, prompts_raw: Dict, mode: str, env: Optional[Dict] = None) -> List[str]:
+def preflight(models: Dict, prompts_raw: Dict, mode: str, env: Optional[Dict] = None,
+              fabricability_evidence: Optional[Dict] = None) -> List[str]:
     """Return the list of unmet requirements for `mode` in {"dry-run", "smoke", "pilot", "full"}.
 
     Every live mode needs the OpenRouter key and verified prices (the runtime spend cap is
@@ -402,6 +403,11 @@ def preflight(models: Dict, prompts_raw: Dict, mode: str, env: Optional[Dict] = 
     if mode == "full":
         for p in prompts_raw["prompts"]:
             fab = p.get("fabricability") or {}
+            # Owner-approved substitute evidence held outside the hashed instrument (run control,
+            # brief §8 item 28). It does not mark the prompt verified; it lets the gate pass.
+            sub = fabricability_evidence or {}
+            if sub.get("owner_approved") is True and p["id"] in sub.get("prompts", []):
+                continue
             if fab.get("status") != "verified_in_pilot" or not fab.get("evidence"):
                 problems.append(f"prompt {p['id']!r}: fabricability not verified in pilot (status={fab.get('status')!r})")
     return problems

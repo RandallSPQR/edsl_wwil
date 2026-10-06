@@ -843,17 +843,20 @@ def test_openrouter_params_are_accepted_by_the_real_openai_client(instrument):
     assert _perfect_lie_extract_trace_from_raw(resp.model_dump()) == ("thought", "text")
 
 
-def test_owner_locks_block_full_run_and_trace_probe():
-    """Owner instruction (2026-10-05): the full run and the trace probe must not run."""
+def test_owner_locks_trace_probe():
+    """Owner instruction (2026-10-05): the trace probe must not run. The full run was unlocked by
+    the owner on 2026-10-06 (brief §8 item 27); its lock behaviour is tested with a patched lock."""
     import json
     from src.perfect_lie import DATA_DIR
     locks = json.loads((DATA_DIR / "run_locks.json").read_text())
-    assert locks["full_run"]["locked"] is True
     assert locks["trace_probe"]["locked"] is True
 
 
 def test_full_mode_refused_while_locked(monkeypatch, capsys):
     import run_perfect_lie
+    # Never read the real lock file here: with the full run unlocked, this call would start a run.
+    monkeypatch.setattr(run_perfect_lie, "run_locks", lambda: {"full_run": {"locked": True, "reason": "test"},
+                                                               "trace_probe": {"locked": True}})
     monkeypatch.setenv("OPEN_ROUTER_API_KEY", "sk-or-v1-test")
     rc = run_perfect_lie.main(["--full", "--tier", "tier1", "--confirm-spend", "1000"])
     assert rc == 4
@@ -1592,3 +1595,18 @@ def test_unit_lifts_use_placebo_net_cues_and_drop_confessions(instrument):
 def test_full_run_uses_preregistered_conditions():
     import run_perfect_lie
     assert run_perfect_lie.FULL_RUN_CONDITIONS == ("none", "placebo", "full")
+
+
+def test_preflight_accepts_owner_approved_substitute_fabricability_evidence():
+    import copy, json
+    from src.perfect_lie.pipeline import DATA_DIR, preflight
+    models = _models(class_id="C1")
+    models = dict(models, class_status="approved")
+    prompts = json.loads((DATA_DIR / "prompts.json").read_text())
+    key = {"OPEN_ROUTER_API_KEY": "x"}
+    fab = lambda probs: [x for x in probs if "fabricability" in x]
+    assert len(fab(preflight(models, prompts, "full", env=key))) == 6
+    ev = {"owner_approved": True, "prompts": [p["id"] for p in prompts["prompts"]]}
+    assert fab(preflight(models, prompts, "full", env=key, fabricability_evidence=ev)) == []
+    assert len(fab(preflight(models, prompts, "full", env=key, fabricability_evidence=dict(ev, owner_approved=False)))) == 6
+    assert all(p["fabricability"]["status"] != "verified_in_pilot" for p in prompts["prompts"])  # never marked verified

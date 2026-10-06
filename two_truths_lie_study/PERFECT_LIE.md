@@ -774,6 +774,25 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
      - cell counts, failures and spend.
      No lift, interval or statistic is computed for reporting until the final analysis. The interim
      function returns none.
+28. **Deviation: the fabricability gate was not met as written; replaced by Stage 1 v3 evidence** (owner
+   decision, recorded 2026-10-06T18:02:06Z, before any confirmatory call).
+   - **The gate as written** (§6 TODO, enforced by the `--full` preflight): every pilot lie under
+     `none` must be viable, with no refusal, no breaking character, and within the word range. It
+     was never recorded, and it **was not met**: biology was 7 of 8. One lie ran 233 words, below the
+     240 minimum (300 words less 20% slack).
+   - **Replaced by:** Stage 1 prompt-v3 controls. 47 of 48 `none` lies were viable, with no refusals,
+     no confessions and no failed cells (`results/perfect_lie/stage1_v3_controls`).
+   - **How it is recorded:** in the run-control file `data/perfect_lie/fabricability_evidence.json`,
+     outside the hashed instrument. The preflight accepts it. `prompts.json` is unchanged, its hash
+     still matches the tag, and **no prompt is marked "fabricability verified"**.
+   - **Test incident, same session (no spend).** After the item 27 unlock, the offline test
+     `test_full_mode_refused_while_locked` read the real lock file. Once the fabricability evidence
+     let the preflight pass, it started a real `--full` run with a fake key.
+     - EDSL found no OpenRouter key, so no request was sent: 157 cells errored with 0 lies, and the
+       account usage was unchanged ($14.95 before and after). The $0.36 in that run's manifest is the
+       runner's failed-call bound, not real spend.
+     - The run directory was deleted (`results/perfect_lie/full_20261006T180215Z`, no data).
+     - The test now patches the lock, and the real-lock test checks only the trace probe.
 
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.
