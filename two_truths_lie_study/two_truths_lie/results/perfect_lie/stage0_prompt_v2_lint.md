@@ -65,3 +65,19 @@ Reading for the three saturated cues:
   follows the same category pattern.
 
 Stage 1's new-versus-original comparison is the real test of how much is prompt-driven.
+
+## Re-lint of the adopted prompt v3 (2026-10-06)
+
+Same method. v3 differs from the draft by "One continuous story" (was "One continuous story in
+plain prose") and "Do not mention this game." (was "Do not state that the story is invented, and
+do not mention this game").
+
+| sentence | overlap |
+|---|---|
+| One continuous story | none |
+| Do not mention this game. | none |
+| every other sentence | unchanged from the draft lint above |
+
+Remaining overlaps, both accepted by the owner: the category words `history` (historical_anchor;
+named_expert) and `science` (named_expert), and "strange-but-true" (skeptic_acknowledgment).
+named_expert is heatmap-only from the amendment to deviation 17. No new overlap; Stage 1 proceeds.
