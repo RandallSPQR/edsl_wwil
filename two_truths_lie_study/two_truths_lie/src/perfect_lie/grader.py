@@ -45,6 +45,10 @@ def cue_list_block(cues: Sequence[Cue]) -> str:
     lines = ["CUES (fixed list, fixed order):"]
     for i, c in enumerate(cues, 1):
         lines.append(f"{i}. {c.id}: {c.definition}")
+        if c.boundary_examples:
+            lines.append("   Boundary examples:")
+            for text, present in c.boundary_examples:
+                lines.append(f"   - {'counts' if present else 'does not count'}: {text}")
     return "\n".join(lines) + "\n"
 
 

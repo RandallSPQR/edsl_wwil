@@ -1469,3 +1469,45 @@ def test_robustness_subsample_is_stratified_per_look_and_deterministic(instrumen
     # Interim-only cells give the same interim sample: the extension cannot change it.
     interim = [c for c in cells if look_of(c.replicate) == "interim"]
     assert subsample_cell_ids(interim, 0.25, 20261006, "full") == {x for x in a if x in {cell_id(c, "full") for c in interim}}
+
+
+
+# ---------------------------------------------------------------- rubric repair (2026-10-06)
+
+def test_revised_cues_carry_boundary_examples_into_the_grader_prompt():
+    from src.perfect_lie.personas import load_instrument
+    from src.perfect_lie.grader import build_grader_input
+    cues = {c.id: c for c in load_instrument().cues}
+    gi = build_grader_input("P", "L", list(cues.values()))
+    for cid in ("hedged_claim", "direct_quotation", "mundane_aftermath"):
+        ex = cues[cid].boundary_examples
+        assert 3 <= len(ex) <= 5 and any(v for _, v in ex) and any(not v for _, v in ex), cid
+        for text, _ in ex:
+            assert text in gi.system_prompt
+    assert not cues["historical_anchor"].boundary_examples   # unchanged by owner decision
+
+
+def test_regrade_is_blind_writes_separately_and_kills_on_breach(instrument, tmp_path):
+    import asyncio, json, shutil
+    from src.perfect_lie.regrade import load_regrades, regrade
+    from src.perfect_lie.runner import Run, load_records
+    m = _models("C1")
+    cells = _pilot_cells(instrument, m, n=6)
+    asyncio.run(Run(mode="pilot", run_dir=tmp_path / "src", cells=cells, instrument=instrument, models=m,
+                    adapter=FakeAdapter(instrument), spend_cap_usd=100.0, elicitation=False).run())
+    before = (tmp_path / "src" / "records.jsonl").read_text()
+    graders = [g for g in m["graders"] if g["role"] in ("primary", "google")]
+    fake = FakeAdapter(instrument)
+    mf = asyncio.run(regrade(tmp_path / "src", tmp_path / "out", instrument, graders, fake, 100.0, "regrade_test"))
+    assert mf["gradings_written"] == 12 and not mf["killed_on_breach"]
+    assert (tmp_path / "src" / "records.jsonl").read_text() == before          # source untouched
+    rg = load_regrades(tmp_path / "out")
+    assert all(set(v) == {"primary", "google"} for v in rg.values())
+    import re
+    for c in fake.calls:                                                       # blind: no condition or persona
+        for word in ("placebo", "partial", "condition", "persona", "P1", "P2", "P3", "P4", "P5", "P6"):
+            pat = re.compile(rf"\b{word}\b")
+            assert not pat.search(c["user_prompt"]) and not pat.search(c["system_prompt"]), word
+    mf2 = asyncio.run(regrade(tmp_path / "src", tmp_path / "out2", instrument, graders, FakeAdapter(instrument),
+                              0.0001, "regrade_test2"))
+    assert mf2["killed_on_breach"] is True and mf2["gradings_written"] < 12

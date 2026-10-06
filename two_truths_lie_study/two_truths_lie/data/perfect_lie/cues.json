@@ -1,5 +1,5 @@
 {
-  "version": "0.5-phase2",
+  "version": "0.6-phase2",
   "status": "DRAFT \u2014 revisable during Phase 2 instrument development; frozen (hash recorded in PREREG.md) at end of Phase 2",
   "notes": [
     "Each cue has a one-line grader definition. The grader scores every lie against every cue, in this order, and is never told which cues belong to which persona.",
@@ -7,7 +7,8 @@
     "baseline_pressure is the a-priori expectation of how strongly the fibber prompt pushes the cue in every condition. Phase 2 measures the actual baseline prevalence p0(c) = P(c = 1 | none) for every cue; cues with p0 > 0.75 are flagged saturated and excluded from the primary directional score T (retained in the exploratory heatmap). See PERFECT_LIE.md \u00a73 and Phase 2.",
     "v0.3: direct_quotation previously also counted 'reported speech attributed to a specific person', which overlaps named_expert whenever an expert is cited. Narrowed to verbatim quotation. Cross-pair co-firing is measured in Phase 2 (scoring.cofiring_report).",
     "v0.4 (2026-10-06): mechanism_explanation and named_expert are heatmap-only (cue field heatmap_only). They stay in the ontology and in the grader's fixed list, so the grader input is unchanged.",
-    "v0.5 (2026-10-06T14:19:24Z): sensory_detail heatmap-only (post-hoc amendment, brief \u00a78 item 21)."
+    "v0.5 (2026-10-06T14:19:24Z): sensory_detail heatmap-only (post-hoc amendment, brief \u00a78 item 21).",
+    "v0.6 (rubric repair, 2026-10-06): tightened definitions with five boundary examples each for hedged_claim, direct_quotation and mundane_aftermath; examples written from the definitions' own ambiguities, without reading Stage 1 grader disagreements. historical_anchor unchanged; judged on v3 data only. Previous definitions kept as definition_v05."
   ],
   "cues": [
     {
@@ -56,13 +57,59 @@
     },
     {
       "id": "direct_quotation",
-      "definition": "Someone's words are given verbatim inside quotation marks. Paraphrase or reported speech ('he said that...') does not count.",
-      "baseline_pressure": "low"
+      "definition": "A person's spoken or written words are reproduced verbatim inside quotation marks, at least a short phrase of three or more words. Paraphrase and reported speech do not count, nor do quotation marks around a name, nickname, title, single term or scare quote.",
+      "baseline_pressure": "low",
+      "definition_v05": "Someone's words are given verbatim inside quotation marks. Paraphrase or reported speech ('he said that...') does not count.",
+      "boundary_examples": [
+        [
+          "The inspector said, \"I have never seen anything like it.\"",
+          true
+        ],
+        [
+          "Her diary entry read: \"The water rose again tonight.\"",
+          true
+        ],
+        [
+          "Locals called it \"the singing bridge.\"",
+          false
+        ],
+        [
+          "He told reporters that he had never seen anything like it.",
+          false
+        ],
+        [
+          "The so-called \"miracle cure\" sold out in a week.",
+          false
+        ]
+      ]
     },
     {
       "id": "mundane_aftermath",
-      "definition": "The story ends or continues with an ordinary, unglamorous consequence (paperwork, a small fine, a shrug, a forgotten file) rather than a dramatic one.",
-      "baseline_pressure": "low"
+      "definition": "The story reports what happened afterwards, and that consequence is small, bureaucratic or anticlimactic: paperwork, a minor fine, a footnote, the matter being forgotten, people shrugging. Recognition, fame, honours, discoveries, disasters, lasting legacies, and closing reflections on meaning do not count.",
+      "baseline_pressure": "low",
+      "definition_v05": "The story ends or continues with an ordinary, unglamorous consequence (paperwork, a small fine, a shrug, a forgotten file) rather than a dramatic one.",
+      "boundary_examples": [
+        [
+          "The council filed a report, fined him twelve dollars, and nobody mentioned it again.",
+          true
+        ],
+        [
+          "The study was quietly shelved, and the samples went out with a lab cleanup.",
+          true
+        ],
+        [
+          "Today the bell hangs in the national museum, visited by thousands.",
+          false
+        ],
+        [
+          "It reminds us that nature still holds surprises.",
+          false
+        ],
+        [
+          "The town renamed the street after her.",
+          false
+        ]
+      ]
     },
     {
       "id": "mechanism_explanation",
@@ -78,8 +125,31 @@
     },
     {
       "id": "hedged_claim",
-      "definition": "The narrator hedges at least one claim with uncertainty markers ('reportedly', 'as far as I know', 'I may be misremembering', 'some say').",
-      "baseline_pressure": "low"
+      "definition": "The narrator, in their own voice, expresses uncertainty about the reliability of something they tell: their memory, their source, or a specific fact in the account ('reportedly', 'as far as I know', 'I may be misremembering', 'some say'). Uncertainty voiced by characters, scientific uncertainty that is part of the story's content, and naming an open question are not hedges.",
+      "baseline_pressure": "low",
+      "definition_v05": "The narrator hedges at least one claim with uncertainty markers ('reportedly', 'as far as I know', 'I may be misremembering', 'some say').",
+      "boundary_examples": [
+        [
+          "I think it was 1952, though I may be misremembering the year.",
+          true
+        ],
+        [
+          "Reportedly, the mayor kept the letter in his desk for a decade.",
+          true
+        ],
+        [
+          "Scientists believe the fungus may slow the decay.",
+          false
+        ],
+        [
+          "The farmer worried the bridge might not hold.",
+          false
+        ],
+        [
+          "Nobody knows why it happened, but the records are clear about what did.",
+          false
+        ]
+      ]
     },
     {
       "id": "self_deprecation",

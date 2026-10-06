@@ -29,13 +29,15 @@ class Cue:
     definition: str
     baseline_pressure: str
     heatmap_only: bool = False   # graded and shown in the heatmap, excluded from T and the Stage 1 50% rule
+    boundary_examples: tuple = ()  # ((text, present?), ...) rendered into the grader's cue list
 
 
 def load_cues(path: Optional[Path] = None) -> List[Cue]:
     """Return the global cue ontology in file order (the fixed grader order)."""
     path = path or DATA_DIR / "cues.json"
     raw = json.loads(path.read_text())
-    cues = [Cue(c["id"], c["definition"], c.get("baseline_pressure", "unknown"), bool(c.get("heatmap_only", False)))
+    cues = [Cue(c["id"], c["definition"], c.get("baseline_pressure", "unknown"), bool(c.get("heatmap_only", False)),
+                tuple((t, bool(v)) for t, v in c.get("boundary_examples", [])))
             for c in raw["cues"]]
     ids = [c.id for c in cues]
     if len(ids) != len(set(ids)):

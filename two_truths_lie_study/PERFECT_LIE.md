@@ -688,6 +688,22 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
      20261006). Pre-registered: kappa versus the primary grader on the subsample, and the
      primary test re-run on the subsample under gpt-5 annotations, reported as robustness only.
 
+24. **Rubric repair, recorded 2026-10-06T15:49:05Z, before the regrade** (owner decision; blind to condition, no lift).
+   - `hedged_claim`, `direct_quotation` and `mundane_aftermath` get tightened definitions and five
+     boundary examples each (`cues.json` v0.6; the previous wording is kept as `definition_v05`).
+     The examples render inside the grader's cue list. They were written from each definition's
+     own ambiguities (characters' versus narrator's doubt; names and scare quotes versus speech;
+     recognition and reflection versus an anticlimactic consequence), without reading the Stage 1
+     grader disagreements, so the regrade is not fitted to them. It does reuse the same 95 lies,
+     so it is a check of the repair, not an independent validation.
+   - `historical_anchor` is unchanged and judged on prompt-v3 data only.
+   - Which personas name the at-risk cues: `hedged_claim` only P4 (outside the primary pool);
+     `emotional_appeal` P4 and P6 (partial note: P6); `direct_quotation` P3 and P5 (partial notes:
+     both); `historical_anchor` P1 and P5; `mundane_aftermath` P3.
+   - The 95 Stage 1 prompt-v3 lies are regraded by the primary and Google graders under the
+     revised rubric (kill cap $5) into `results/perfect_lie/rubric_repair_v06/`; the original
+     Stage 1 grades are untouched.
+
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.
 
