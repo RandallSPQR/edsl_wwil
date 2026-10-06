@@ -723,6 +723,28 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
    - Proposed, not applied: rubric v0.7 changing emotional_appeal only (narrator-voiced, judged
      independently of hedged_claim and mundane_aftermath, five boundary examples). Alternative:
      freeze v0.6 and let the interim gate decide.
+26. **Rubric v0.7 and the pre-committed freeze rule, recorded 2026-10-06T16:28:53Z, before any v0.7 grading**
+   (owner decision; blind to condition, no lift; combined kill cap $5).
+   - v0.7 changes `emotional_appeal` only: narrator-voiced to match the P4/P6 notes, judged
+     independently of other cues' exclusions, with the five boundary examples from the pre-freeze
+     report. Every other cue is byte-identical to v0.6.
+   - Runs on the 95 Stage 1 v3 lies under v0.7: primary, Google, gpt-5, and a second primary run with
+     a fresh cache (its test-retest noise).
+   - **Rule, applied mechanically. Freeze v0.7 only if both A and B hold:**
+     - A. On primary vs Google, emotional_appeal's v0.7 kappa AND AC1 point estimates are both strictly
+       higher than its v0.6 values, computed by the same code on the same lies (v0.6: 0.65 / 0.67).
+     - B. For every cue other than emotional_appeal (all 15, heatmap-only included), and for each of
+       the primary and Google graders, the share of lies whose label differs between v0.6
+       (`rubric_repair_v06`) and v0.7 is at most 0.08, the band measured in item 25. The primary
+       grader's first v0.7 run is the one compared. Lies with a failed grading in either run are
+       left out of that grader's rate.
+   - **Otherwise freeze v0.6** (`cues.json` restored byte-for-byte, sha256 aee8391e…). The rule is
+     also not met if the cap is breached or fewer than 90 lies have valid v0.7 labels from both the
+     primary and Google graders.
+   - Reported, not deciding: gpt-5 agreement and change rates (temperature 1.0, noise unmeasured), and
+     the primary grader's retest rate.
+   - **No further rubric iterations** whatever the outcome. After the freeze the full run stays
+     locked until the owner unlocks it.
 
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.
