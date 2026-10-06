@@ -109,6 +109,11 @@ class Run:
         self.billing_probe = billing_probe
         self.billed_at_start = None
         self.billed_delta = 0.0
+        # Robustness graders (e.g. gpt-5) grade only their seeded, stratified subsample.
+        from .pipeline import subsample_cell_ids
+        self.subsamples = {g["role"]: subsample_cell_ids(cells, g["subsample"]["fraction"], g["subsample"]["seed"],
+                                                         self.namespace)
+                           for g in models["graders"] if g.get("subsample")}
         # Kill on breach: once spend reaches the cap, every in-flight call is cancelled, not
         # only new cells held back. Cancelled cells are left pending (resumable).
         self.killed = False
@@ -176,6 +181,7 @@ class Run:
             "class_id": self.models.get("class_id"), "class_status": self.models.get("class_status"),
             "target_models": [t["id"] for t in self.models["target_models"]],
             "graders": [g["id"] for g in self.models["graders"]],
+            "robustness_subsamples": {k: len(v) for k, v in self.subsamples.items()},
             "trace_probe": (self.models.get("trace_probe") or {}).get("id"),
             "stages": list(self.stages),
             "price_source": self.models.get("price_source"), "price_fetched_at": self.models.get("price_fetched_at"),
@@ -378,13 +384,18 @@ class Run:
         cue_order = [c.id for c in self.instrument.cues]
         gi = build_bhat_grader_input(ELICITATION_QUESTION, rec["elicitation"]["answer"], self.instrument.cues)
         grades = {}
-        for g in self.models["graders"]:
+        for g in self._graders_for(rec):
             parsed, out, attempt = await self._call_parsed(
                 role="grader", entry=g, system_prompt=gi.system_prompt, user_prompt=gi.user_prompt,
                 parse=lambda txt: parse_grader_output(txt, cue_order), rec=rec, label=f"bhat[{g['role']}]",
                 response_format=grader_response_format(cue_order))
             grades[g["role"]] = {**parsed, "model": g["id"], "attempt": attempt, "usage": out["usage"]}
         rec["bhat_grades"] = grades
+
+    def _graders_for(self, rec: Dict) -> List[Dict]:
+        """Every grader, except robustness graders outside their subsample."""
+        return [g for g in self.models["graders"]
+                if g["role"] not in self.subsamples or rec["cell_id"] in self.subsamples[g["role"]]]
 
     async def _target(self, cell: Cell, rec: Dict) -> None:
         """Every target model in the class panel reads the same lie (liar family x target family)."""
@@ -404,7 +415,7 @@ class Run:
         cue_order = [c.id for c in self.instrument.cues]
         gi = grader_input_from_record(rec, self.instrument.cues)
         grades = {}
-        for g in self.models["graders"]:
+        for g in self._graders_for(rec):
             parsed, out, attempt = await self._call_parsed(
                 role="grader", entry=g, system_prompt=gi.system_prompt, user_prompt=gi.user_prompt,
                 parse=lambda txt: parse_grader_output(txt, cue_order), rec=rec, label=f"grader[{g['role']}]",

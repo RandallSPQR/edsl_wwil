@@ -703,7 +703,9 @@ def test_runner_end_to_end_records_manifest_and_resume(instrument, tmp_path):
     recs = load_records(tmp_path / "pilot")
     assert len(recs) == 8 and all(r["status"] == "complete" for r in recs)
     r = recs[0]
-    assert set(r["grades"]) == {g["role"] for g in models["graders"]}
+    sub = run.subsamples.get("secondary", set())
+    assert all(set(x["grades"]) == ({"primary", "google"} | ({"secondary"} if x["cell_id"] in sub else set()))
+               for x in recs)
     assert set(r["targets"]) == {t["id"] for t in models["target_models"]}
     assert all(t["accept"] is True for t in r["targets"].values())
     assert r.get("trace_probe") is None  # locked, and reasoning off: no probe
@@ -1433,3 +1435,37 @@ def test_bhat_coding_uses_the_story_cue_list_output_and_schema():
 
 def test_tests_cannot_reach_a_live_model():
     assert "OPEN_ROUTER_API_KEY" not in os.environ
+
+
+
+# ---------------------------------------------------------------- grader set and robustness subsample (2026-10-06)
+
+def test_maverick_retired_and_grader_set():
+    m = _models("C1")
+    roles = {g["role"]: g for g in m["graders"]}
+    assert set(roles) == {"primary", "google", "secondary"}
+    assert roles["secondary"]["id"] == "openai/gpt-5" and roles["secondary"]["subsample"]["fraction"] == 0.25
+    assert all("maverick" not in g["id"] for g in m["graders"])
+    assert any("maverick" in g["id"] and g["retired"]["reason"] for g in m["retired_graders"])
+
+
+def test_robustness_subsample_is_stratified_per_look_and_deterministic(instrument):
+    from collections import Counter
+    from src.perfect_lie.pipeline import enumerate_cells, look_of, subsample_cell_ids
+    from src.perfect_lie.runner import cell_id
+    m = _models("C1")
+    cells = list(enumerate_cells(instrument, m, replicates=tuple(range(1, 36)), levels=("off",),
+                                 conditions=("none", "placebo", "full")))
+    a = subsample_cell_ids(cells, 0.25, 20261006, "full")
+    assert a == subsample_cell_ids(cells, 0.25, 20261006, "full")            # deterministic
+    assert a != subsample_cell_ids(cells, 0.25, 7, "full")                   # seed matters
+    total, picked = Counter(), Counter()
+    for c in cells:
+        k = (c.model_id, c.condition, look_of(c.replicate))
+        total[k] += 1
+        picked[k] += cell_id(c, "full") in a
+    for k in total:
+        assert picked[k] == round(0.25 * total[k]), k                        # exact 25% in every stratum and look
+    # Interim-only cells give the same interim sample: the extension cannot change it.
+    interim = [c for c in cells if look_of(c.replicate) == "interim"]
+    assert subsample_cell_ids(interim, 0.25, 20261006, "full") == {x for x in a if x in {cell_id(c, "full") for c in interim}}

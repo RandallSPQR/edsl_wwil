@@ -674,6 +674,20 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
      it is not backfilled. Stage 2 collects it on the `full` cells and reports only parse,
      refusal, breakdown and echo rates.
 
+23. **Grader set changed, recorded 2026-10-06T15:36:09Z, before any full-run data** (owner decision).
+   - *Llama 4 Maverick is dropped as a grader.* Reason: three strict-schema self-contradictions
+     (a cue marked present with a count of 0, or absent with a count above 0): Stage 1 story
+     coding, technology / P5 / placebo / gemini-2.5-flash-lite; Stage 2 B-hat codings,
+     technology / P6 / full / gemini-2.5-flash-lite and culture / P6 / full / llama-3.1-8b-instruct.
+     With Maverick gone, no grader is in the same family as the Llama liar; the self-preference
+     check covers the Google and OpenAI liars only.
+   - Primary (Claude Sonnet 4.5) and Google (gemini-2.5-flash, thinking off) grade every lie,
+     story and B-hat.
+   - gpt-5 is kept as a **robustness grader** on a seeded, random 25% subsample of lies,
+     stratified by liar model x condition and drawn separately within each look (seed
+     20261006). Pre-registered: kappa versus the primary grader on the subsample, and the
+     primary test re-run on the subsample under gpt-5 annotations, reported as robustness only.
+
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.
 

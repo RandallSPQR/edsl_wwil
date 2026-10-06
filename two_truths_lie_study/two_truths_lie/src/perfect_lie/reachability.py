@@ -36,7 +36,7 @@ def reachability(records: Sequence[Dict], manifest: Dict) -> Dict:
                         "error": (r.get("errors") or [{}])[-1].get("error")} for r in rs if r.get("status") != "complete"],
             "lies": len(lies),
             "all_judges_read": sum(set(judges) <= set((r.get("targets") or {})) for r in lies),
-            "all_graders_scored": sum(len(r.get("grades") or {}) == len(graders) for r in lies),
+            "all_graders_scored": sum(len(r.get("grades") or {}) >= 2 for r in lies),
             "confessions": sum(bool(confession(r["lie"])) for r in lies),
             "degenerate": sum(degenerate_tail(r["lie"]) for r in lies),
             "words": {"min": min(words) if words else None, "median": statistics.median(words) if words else None,

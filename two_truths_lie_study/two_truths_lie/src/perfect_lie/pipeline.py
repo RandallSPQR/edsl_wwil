@@ -281,8 +281,12 @@ def estimate_cost(instrument: Instrument, models: Dict, cells: List[Cell], liar_
 
     grader_lines = []
     for g in models["graders"]:
-        out = grader_out + len(cells) * g.get("expected_thinking_tokens", 0)
-        grader_lines.append(CostLine(f"grader[{g['role']}]", g["id"], len(cells), grader_in, out, _usd(g, grader_in, out)))
+        frac = (g.get("subsample") or {}).get("fraction", 1.0)
+        n = round(len(cells) * frac)
+        gin = round(grader_in * frac)
+        out = round(grader_out * frac) + n * g.get("expected_thinking_tokens", 0)
+        label = f"grader[{g['role']}]" + (f" {frac:.0%}" if frac < 1 else "")
+        grader_lines.append(CostLine(label, g["id"], n, gin, out, _usd(g, gin, out)))
     if include_elicitation and cells:
         # One more liar call per cell (the conversation so far + the question; a short answer),
         # and every grader codes the answer (rubric + short answer).
@@ -303,9 +307,11 @@ def estimate_cost(instrument: Instrument, models: Dict, cells: List[Cell], liar_
             line.usd = _usd(liar_by_id[mid], line.input_tokens, line.output_tokens)
         target_lines = target_lines + list(el_lines.values())
         for g in models["graders"]:
-            n = len(cells)
+            frac = (g.get("subsample") or {}).get("fraction", 1.0)
+            n = round(len(cells) * frac)
             out = n * (ta["grader_output_tokens"] + g.get("expected_thinking_tokens", 0))
-            grader_lines.append(CostLine(f"bhat[{g['role']}]", g["id"], n, n * bh_in, out, _usd(g, n * bh_in, out)))
+            label = f"bhat[{g['role']}]" + (f" {frac:.0%}" if frac < 1 else "")
+            grader_lines.append(CostLine(label, g["id"], n, n * bh_in, out, _usd(g, n * bh_in, out)))
     tp = models.get("trace_probe")
     if include_trace_probe and tp and trace_cells:
         tin = trace_cells * ta["trace_probe_input_tokens"]
@@ -426,3 +432,32 @@ def smoke_cells(instrument: Instrument, models: Dict, per_level: int = 4) -> Lis
                     out.append(match[0])
                     picked += 1
     return out
+
+
+# ---------------------------------------------------------------- looks and the robustness subsample
+
+LOOKS = {"interim": tuple(range(1, 16)), "extension": tuple(range(16, 36))}
+
+
+def look_of(replicate: int) -> str:
+    for name, reps in LOOKS.items():
+        if replicate in reps:
+            return name
+    return "outside"
+
+
+def subsample_cell_ids(cells: List[Cell], fraction: float, seed: int, namespace: str) -> set:
+    """Seeded, stratified random subsample: within each (liar model, condition, look) the cells
+    are ordered by cell id, shuffled with a seed derived from (seed, stratum, look), and the
+    first round(fraction * n) are taken. Deterministic for a given cell set."""
+    import random
+    from .runner import cell_id
+    groups: Dict[tuple, List[str]] = {}
+    for c in cells:
+        groups.setdefault((c.model_id, c.condition, look_of(c.replicate)), []).append(cell_id(c, namespace))
+    chosen = set()
+    for key, ids in sorted(groups.items()):
+        ids = sorted(ids)
+        random.Random(f"{seed}|{key[0]}|{key[1]}|{key[2]}").shuffle(ids)
+        chosen.update(ids[:round(fraction * len(ids))])
+    return chosen
