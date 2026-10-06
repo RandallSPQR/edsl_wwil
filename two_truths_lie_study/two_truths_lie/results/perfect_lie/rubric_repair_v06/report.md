@@ -158,6 +158,6 @@ an estimate of $0.0112.
 - `regrades.jsonl`: 190 gradings (cell id, grader, cues, counts, confidence).
 - `manifest.json`: run parameters, spend, rubric hash.
 - Code: `src/perfect_lie/regrade.py` (blind input, kill on breach).
-- `analysis/`: agreement and flip tables (`regrade_agreement.*`), the v0.6 cost re-estimate
-  (`costs_v06.txt`), and the boundary and power computation for PREREG revision 3
-  (`gsd3.py`, `gsd3.txt`; offline, no model calls).
+- `analysis/`: agreement and flip tables (`regrade_agreement.json`, `regrade_agreement.log.md`), the v0.6 cost re-estimate
+  (`costs_v06.log.md`), and the boundary and power computation for PREREG revision 3
+  (`gsd3.py`, `gsd3.log.md`; offline, no model calls).
