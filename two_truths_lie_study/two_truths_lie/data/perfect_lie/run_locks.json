@@ -1,8 +1,8 @@
 {
   "note": "Run control, not instrument: not hashed into run manifests. Only the study owner unlocks an entry, by setting locked to false in a commit that says why. Locked by owner instruction on 2026-10-05.",
   "full_run": {
-    "locked": true,
-    "reason": "Owner: Tiers 1 + 2 with both graders and the trace probe are not ready. Do not run. The full run (any tier) stays locked until the owner unlocks it."
+    "locked": false,
+    "reason": "Owner unlocked the full run on 2026-10-06T16:50:35Z after approving the v0.6 freeze (tag perfect-lie-prereg-v1 at c2ca8b8). Interim: replicates 1-15, all four C1 models, reasoning off, conditions none/placebo/full, kill cap $80. Extension budgets are cleared by the owner after the interim decisions."
   },
   "trace_probe": {
     "locked": true,

@@ -753,6 +753,27 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
      - `cues.json` is restored byte-for-byte to v0.6 (sha256 aee8391e…). The v0.7 file is kept for
        the record as `rubric_v07/cues_v07_not_frozen.json`.
      - Primary test-retest under v0.7: at most 0.032 on any cue.
+27. **Freeze approved; full run unlocked, recorded 2026-10-06T16:50:35Z, before any confirmatory call.**
+   - The owner approved the v0.6 freeze. PR #3 was merged to `main` as c2ca8b8, the commit to tag
+     `perfect-lie-prereg-v1`. The tag and release are made by the owner, because this session cannot
+     create tags or releases. The notes are in `release_notes_perfect-lie-prereg-v1.md`.
+   - Interim: replicates 1-15, all four C1 models, reasoning off, conditions `none`, `placebo` and
+     `full` (2,160 lies). Kill on breach at $80. The owner raised this from $60 after the cost
+     re-check below. The owner clears extension budgets after seeing the interim decisions.
+   - **Cost re-check.** The CLI estimator assumes about 1,800 input tokens per primary grading.
+     Under rubric v0.6 the real figure is about 3,250. Calibrated on Stage 2's actual usage, the
+     interim costs about $70 at list price (the estimator says $52.70), and each extended model
+     about $23.
+   - **Code fixed before data.**
+     - `--full` enumerated `partial`. It now uses the pre-registered conditions.
+     - `src/perfect_lie/sequential.py` implements the gate, the unit lifts and the Holm group-sequential
+       rules (commit 4a42f61), with tests.
+   - **Interim blinding (owner instruction).** Report only:
+     - per-model decisions (efficacy stop, equivalence stop, extend);
+     - the gate's excluded cues;
+     - cell counts, failures and spend.
+     No lift, interval or statistic is computed for reporting until the final analysis. The interim
+     function returns none.
 
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.
