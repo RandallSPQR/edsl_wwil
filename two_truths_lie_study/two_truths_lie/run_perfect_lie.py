@@ -266,8 +266,9 @@ def score(run_dir: Path, only_models=None) -> int:
     else:
         cue_ids = [c.id for c in ins.cues]
         prev = scoring.baseline_prevalence(recs, cue_ids)
+        from src.perfect_lie.personas import heatmap_only_cues
         sat = scoring.saturated_cues(prev)
-        rows = scoring.unit_scores(recs, ins.personas, exclude=sat)
+        rows = scoring.unit_scores(recs, ins.personas, exclude=sat | heatmap_only_cues(ins.cues))
         out.update(
             baseline_prevalence=prev, saturated=sorted(sat),
             mean_T_by_condition={"|".join(k): v for k, v in scoring.mean_T_by(rows, "condition").items()},
@@ -376,8 +377,12 @@ def main(argv=None) -> int:
         from src.perfect_lie.stage1 import evaluate, render_markdown
         from src.perfect_lie.conditions import prompt_word_range
         new_dir, ref_dir = args.stage1_report
-        cue_ids = [c.id for c in load_instrument().cues]
-        res = evaluate(load_records(new_dir), load_records(ref_dir), cue_ids, prompt_word_range("v2"))
+        from src.perfect_lie.personas import heatmap_only_cues
+        from src.perfect_lie.conditions import active_prompt_version
+        cues = load_instrument().cues
+        cue_ids = [c.id for c in cues]
+        res = evaluate(load_records(new_dir), load_records(ref_dir), cue_ids, prompt_word_range(active_prompt_version()),
+                       exempt_cues=sorted(heatmap_only_cues(cues)))
         md = render_markdown(res, cue_ids, str(new_dir), str(ref_dir))
         (new_dir / "stage1_report.md").write_text(md)
         (new_dir / "stage1_report.json").write_text(json.dumps(res, indent=2, default=str) + "\n")

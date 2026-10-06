@@ -2,8 +2,13 @@
 `none` reference under the original prompt. Pass criteria are fixed in advance (brief §8
 item 17) and applied mechanically per model. No lift is computed here.
 
+Confessed lies (scoring.CONFESSION_RULE) are excluded before baselines and counted by
+model x condition.
+
 Criteria, per liar model, on the new-prompt run:
-  A  no cue above 50% baseline: every cue's P(cue | none) <= 0.50 (primary grader)
+  A  no cue above 50% baseline: every cue's P(cue | none) <= 0.50 (primary grader),
+     except heatmap-only cues (mechanism_explanation, named_expert; amendment to deviation 17,
+     2026-10-06), which are reported but exempt
   B  degeneration below 5% of lies (none + placebo)
   C  none/placebo pairs are distinct draws: no unit whose two lies are identical
   D  grader parse failures below 3% of cells: cells where any grader call failed to parse
@@ -16,7 +21,7 @@ import statistics
 from collections import defaultdict
 from typing import Dict, List, Sequence
 
-from .scoring import degenerate_tail
+from .scoring import confession, degenerate_tail
 
 THRESH_BASELINE = 0.50
 THRESH_DEGENERATE = 0.05
@@ -34,7 +39,8 @@ def baselines(records: Sequence[Dict], cue_ids: Sequence[str], grader: str = "pr
     """P(cue | none) per model, with n."""
     out = {}
     for mid, rs in sorted(_by_model(records).items()):
-        none = [r for r in rs if r["condition"] == "none" and r.get("status") == "complete" and grader in (r.get("grades") or {})]
+        none = [r for r in rs if r["condition"] == "none" and r.get("status") == "complete"
+                and grader in (r.get("grades") or {}) and not confession(r.get("lie") or "")]
         n = len(none)
         out[mid] = {"n": n, "rates": {c: (sum(bool(r["grades"][grader]["cues"][c]) for r in none) / n if n else None)
                                       for c in cue_ids}}
@@ -42,7 +48,7 @@ def baselines(records: Sequence[Dict], cue_ids: Sequence[str], grader: str = "pr
 
 
 def evaluate(new_records: Sequence[Dict], ref_records: Sequence[Dict], cue_ids: Sequence[str],
-             word_range=(300, 400)) -> Dict:
+             word_range=(300, 400), exempt_cues: Sequence[str] = ()) -> Dict:
     new_base = baselines(new_records, cue_ids)
     ref_base = baselines(ref_records, cue_ids)
     models = {}
@@ -50,7 +56,12 @@ def evaluate(new_records: Sequence[Dict], ref_records: Sequence[Dict], cue_ids: 
         lies = [r for r in rs if r.get("lie")]
         # A
         rates = new_base[mid]["rates"]
-        over = {c: v for c, v in rates.items() if v is not None and v > THRESH_BASELINE}
+        over = {c: v for c, v in rates.items() if v is not None and v > THRESH_BASELINE and c not in exempt_cues}
+        exempt_over = {c: v for c, v in rates.items() if v is not None and v > THRESH_BASELINE and c in exempt_cues}
+        conf = defaultdict(lambda: [0, 0])
+        for r in lies:
+            conf[r["condition"]][0] += bool(confession(r["lie"]))
+            conf[r["condition"]][1] += 1
         a_pass = new_base[mid]["n"] > 0 and not over
         # B
         degen = defaultdict(lambda: [0, 0])
@@ -86,7 +97,8 @@ def evaluate(new_records: Sequence[Dict], ref_records: Sequence[Dict], cue_ids: 
                           for r in rs for f in r.get("parse_failures", [])]
         models[mid] = {
             "criteria": {
-                "A_no_cue_above_50pct": {"pass": a_pass, "n_none": new_base[mid]["n"], "cues_over": over},
+                "A_no_cue_above_50pct": {"pass": a_pass, "n_none": new_base[mid]["n"], "cues_over": over,
+                                         "exempt_cues_over": exempt_over},
                 "B_degeneration_below_5pct": {"pass": b_pass, "rate": deg_rate, "n_degenerate": n_deg, "n_lies": len(lies)},
                 "C_distinct_draws": {"pass": c_pass, "paired_units": len(paired), "identical": identical},
                 "D_parse_failures_below_3pct": {"pass": d_pass, "rate": pf_rate, "cells_with_failure": len(with_pf),
@@ -94,11 +106,13 @@ def evaluate(new_records: Sequence[Dict], ref_records: Sequence[Dict], cue_ids: 
             },
             "pass": a_pass and b_pass and c_pass and d_pass,
             "degeneration_by_condition": {k: {"degenerate": v[0], "n": v[1]} for k, v in sorted(degen.items())},
+            "confessions_by_condition": {k: {"excluded": v[0], "n": v[1]} for k, v in sorted(conf.items())},
             "words": words, "failures": failures, "parse_failures": parse_failures,
             "n_cells": len(rs), "n_complete": sum(r.get("status") == "complete" for r in rs),
         }
     return {"criteria_thresholds": {"baseline": THRESH_BASELINE, "degeneration": THRESH_DEGENERATE,
                                     "parse_failures": THRESH_PARSE},
+            "exempt_cues": list(exempt_cues),
             "baseline_new": new_base, "baseline_reference": ref_base, "models": models,
             "all_models_pass": bool(models) and all(m["pass"] for m in models.values())}
 
@@ -132,6 +146,12 @@ def render_markdown(result: Dict, cue_ids: Sequence[str], new_dir: str, ref_dir:
         L.append(f"| {cue} | " + " | ".join(cells) + " |")
     L.append("| n (none lies) | " + " | ".join(
         f"{result['baseline_new'].get(m, {}).get('n', 0)} / {result['baseline_reference'].get(m, {}).get('n', 0)}" for m in mids) + " |")
+    L += ["", "Heatmap-only cues (exempt from criterion A): " + (", ".join(result.get("exempt_cues", [])) or "none") + ".",
+          "", "## Confessions excluded, by model and condition (new prompt)", "", "| model | none | placebo |", "|---|---|---|"]
+    for mid, m in result["models"].items():
+        cc = m["confessions_by_condition"]
+        g = lambda k: f"{cc[k]['excluded']}/{cc[k]['n']}" if k in cc else "n/a"
+        L.append(f"| {mid} | {g('none')} | {g('placebo')} |")
     L += ["", "## Degeneration by model and condition (new prompt)", "", "| model | none | placebo |", "|---|---|---|"]
     for mid, m in result["models"].items():
         dc = m["degeneration_by_condition"]

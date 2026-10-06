@@ -104,6 +104,11 @@ class Run:
         self.billing_probe = billing_probe
         self.billed_at_start = None
         self.billed_delta = 0.0
+        # Kill on breach: once spend reaches the cap, every in-flight call is cancelled, not
+        # only new cells held back. Cancelled cells are left pending (resumable).
+        self.killed = False
+        self._tasks: List[asyncio.Task] = []
+        self._charges = 0
         self.liar_by_id = {m["id"]: m for m in models["liar_models"]}
         self.design_by_prompt = {r.prompt_id: r for r in instrument.design}
         self.records: Dict[str, Dict] = {}
@@ -173,7 +178,7 @@ class Run:
             "spend_usd": round(self.effective_spend(), 4), "spend_counted_usd": round(self.spent, 4),
             "openrouter_billed_delta_usd": round(self.billed_delta, 4) if self.billed_at_start is not None else None,
             "spend_cap_usd": self.spend_cap, "spend_cap_reached": self.cap_reached,
-            "trace_probe_locked": self.trace_probe_locked,
+            "trace_probe_locked": self.trace_probe_locked, "killed_on_breach": self.killed,
             "python": platform.python_version(),
             "edsl_version": _edsl_version(),
         }
@@ -205,7 +210,8 @@ class Run:
                     return
                 await self.run_cell(cell)
 
-        await asyncio.gather(*(guarded(c) for c in self.pending()))
+        self._tasks = [asyncio.ensure_future(guarded(c)) for c in self.pending()]
+        await asyncio.gather(*self._tasks, return_exceptions=True)
         self._refresh_billed()
         self.write_manifest(finished=not self.cap_reached and not self.pending())
         return json.loads((self.run_dir / "manifest.json").read_text())
@@ -231,10 +237,25 @@ class Run:
         rec["cost_usd"] = rec.get("cost_usd", 0.0) + est
         rec["cost_includes_failed_call_bound"] = True
 
+    def _check_breach(self) -> None:
+        if not self.killed and self.effective_spend() >= self.spend_cap:
+            self.killed = True
+            self.cap_reached = True
+            current = asyncio.current_task()
+            for t in self._tasks:
+                if t is not current and not t.done():
+                    t.cancel()
+
     async def _charge(self, entry: Dict, usage: Dict) -> float:
         cost = _price(entry, usage)
         async with self._lock:
             self.spent += cost
+            self._charges += 1
+        if self._charges % 5 == 0:
+            self._refresh_billed()
+        self._check_breach()
+        if self.killed:
+            raise asyncio.CancelledError("spend cap breached")
         return cost
 
     def _base_record(self, cell: Cell) -> Dict:
@@ -269,6 +290,8 @@ class Run:
             if rec["stage_done"] == self.stages[-1] and rec["status"] != "complete":
                 rec["status"] = "complete"
                 await self._append(rec)
+        except asyncio.CancelledError:
+            raise  # killed on breach: leave the cell pending, write nothing further
         except Exception as e:  # recorded, retried on resume; never silently dropped
             rec["status"] = "error"
             rec["errors"].append({"stage_after": rec.get("stage_done"), "error": f"{type(e).__name__}: {e}"[:2000],

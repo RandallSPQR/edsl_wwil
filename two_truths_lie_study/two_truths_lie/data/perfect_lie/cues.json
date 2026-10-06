@@ -1,11 +1,12 @@
 {
-  "version": "0.3-phase1",
+  "version": "0.4-phase2",
   "status": "DRAFT \u2014 revisable during Phase 2 instrument development; frozen (hash recorded in PREREG.md) at end of Phase 2",
   "notes": [
     "Each cue has a one-line grader definition. The grader scores every lie against every cue, in this order, and is never told which cues belong to which persona.",
     "The unchanged TTAL fibber prompt mandates 'specific details: dates, names, locations, and numbers' and a closing source mention. Cues that restate a mandate (an exact date, a precise number, a named place) would be saturated by construction and were removed from the ontology in v0.2. The remaining cues are choices the mandate leaves open: WHICH kind of source, WHOSE words, WHAT tone, and whether the story includes an official process, a quotation, or an unglamorous aftermath.",
     "baseline_pressure is the a-priori expectation of how strongly the fibber prompt pushes the cue in every condition. Phase 2 measures the actual baseline prevalence p0(c) = P(c = 1 | none) for every cue; cues with p0 > 0.75 are flagged saturated and excluded from the primary directional score T (retained in the exploratory heatmap). See PERFECT_LIE.md \u00a73 and Phase 2.",
-    "v0.3: direct_quotation previously also counted 'reported speech attributed to a specific person', which overlaps named_expert whenever an expert is cited. Narrowed to verbatim quotation. Cross-pair co-firing is measured in Phase 2 (scoring.cofiring_report)."
+    "v0.3: direct_quotation previously also counted 'reported speech attributed to a specific person', which overlaps named_expert whenever an expert is cited. Narrowed to verbatim quotation. Cross-pair co-firing is measured in Phase 2 (scoring.cofiring_report).",
+    "v0.4 (2026-10-06): mechanism_explanation and named_expert are heatmap-only (cue field heatmap_only). They stay in the ontology and in the grader's fixed list, so the grader input is unchanged."
   ],
   "cues": [
     {
@@ -21,7 +22,9 @@
     {
       "id": "named_expert",
       "definition": "A specific named person is credited as a researcher, scientist, historian, or other expert who established or studied the claim.",
-      "baseline_pressure": "medium"
+      "baseline_pressure": "medium",
+      "heatmap_only": true,
+      "heatmap_only_reason": "Category-intrinsic (Stage 0: high in technical categories, low in culture and history). Owner amendment to deviation 17, recorded 2026-10-06 before any Stage 1 data: excluded from T and from the Stage 1 50% rule; still graded and shown in the heatmap."
     },
     {
       "id": "historical_anchor",
@@ -61,7 +64,9 @@
     {
       "id": "mechanism_explanation",
       "definition": "The story explains how or why the phenomenon works through a causal or step-by-step account.",
-      "baseline_pressure": "low"
+      "baseline_pressure": "low",
+      "heatmap_only": true,
+      "heatmap_only_reason": "Category-intrinsic (Stage 0: high in technical categories, low in culture and history). Owner amendment to deviation 17, recorded 2026-10-06 before any Stage 1 data: excluded from T and from the Stage 1 50% rule; still graded and shown in the heatmap."
     },
     {
       "id": "emotional_appeal",

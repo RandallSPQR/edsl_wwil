@@ -28,13 +28,15 @@ class Cue:
     id: str
     definition: str
     baseline_pressure: str
+    heatmap_only: bool = False   # graded and shown in the heatmap, excluded from T and the Stage 1 50% rule
 
 
 def load_cues(path: Optional[Path] = None) -> List[Cue]:
     """Return the global cue ontology in file order (the fixed grader order)."""
     path = path or DATA_DIR / "cues.json"
     raw = json.loads(path.read_text())
-    cues = [Cue(c["id"], c["definition"], c.get("baseline_pressure", "unknown")) for c in raw["cues"]]
+    cues = [Cue(c["id"], c["definition"], c.get("baseline_pressure", "unknown"), bool(c.get("heatmap_only", False)))
+            for c in raw["cues"]]
     ids = [c.id for c in cues]
     if len(ids) != len(set(ids)):
         raise ValueError("cues.json contains duplicate cue ids")
@@ -229,3 +231,7 @@ def load_instrument(data_dir: Optional[Path] = None) -> Instrument:
     design = load_design(d / "design.json", personas, prompts)
     hashes = {name: file_sha256(d / f"{name}.json") for name in ("cues", "personas", "prompts", "design")}
     return Instrument(cues, personas, prompts, design, hashes)
+
+
+def heatmap_only_cues(cues) -> set:
+    return {c.id for c in cues if c.heatmap_only}

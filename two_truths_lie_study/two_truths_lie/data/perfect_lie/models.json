@@ -506,35 +506,17 @@
             "tools",
             "top_p"
           ]
-        },
-        {
-          "id": "openai/gpt-4.1-mini",
-          "temperature": 0.0,
-          "max_output_tokens": 300,
-          "reasoning": null,
-          "usd_per_1k_input": 0.00039999999999999996,
-          "usd_per_1k_output": 0.0015999999999999999,
-          "family": "openai",
-          "system_role": true,
-          "note": "Anchor target in every class, so acceptance compares across classes.",
-          "price_verified_at": "2026-10-05T17:04:53+00:00",
-          "openrouter_supported_parameters": [
-            "max_completion_tokens",
-            "max_tokens",
-            "response_format",
-            "seed",
-            "structured_outputs",
-            "temperature",
-            "tool_choice",
-            "tools",
-            "top_p"
-          ]
         }
       ],
       "note": "Open pair chosen by the owner (probes exist for both). Closed partners proposed. No Anthropic model of this size or age is still served.",
       "approved": {
         "by": "owner",
         "on": "2026-10-05"
+      },
+      "frozen": {
+        "on": "2026-10-06",
+        "by": "owner",
+        "note": "Model set frozen at the four pilot models, as liars and as judges. No anchor judge in this phase."
       }
     },
     "C2": {
