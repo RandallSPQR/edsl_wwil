@@ -1,14 +1,15 @@
 {
-  "version": "0.6-phase2",
-  "status": "DRAFT \u2014 revisable during Phase 2 instrument development; frozen (hash recorded in PREREG.md) at end of Phase 2",
+  "version": "0.7-phase2",
+  "status": "DRAFT — revisable during Phase 2 instrument development; frozen (hash recorded in PREREG.md) at end of Phase 2",
   "notes": [
     "Each cue has a one-line grader definition. The grader scores every lie against every cue, in this order, and is never told which cues belong to which persona.",
     "The unchanged TTAL fibber prompt mandates 'specific details: dates, names, locations, and numbers' and a closing source mention. Cues that restate a mandate (an exact date, a precise number, a named place) would be saturated by construction and were removed from the ontology in v0.2. The remaining cues are choices the mandate leaves open: WHICH kind of source, WHOSE words, WHAT tone, and whether the story includes an official process, a quotation, or an unglamorous aftermath.",
-    "baseline_pressure is the a-priori expectation of how strongly the fibber prompt pushes the cue in every condition. Phase 2 measures the actual baseline prevalence p0(c) = P(c = 1 | none) for every cue; cues with p0 > 0.75 are flagged saturated and excluded from the primary directional score T (retained in the exploratory heatmap). See PERFECT_LIE.md \u00a73 and Phase 2.",
+    "baseline_pressure is the a-priori expectation of how strongly the fibber prompt pushes the cue in every condition. Phase 2 measures the actual baseline prevalence p0(c) = P(c = 1 | none) for every cue; cues with p0 > 0.75 are flagged saturated and excluded from the primary directional score T (retained in the exploratory heatmap). See PERFECT_LIE.md §3 and Phase 2.",
     "v0.3: direct_quotation previously also counted 'reported speech attributed to a specific person', which overlaps named_expert whenever an expert is cited. Narrowed to verbatim quotation. Cross-pair co-firing is measured in Phase 2 (scoring.cofiring_report).",
     "v0.4 (2026-10-06): mechanism_explanation and named_expert are heatmap-only (cue field heatmap_only). They stay in the ontology and in the grader's fixed list, so the grader input is unchanged.",
-    "v0.5 (2026-10-06T14:19:24Z): sensory_detail heatmap-only (post-hoc amendment, brief \u00a78 item 21).",
-    "v0.6 (rubric repair, 2026-10-06): tightened definitions with five boundary examples each for hedged_claim, direct_quotation and mundane_aftermath; examples written from the definitions' own ambiguities, without reading Stage 1 grader disagreements. historical_anchor unchanged; judged on v3 data only. Previous definitions kept as definition_v05."
+    "v0.5 (2026-10-06T14:19:24Z): sensory_detail heatmap-only (post-hoc amendment, brief §8 item 21).",
+    "v0.6 (rubric repair, 2026-10-06): tightened definitions with five boundary examples each for hedged_claim, direct_quotation and mundane_aftermath; examples written from the definitions' own ambiguities, without reading Stage 1 grader disagreements. historical_anchor unchanged; judged on v3 data only. Previous definitions kept as definition_v05.",
+    "v0.7 (2026-10-06, brief §8 item 26): emotional_appeal only. Narrator-voiced to match the P4/P6 notes, judged independently of other cues' exclusions, five boundary examples (from the pre-freeze report, written without reading stories or grader disagreements). Previous definition kept as definition_v06. Every other cue unchanged from v0.6."
   ],
   "cues": [
     {
@@ -120,8 +121,31 @@
     },
     {
       "id": "emotional_appeal",
-      "definition": "The narrator explicitly appeals to feeling: wonder, awe, sadness, fear, nostalgia, or asks the listener to imagine how it felt.",
-      "baseline_pressure": "low"
+      "definition": "The narrator, in their own voice, names or evokes a feeling about the events (wonder, awe, sadness, fear, nostalgia), conveys what it felt like to be there, or asks the listener to imagine how it felt. Judge this cue on its own: a line that does not count as a hedge or as a mundane aftermath still counts here if the narrator voices or invites a feeling. A character's feeling reported as plain fact, and a dramatic or sad event stated without any feeling named or evoked, do not count.",
+      "baseline_pressure": "low",
+      "definition_v06": "The narrator explicitly appeals to feeling: wonder, awe, sadness, fear, nostalgia, or asks the listener to imagine how it felt.",
+      "boundary_examples": [
+        [
+          "I still get chills remembering the silence when the lid came off.",
+          true
+        ],
+        [
+          "Imagine standing on that ice, hearing it crack beneath you.",
+          true
+        ],
+        [
+          "It reminds me, every time, of the wonder I felt that morning.",
+          true
+        ],
+        [
+          "The farmer worried the bridge might not hold.",
+          false
+        ],
+        [
+          "The flood destroyed forty homes in a single night.",
+          false
+        ]
+      ]
     },
     {
       "id": "hedged_claim",
