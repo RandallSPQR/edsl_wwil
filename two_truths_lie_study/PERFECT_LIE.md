@@ -703,6 +703,13 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
    - The 95 Stage 1 prompt-v3 lies are regraded by the primary and Google graders under the
      revised rubric (kill cap $5) into `results/perfect_lie/rubric_repair_v06/`; the original
      Stage 1 grades are untouched.
+   - Result (2026-10-06, report in `rubric_repair_v06/report.md`): 190/190 gradings, $1.35
+     counted ($1.12 billed), cap not breached. direct_quotation is repaired (kappa 0.68 to 0.84)
+     and mundane_aftermath clears the rule through AC1 (0.83 [0.73, 0.92]). hedged_claim stays at
+     risk (AC1 0.71 [0.56, 0.84], kappa 0.34) but touches only P4. Two unrevised cues moved,
+     mostly in the Google grader: institutional_authority became at risk and emotional_appeal
+     stayed at risk. Worst-case primary pool: 9 units per replicate per liar (was 5). Feeds
+     PREREG_DRAFT revision 3.
 
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.
