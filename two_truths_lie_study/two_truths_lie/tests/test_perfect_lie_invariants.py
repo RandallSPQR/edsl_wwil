@@ -1610,3 +1610,21 @@ def test_preflight_accepts_owner_approved_substitute_fabricability_evidence():
     assert fab(preflight(models, prompts, "full", env=key, fabricability_evidence=ev)) == []
     assert len(fab(preflight(models, prompts, "full", env=key, fabricability_evidence=dict(ev, owner_approved=False)))) == 6
     assert all(p["fabricability"]["status"] != "verified_in_pilot" for p in prompts["prompts"])  # never marked verified
+
+
+def test_nonviable_lies_stay_in_and_sensitivity_excludes_them(instrument):
+    from src.perfect_lie.sequential import nonviable_counts, note_named, primary_pool, scorable_cues, unit_lifts
+    sc = scorable_cues(instrument); pool = primary_pool(instrument, sc)
+    row = instrument.design[0]; t = row.j1 if row.j1 in pool else row.j2
+    named = note_named(instrument, row, t, sc)
+    long_story = " ".join(["word"] * 350); short_story = " ".join(["word"] * 100)
+    def rec(cond, lie):
+        return {"model_id": "m", "prompt_id": row.prompt_id, "target_id": t, "replicate": 1, "condition": cond,
+                "status": "complete", "lie": lie, "lie_word_range": [300, 400],
+                "grades": {"primary": {"cues": {c.id: (c.id in named and cond == "full") for c in instrument.cues}}}}
+    recs = [rec("full", short_story), rec("placebo", long_story)]
+    assert len(unit_lifts(recs, instrument, sc, pool)["units"]) == 1            # rule (a): stays in
+    out = unit_lifts(recs, instrument, sc, pool, exclude_nonviable=True)
+    assert out["units"] == [] and out["excluded"]["nonviable"] == 1            # sensitivity: excluded
+    counts = nonviable_counts(recs)
+    assert counts["full"]["too_short"] == 1 and counts["placebo"]["any"] == 0

@@ -793,6 +793,24 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
        runner's failed-call bound, not real spend.
      - The run directory was deleted (`results/perfect_lie/full_20261006T180215Z`, no data).
      - The test now patches the lock, and the real-lock test checks only the trace probe.
+29. **Owner decisions on code changes since the tag and on non-viable lies, recorded 2026-10-06T18:17:23Z, before any
+   confirmatory call.**
+   1. **The conditions fix is kept.** At the tag (c2ca8b8), `--full` also generated `partial`. The run
+      uses `none`, `placebo` and `full`, as the pre-registration says (section 2).
+   2. **`sequential.py` is kept** as the implementation of pre-registration sections 3-6. It was written
+      after the tag and before any data. Blinded interim reporting is unchanged (item 27).
+   3. **Non-viable lies follow rule (a).** The pre-registration is silent on them, so the rule is set
+      here:
+      - Word-range failures (more than 20% outside 300-400 words) and refusals **stay in** the primary
+        analysis and are **counted by condition**.
+      - One **sensitivity analysis** excludes units in which either lie fails these checks. Its label
+        is "added post-registration, before data".
+      - Code: `sequential.nonviable_counts` and `unit_lifts(exclude_nonviable=True)`.
+      - Degenerate text is still reported, not excluded.
+   4. **Before the interim:** `sequential.py` is validated offline (null, operating characteristics,
+      and a Stage 2 label permutation; `results/perfect_lie/validation_sequential/`). An OSF addendum
+      is drafted for the owner to post. The interim starts only after the owner confirms the
+      addendum is posted and the tree is clean.
 
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.
