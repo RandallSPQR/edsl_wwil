@@ -229,6 +229,27 @@ class OpenAIService(InferenceServiceABC):
                         params.pop("presence_penalty", None)
                         params.pop("frequency_penalty", None)
 
+                # OpenRouter: forward the unified `reasoning` field when the model was
+                # constructed with one (Model(..., service_name="open_router") then
+                # model.parameters["reasoning"] = {...}). Used by the Perfect Lie study
+                # to vary thinking budget within one set of weights.
+                if self._inference_service_ == "open_router":
+                    # OpenRouter-only request fields set on model.parameters: `reasoning`
+                    # (thinking budget) and `provider` (routing, e.g. a bf16 pin). The
+                    # OpenAI client rejects unknown keyword arguments, so they go through
+                    # extra_body, which the client merges into the JSON request body.
+                    for field in ("reasoning", "provider", "response_format"):
+                        value = self.parameters.get(field) if isinstance(self.parameters, dict) else None
+                        if value:
+                            extra = dict(params.get("extra_body") or {})
+                            extra[field] = dict(value)
+                            params["extra_body"] = extra
+                    # Do not send top_logprobs without logprobs: some upstream
+                    # providers reject the combination instead of ignoring it.
+                    if not params.get("logprobs"):
+                        params.pop("logprobs", None)
+                        params.pop("top_logprobs", None)
+
                 # Add additional service-specific filtering logic here as needed
                 # Example:
                 # elif self._inference_service_ == "another_service":

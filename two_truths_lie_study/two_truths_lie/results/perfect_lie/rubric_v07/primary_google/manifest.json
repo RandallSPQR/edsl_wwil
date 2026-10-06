@@ -1,0 +1,20 @@
+{
+  "source": "results/perfect_lie/stage1_v3_controls",
+  "namespace": "rubric_v07_20261006",
+  "graders": [
+    "anthropic/claude-sonnet-4.5",
+    "google/gemini-2.5-flash"
+  ],
+  "lies": 95,
+  "gradings_written": 190,
+  "gradings_planned": 190,
+  "spend_usd": 1.4102,
+  "spend_counted_usd": 1.4102,
+  "billed_delta_usd": 1.0529,
+  "cap_usd": 5.0,
+  "killed_on_breach": false,
+  "rubric_sha256": "6b4cdf49d73b4f5d1f8ea7f6f00acc780bc9643ba6150735249cad678c86444c",
+  "finished_at": "2026-10-06T16:32:49+00:00",
+  "combined_cap_usd": 5.0,
+  "combined_spend_usd": 1.4102
+}

@@ -44,6 +44,9 @@ probable_junk/
 !edsl/utilities/data/*.json
 !.vscode/settings.json
 !tests/serialization/data/*.json
+!two_truths_lie_study/two_truths_lie/data/perfect_lie/*.json
+!two_truths_lie_study/two_truths_lie/results/perfect_lie/**/*.json
+!two_truths_lie_study/two_truths_lie/results/perfect_lie/**/*.jsonl
 !performance.yml
 .env*
 docs/notebooks/drafts/*

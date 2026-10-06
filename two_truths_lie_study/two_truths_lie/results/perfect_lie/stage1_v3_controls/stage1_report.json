@@ -1,0 +1,1092 @@
+{
+  "criteria_thresholds": {
+    "baseline": 0.5,
+    "degeneration": 0.05,
+    "parse_failures": 0.03
+  },
+  "exempt_cues": [
+    "mechanism_explanation",
+    "named_expert",
+    "sensory_detail"
+  ],
+  "baseline_new": {
+    "google/gemini-2.5-flash-lite": {
+      "n": 12,
+      "rates": {
+        "document_citation": 0.0,
+        "institutional_authority": 0.0,
+        "named_expert": 0.0,
+        "historical_anchor": 0.25,
+        "official_failure": 0.0,
+        "first_person_witness": 0.08333333333333333,
+        "family_provenance": 0.0,
+        "sensory_detail": 0.8333333333333334,
+        "direct_quotation": 0.08333333333333333,
+        "mundane_aftermath": 0.0,
+        "mechanism_explanation": 0.8333333333333334,
+        "emotional_appeal": 0.6666666666666666,
+        "hedged_claim": 0.5,
+        "self_deprecation": 0.0,
+        "skeptic_acknowledgment": 0.08333333333333333,
+        "humor": 0.08333333333333333
+      },
+      "wilson95": {
+        "document_citation": [
+          0.0,
+          0.2424940095530979
+        ],
+        "institutional_authority": [
+          0.0,
+          0.2424940095530979
+        ],
+        "named_expert": [
+          0.0,
+          0.2424940095530979
+        ],
+        "historical_anchor": [
+          0.08894166769488562,
+          0.5323053370816633
+        ],
+        "official_failure": [
+          0.0,
+          0.2424940095530979
+        ],
+        "first_person_witness": [
+          0.014865094239669363,
+          0.35387991372124555
+        ],
+        "family_provenance": [
+          0.0,
+          0.2424940095530979
+        ],
+        "sensory_detail": [
+          0.5519691353881888,
+          0.9530348582430792
+        ],
+        "direct_quotation": [
+          0.014865094239669363,
+          0.35387991372124555
+        ],
+        "mundane_aftermath": [
+          0.0,
+          0.2424940095530979
+        ],
+        "mechanism_explanation": [
+          0.5519691353881888,
+          0.9530348582430792
+        ],
+        "emotional_appeal": [
+          0.3906220869404939,
+          0.86187990987514
+        ],
+        "hedged_claim": [
+          0.25378159616252394,
+          0.7462184038374761
+        ],
+        "self_deprecation": [
+          0.0,
+          0.2424940095530979
+        ],
+        "skeptic_acknowledgment": [
+          0.014865094239669363,
+          0.35387991372124555
+        ],
+        "humor": [
+          0.014865094239669363,
+          0.35387991372124555
+        ]
+      }
+    },
+    "google/gemma-3-27b-it": {
+      "n": 12,
+      "rates": {
+        "document_citation": 0.0,
+        "institutional_authority": 0.3333333333333333,
+        "named_expert": 0.5833333333333334,
+        "historical_anchor": 0.5833333333333334,
+        "official_failure": 0.0,
+        "first_person_witness": 0.25,
+        "family_provenance": 0.25,
+        "sensory_detail": 1.0,
+        "direct_quotation": 0.3333333333333333,
+        "mundane_aftermath": 0.0,
+        "mechanism_explanation": 1.0,
+        "emotional_appeal": 0.4166666666666667,
+        "hedged_claim": 0.5833333333333334,
+        "self_deprecation": 0.0,
+        "skeptic_acknowledgment": 0.08333333333333333,
+        "humor": 0.0
+      },
+      "wilson95": {
+        "document_citation": [
+          0.0,
+          0.2424940095530979
+        ],
+        "institutional_authority": [
+          0.13812009012485987,
+          0.6093779130595061
+        ],
+        "named_expert": [
+          0.31951131084242423,
+          0.8067396875653928
+        ],
+        "historical_anchor": [
+          0.31951131084242423,
+          0.8067396875653928
+        ],
+        "official_failure": [
+          0.0,
+          0.2424940095530979
+        ],
+        "first_person_witness": [
+          0.08894166769488562,
+          0.5323053370816633
+        ],
+        "family_provenance": [
+          0.08894166769488562,
+          0.5323053370816633
+        ],
+        "sensory_detail": [
+          0.7575059904469021,
+          1.0
+        ],
+        "direct_quotation": [
+          0.13812009012485987,
+          0.6093779130595061
+        ],
+        "mundane_aftermath": [
+          0.0,
+          0.2424940095530979
+        ],
+        "mechanism_explanation": [
+          0.7575059904469021,
+          1.0
+        ],
+        "emotional_appeal": [
+          0.1932603124346072,
+          0.6804886891575758
+        ],
+        "hedged_claim": [
+          0.31951131084242423,
+          0.8067396875653928
+        ],
+        "self_deprecation": [
+          0.0,
+          0.2424940095530979
+        ],
+        "skeptic_acknowledgment": [
+          0.014865094239669363,
+          0.35387991372124555
+        ],
+        "humor": [
+          0.0,
+          0.2424940095530979
+        ]
+      }
+    },
+    "meta-llama/llama-3.1-8b-instruct": {
+      "n": 12,
+      "rates": {
+        "document_citation": 0.0,
+        "institutional_authority": 0.16666666666666666,
+        "named_expert": 0.25,
+        "historical_anchor": 0.25,
+        "official_failure": 0.0,
+        "first_person_witness": 0.0,
+        "family_provenance": 0.0,
+        "sensory_detail": 0.75,
+        "direct_quotation": 0.0,
+        "mundane_aftermath": 0.0,
+        "mechanism_explanation": 0.9166666666666666,
+        "emotional_appeal": 0.4166666666666667,
+        "hedged_claim": 0.5833333333333334,
+        "self_deprecation": 0.0,
+        "skeptic_acknowledgment": 0.08333333333333333,
+        "humor": 0.0
+      },
+      "wilson95": {
+        "document_citation": [
+          0.0,
+          0.2424940095530979
+        ],
+        "institutional_authority": [
+          0.04696514175692082,
+          0.4480308646118111
+        ],
+        "named_expert": [
+          0.08894166769488562,
+          0.5323053370816633
+        ],
+        "historical_anchor": [
+          0.08894166769488562,
+          0.5323053370816633
+        ],
+        "official_failure": [
+          0.0,
+          0.2424940095530979
+        ],
+        "first_person_witness": [
+          0.0,
+          0.2424940095530979
+        ],
+        "family_provenance": [
+          0.0,
+          0.2424940095530979
+        ],
+        "sensory_detail": [
+          0.4676946629183366,
+          0.9110583323051143
+        ],
+        "direct_quotation": [
+          0.0,
+          0.2424940095530979
+        ],
+        "mundane_aftermath": [
+          0.0,
+          0.2424940095530979
+        ],
+        "mechanism_explanation": [
+          0.6461200862787544,
+          0.9851349057603305
+        ],
+        "emotional_appeal": [
+          0.1932603124346072,
+          0.6804886891575758
+        ],
+        "hedged_claim": [
+          0.31951131084242423,
+          0.8067396875653928
+        ],
+        "self_deprecation": [
+          0.0,
+          0.2424940095530979
+        ],
+        "skeptic_acknowledgment": [
+          0.014865094239669363,
+          0.35387991372124555
+        ],
+        "humor": [
+          0.0,
+          0.2424940095530979
+        ]
+      }
+    },
+    "openai/gpt-4o-mini": {
+      "n": 12,
+      "rates": {
+        "document_citation": 0.0,
+        "institutional_authority": 0.16666666666666666,
+        "named_expert": 0.25,
+        "historical_anchor": 0.5833333333333334,
+        "official_failure": 0.08333333333333333,
+        "first_person_witness": 0.0,
+        "family_provenance": 0.0,
+        "sensory_detail": 0.75,
+        "direct_quotation": 0.25,
+        "mundane_aftermath": 0.08333333333333333,
+        "mechanism_explanation": 0.8333333333333334,
+        "emotional_appeal": 0.3333333333333333,
+        "hedged_claim": 0.3333333333333333,
+        "self_deprecation": 0.0,
+        "skeptic_acknowledgment": 0.3333333333333333,
+        "humor": 0.08333333333333333
+      },
+      "wilson95": {
+        "document_citation": [
+          0.0,
+          0.2424940095530979
+        ],
+        "institutional_authority": [
+          0.04696514175692082,
+          0.4480308646118111
+        ],
+        "named_expert": [
+          0.08894166769488562,
+          0.5323053370816633
+        ],
+        "historical_anchor": [
+          0.31951131084242423,
+          0.8067396875653928
+        ],
+        "official_failure": [
+          0.014865094239669363,
+          0.35387991372124555
+        ],
+        "first_person_witness": [
+          0.0,
+          0.2424940095530979
+        ],
+        "family_provenance": [
+          0.0,
+          0.2424940095530979
+        ],
+        "sensory_detail": [
+          0.4676946629183366,
+          0.9110583323051143
+        ],
+        "direct_quotation": [
+          0.08894166769488562,
+          0.5323053370816633
+        ],
+        "mundane_aftermath": [
+          0.014865094239669363,
+          0.35387991372124555
+        ],
+        "mechanism_explanation": [
+          0.5519691353881888,
+          0.9530348582430792
+        ],
+        "emotional_appeal": [
+          0.13812009012485987,
+          0.6093779130595061
+        ],
+        "hedged_claim": [
+          0.13812009012485987,
+          0.6093779130595061
+        ],
+        "self_deprecation": [
+          0.0,
+          0.2424940095530979
+        ],
+        "skeptic_acknowledgment": [
+          0.13812009012485987,
+          0.6093779130595061
+        ],
+        "humor": [
+          0.014865094239669363,
+          0.35387991372124555
+        ]
+      }
+    }
+  },
+  "baseline_reference": {
+    "google/gemini-2.5-flash-lite": {
+      "n": 12,
+      "rates": {
+        "document_citation": 0.8333333333333334,
+        "institutional_authority": 0.8333333333333334,
+        "named_expert": 0.75,
+        "historical_anchor": 0.6666666666666666,
+        "official_failure": 0.16666666666666666,
+        "first_person_witness": 0.08333333333333333,
+        "family_provenance": 0.0,
+        "sensory_detail": 0.75,
+        "direct_quotation": 0.0,
+        "mundane_aftermath": 0.4166666666666667,
+        "mechanism_explanation": 0.9166666666666666,
+        "emotional_appeal": 0.25,
+        "hedged_claim": 0.5833333333333334,
+        "self_deprecation": 0.0,
+        "skeptic_acknowledgment": 0.25,
+        "humor": 0.16666666666666666
+      },
+      "wilson95": {
+        "document_citation": [
+          0.5519691353881888,
+          0.9530348582430792
+        ],
+        "institutional_authority": [
+          0.5519691353881888,
+          0.9530348582430792
+        ],
+        "named_expert": [
+          0.4676946629183366,
+          0.9110583323051143
+        ],
+        "historical_anchor": [
+          0.3906220869404939,
+          0.86187990987514
+        ],
+        "official_failure": [
+          0.04696514175692082,
+          0.4480308646118111
+        ],
+        "first_person_witness": [
+          0.014865094239669363,
+          0.35387991372124555
+        ],
+        "family_provenance": [
+          0.0,
+          0.2424940095530979
+        ],
+        "sensory_detail": [
+          0.4676946629183366,
+          0.9110583323051143
+        ],
+        "direct_quotation": [
+          0.0,
+          0.2424940095530979
+        ],
+        "mundane_aftermath": [
+          0.1932603124346072,
+          0.6804886891575758
+        ],
+        "mechanism_explanation": [
+          0.6461200862787544,
+          0.9851349057603305
+        ],
+        "emotional_appeal": [
+          0.08894166769488562,
+          0.5323053370816633
+        ],
+        "hedged_claim": [
+          0.31951131084242423,
+          0.8067396875653928
+        ],
+        "self_deprecation": [
+          0.0,
+          0.2424940095530979
+        ],
+        "skeptic_acknowledgment": [
+          0.08894166769488562,
+          0.5323053370816633
+        ],
+        "humor": [
+          0.04696514175692082,
+          0.4480308646118111
+        ]
+      }
+    },
+    "google/gemma-3-27b-it": {
+      "n": 12,
+      "rates": {
+        "document_citation": 0.8333333333333334,
+        "institutional_authority": 0.9166666666666666,
+        "named_expert": 0.8333333333333334,
+        "historical_anchor": 0.75,
+        "official_failure": 0.08333333333333333,
+        "first_person_witness": 0.16666666666666666,
+        "family_provenance": 0.08333333333333333,
+        "sensory_detail": 0.5,
+        "direct_quotation": 0.0,
+        "mundane_aftermath": 0.5833333333333334,
+        "mechanism_explanation": 0.9166666666666666,
+        "emotional_appeal": 0.16666666666666666,
+        "hedged_claim": 0.5,
+        "self_deprecation": 0.0,
+        "skeptic_acknowledgment": 0.08333333333333333,
+        "humor": 0.16666666666666666
+      },
+      "wilson95": {
+        "document_citation": [
+          0.5519691353881888,
+          0.9530348582430792
+        ],
+        "institutional_authority": [
+          0.6461200862787544,
+          0.9851349057603305
+        ],
+        "named_expert": [
+          0.5519691353881888,
+          0.9530348582430792
+        ],
+        "historical_anchor": [
+          0.4676946629183366,
+          0.9110583323051143
+        ],
+        "official_failure": [
+          0.014865094239669363,
+          0.35387991372124555
+        ],
+        "first_person_witness": [
+          0.04696514175692082,
+          0.4480308646118111
+        ],
+        "family_provenance": [
+          0.014865094239669363,
+          0.35387991372124555
+        ],
+        "sensory_detail": [
+          0.25378159616252394,
+          0.7462184038374761
+        ],
+        "direct_quotation": [
+          0.0,
+          0.2424940095530979
+        ],
+        "mundane_aftermath": [
+          0.31951131084242423,
+          0.8067396875653928
+        ],
+        "mechanism_explanation": [
+          0.6461200862787544,
+          0.9851349057603305
+        ],
+        "emotional_appeal": [
+          0.04696514175692082,
+          0.4480308646118111
+        ],
+        "hedged_claim": [
+          0.25378159616252394,
+          0.7462184038374761
+        ],
+        "self_deprecation": [
+          0.0,
+          0.2424940095530979
+        ],
+        "skeptic_acknowledgment": [
+          0.014865094239669363,
+          0.35387991372124555
+        ],
+        "humor": [
+          0.04696514175692082,
+          0.4480308646118111
+        ]
+      }
+    },
+    "meta-llama/llama-3.1-8b-instruct": {
+      "n": 12,
+      "rates": {
+        "document_citation": 0.9166666666666666,
+        "institutional_authority": 1.0,
+        "named_expert": 1.0,
+        "historical_anchor": 0.6666666666666666,
+        "official_failure": 0.0,
+        "first_person_witness": 0.3333333333333333,
+        "family_provenance": 0.08333333333333333,
+        "sensory_detail": 0.4166666666666667,
+        "direct_quotation": 0.25,
+        "mundane_aftermath": 0.0,
+        "mechanism_explanation": 0.6666666666666666,
+        "emotional_appeal": 0.5,
+        "hedged_claim": 0.08333333333333333,
+        "self_deprecation": 0.0,
+        "skeptic_acknowledgment": 0.0,
+        "humor": 0.0
+      },
+      "wilson95": {
+        "document_citation": [
+          0.6461200862787544,
+          0.9851349057603305
+        ],
+        "institutional_authority": [
+          0.7575059904469021,
+          1.0
+        ],
+        "named_expert": [
+          0.7575059904469021,
+          1.0
+        ],
+        "historical_anchor": [
+          0.3906220869404939,
+          0.86187990987514
+        ],
+        "official_failure": [
+          0.0,
+          0.2424940095530979
+        ],
+        "first_person_witness": [
+          0.13812009012485987,
+          0.6093779130595061
+        ],
+        "family_provenance": [
+          0.014865094239669363,
+          0.35387991372124555
+        ],
+        "sensory_detail": [
+          0.1932603124346072,
+          0.6804886891575758
+        ],
+        "direct_quotation": [
+          0.08894166769488562,
+          0.5323053370816633
+        ],
+        "mundane_aftermath": [
+          0.0,
+          0.2424940095530979
+        ],
+        "mechanism_explanation": [
+          0.3906220869404939,
+          0.86187990987514
+        ],
+        "emotional_appeal": [
+          0.25378159616252394,
+          0.7462184038374761
+        ],
+        "hedged_claim": [
+          0.014865094239669363,
+          0.35387991372124555
+        ],
+        "self_deprecation": [
+          0.0,
+          0.2424940095530979
+        ],
+        "skeptic_acknowledgment": [
+          0.0,
+          0.2424940095530979
+        ],
+        "humor": [
+          0.0,
+          0.2424940095530979
+        ]
+      }
+    },
+    "openai/gpt-4o-mini": {
+      "n": 12,
+      "rates": {
+        "document_citation": 0.75,
+        "institutional_authority": 1.0,
+        "named_expert": 0.5,
+        "historical_anchor": 0.4166666666666667,
+        "official_failure": 0.0,
+        "first_person_witness": 0.08333333333333333,
+        "family_provenance": 0.0,
+        "sensory_detail": 0.8333333333333334,
+        "direct_quotation": 0.3333333333333333,
+        "mundane_aftermath": 0.25,
+        "mechanism_explanation": 0.8333333333333334,
+        "emotional_appeal": 0.5,
+        "hedged_claim": 0.4166666666666667,
+        "self_deprecation": 0.0,
+        "skeptic_acknowledgment": 0.16666666666666666,
+        "humor": 0.08333333333333333
+      },
+      "wilson95": {
+        "document_citation": [
+          0.4676946629183366,
+          0.9110583323051143
+        ],
+        "institutional_authority": [
+          0.7575059904469021,
+          1.0
+        ],
+        "named_expert": [
+          0.25378159616252394,
+          0.7462184038374761
+        ],
+        "historical_anchor": [
+          0.1932603124346072,
+          0.6804886891575758
+        ],
+        "official_failure": [
+          0.0,
+          0.2424940095530979
+        ],
+        "first_person_witness": [
+          0.014865094239669363,
+          0.35387991372124555
+        ],
+        "family_provenance": [
+          0.0,
+          0.2424940095530979
+        ],
+        "sensory_detail": [
+          0.5519691353881888,
+          0.9530348582430792
+        ],
+        "direct_quotation": [
+          0.13812009012485987,
+          0.6093779130595061
+        ],
+        "mundane_aftermath": [
+          0.08894166769488562,
+          0.5323053370816633
+        ],
+        "mechanism_explanation": [
+          0.5519691353881888,
+          0.9530348582430792
+        ],
+        "emotional_appeal": [
+          0.25378159616252394,
+          0.7462184038374761
+        ],
+        "hedged_claim": [
+          0.1932603124346072,
+          0.6804886891575758
+        ],
+        "self_deprecation": [
+          0.0,
+          0.2424940095530979
+        ],
+        "skeptic_acknowledgment": [
+          0.04696514175692082,
+          0.4480308646118111
+        ],
+        "humor": [
+          0.014865094239669363,
+          0.35387991372124555
+        ]
+      }
+    }
+  },
+  "models": {
+    "google/gemini-2.5-flash-lite": {
+      "criteria": {
+        "A_no_cue_above_50pct": {
+          "pass": true,
+          "n_none": 12,
+          "cues_over": {},
+          "point_estimate_over_but_interval_not": {
+            "emotional_appeal": {
+              "rate": 0.6666666666666666,
+              "ci95": [
+                0.3906220869404939,
+                0.86187990987514
+              ]
+            }
+          },
+          "exempt_cues_over": {
+            "sensory_detail": 0.8333333333333334,
+            "mechanism_explanation": 0.8333333333333334
+          }
+        },
+        "B_degeneration_below_5pct": {
+          "pass": true,
+          "rate": 0.0,
+          "n_degenerate": 0,
+          "n_lies": 24
+        },
+        "C_distinct_draws": {
+          "pass": true,
+          "paired_units": 12,
+          "identical": 0
+        },
+        "D_failed_cells": {
+          "pass": true,
+          "failed_cells": [
+            "pilot|technology|P5|P6|P5|placebo|google/gemini-2.5-flash-lite|off|r1|p=v3"
+          ],
+          "failed_conditions": [
+            "placebo"
+          ],
+          "clustered": false,
+          "recovered_parse_failure_cells": []
+        }
+      },
+      "pass": true,
+      "degeneration_by_condition": {
+        "none": {
+          "degenerate": 0,
+          "n": 12
+        },
+        "placebo": {
+          "degenerate": 0,
+          "n": 12
+        }
+      },
+      "confessions_by_condition": {
+        "none": {
+          "excluded": 0,
+          "n": 12
+        },
+        "placebo": {
+          "excluded": 0,
+          "n": 12
+        }
+      },
+      "words": {
+        "n": 24,
+        "min": 233,
+        "median": 333.5,
+        "max": 450,
+        "in_band": 0.7083333333333334,
+        "below": 4,
+        "above": 3
+      },
+      "failures": [
+        {
+          "cell_id": "pilot|technology|P5|P6|P5|placebo|google/gemini-2.5-flash-lite|off|r1|p=v3",
+          "status": "error",
+          "error": "ValueError: grader[meta]: no well-formed answer after 3 attempts: grader output cues['direct_quotation']=False inconsistent with counts['direct_quotation']=2"
+        }
+      ],
+      "parse_failures": [
+        {
+          "cell_id": "pilot|technology|P5|P6|P5|placebo|google/gemini-2.5-flash-lite|off|r1|p=v3",
+          "call": "grader[meta]",
+          "attempt": 0,
+          "error": "grader output cues['direct_quotation']=False inconsistent with counts['direct_quotation']=2",
+          "finish_reason": "stop"
+        },
+        {
+          "cell_id": "pilot|technology|P5|P6|P5|placebo|google/gemini-2.5-flash-lite|off|r1|p=v3",
+          "call": "grader[meta]",
+          "attempt": 1,
+          "error": "grader output cues['direct_quotation']=False inconsistent with counts['direct_quotation']=2",
+          "finish_reason": "stop"
+        },
+        {
+          "cell_id": "pilot|technology|P5|P6|P5|placebo|google/gemini-2.5-flash-lite|off|r1|p=v3",
+          "call": "grader[meta]",
+          "attempt": 2,
+          "error": "grader output cues['direct_quotation']=False inconsistent with counts['direct_quotation']=2",
+          "finish_reason": "stop"
+        },
+        {
+          "cell_id": "pilot|technology|P5|P6|P5|placebo|google/gemini-2.5-flash-lite|off|r1|p=v3",
+          "call": "grader[meta]",
+          "attempt": 0,
+          "error": "grader output cues['direct_quotation']=False inconsistent with counts['direct_quotation']=2",
+          "finish_reason": "stop"
+        },
+        {
+          "cell_id": "pilot|technology|P5|P6|P5|placebo|google/gemini-2.5-flash-lite|off|r1|p=v3",
+          "call": "grader[meta]",
+          "attempt": 1,
+          "error": "grader output cues['direct_quotation']=False inconsistent with counts['direct_quotation']=2",
+          "finish_reason": "stop"
+        },
+        {
+          "cell_id": "pilot|technology|P5|P6|P5|placebo|google/gemini-2.5-flash-lite|off|r1|p=v3",
+          "call": "grader[meta]",
+          "attempt": 2,
+          "error": "grader output cues['direct_quotation']=False inconsistent with counts['direct_quotation']=2",
+          "finish_reason": "stop"
+        }
+      ],
+      "n_cells": 24,
+      "n_complete": 23
+    },
+    "google/gemma-3-27b-it": {
+      "criteria": {
+        "A_no_cue_above_50pct": {
+          "pass": true,
+          "n_none": 12,
+          "cues_over": {},
+          "point_estimate_over_but_interval_not": {
+            "historical_anchor": {
+              "rate": 0.5833333333333334,
+              "ci95": [
+                0.31951131084242423,
+                0.8067396875653928
+              ]
+            },
+            "hedged_claim": {
+              "rate": 0.5833333333333334,
+              "ci95": [
+                0.31951131084242423,
+                0.8067396875653928
+              ]
+            }
+          },
+          "exempt_cues_over": {
+            "named_expert": 0.5833333333333334,
+            "sensory_detail": 1.0,
+            "mechanism_explanation": 1.0
+          }
+        },
+        "B_degeneration_below_5pct": {
+          "pass": true,
+          "rate": 0.0,
+          "n_degenerate": 0,
+          "n_lies": 24
+        },
+        "C_distinct_draws": {
+          "pass": true,
+          "paired_units": 12,
+          "identical": 0
+        },
+        "D_failed_cells": {
+          "pass": true,
+          "failed_cells": [],
+          "failed_conditions": [],
+          "clustered": false,
+          "recovered_parse_failure_cells": []
+        }
+      },
+      "pass": true,
+      "degeneration_by_condition": {
+        "none": {
+          "degenerate": 0,
+          "n": 12
+        },
+        "placebo": {
+          "degenerate": 0,
+          "n": 12
+        }
+      },
+      "confessions_by_condition": {
+        "none": {
+          "excluded": 0,
+          "n": 12
+        },
+        "placebo": {
+          "excluded": 0,
+          "n": 12
+        }
+      },
+      "words": {
+        "n": 24,
+        "min": 328,
+        "median": 359.5,
+        "max": 408,
+        "in_band": 0.9583333333333334,
+        "below": 0,
+        "above": 1
+      },
+      "failures": [],
+      "parse_failures": [],
+      "n_cells": 24,
+      "n_complete": 24
+    },
+    "meta-llama/llama-3.1-8b-instruct": {
+      "criteria": {
+        "A_no_cue_above_50pct": {
+          "pass": true,
+          "n_none": 12,
+          "cues_over": {},
+          "point_estimate_over_but_interval_not": {
+            "hedged_claim": {
+              "rate": 0.5833333333333334,
+              "ci95": [
+                0.31951131084242423,
+                0.8067396875653928
+              ]
+            }
+          },
+          "exempt_cues_over": {
+            "sensory_detail": 0.75,
+            "mechanism_explanation": 0.9166666666666666
+          }
+        },
+        "B_degeneration_below_5pct": {
+          "pass": true,
+          "rate": 0.0,
+          "n_degenerate": 0,
+          "n_lies": 24
+        },
+        "C_distinct_draws": {
+          "pass": true,
+          "paired_units": 12,
+          "identical": 0
+        },
+        "D_failed_cells": {
+          "pass": true,
+          "failed_cells": [],
+          "failed_conditions": [],
+          "clustered": false,
+          "recovered_parse_failure_cells": []
+        }
+      },
+      "pass": true,
+      "degeneration_by_condition": {
+        "none": {
+          "degenerate": 0,
+          "n": 12
+        },
+        "placebo": {
+          "degenerate": 0,
+          "n": 12
+        }
+      },
+      "confessions_by_condition": {
+        "none": {
+          "excluded": 0,
+          "n": 12
+        },
+        "placebo": {
+          "excluded": 0,
+          "n": 12
+        }
+      },
+      "words": {
+        "n": 24,
+        "min": 279,
+        "median": 334.0,
+        "max": 408,
+        "in_band": 0.875,
+        "below": 2,
+        "above": 1
+      },
+      "failures": [],
+      "parse_failures": [],
+      "n_cells": 24,
+      "n_complete": 24
+    },
+    "openai/gpt-4o-mini": {
+      "criteria": {
+        "A_no_cue_above_50pct": {
+          "pass": true,
+          "n_none": 12,
+          "cues_over": {},
+          "point_estimate_over_but_interval_not": {
+            "historical_anchor": {
+              "rate": 0.5833333333333334,
+              "ci95": [
+                0.31951131084242423,
+                0.8067396875653928
+              ]
+            }
+          },
+          "exempt_cues_over": {
+            "sensory_detail": 0.75,
+            "mechanism_explanation": 0.8333333333333334
+          }
+        },
+        "B_degeneration_below_5pct": {
+          "pass": true,
+          "rate": 0.0,
+          "n_degenerate": 0,
+          "n_lies": 24
+        },
+        "C_distinct_draws": {
+          "pass": true,
+          "paired_units": 12,
+          "identical": 0
+        },
+        "D_failed_cells": {
+          "pass": true,
+          "failed_cells": [],
+          "failed_conditions": [],
+          "clustered": false,
+          "recovered_parse_failure_cells": [
+            "pilot|science|P2|P3|P2|placebo|openai/gpt-4o-mini|off|r1|p=v3"
+          ]
+        }
+      },
+      "pass": true,
+      "degeneration_by_condition": {
+        "none": {
+          "degenerate": 0,
+          "n": 12
+        },
+        "placebo": {
+          "degenerate": 0,
+          "n": 12
+        }
+      },
+      "confessions_by_condition": {
+        "none": {
+          "excluded": 0,
+          "n": 12
+        },
+        "placebo": {
+          "excluded": 0,
+          "n": 12
+        }
+      },
+      "words": {
+        "n": 24,
+        "min": 351,
+        "median": 380.5,
+        "max": 422,
+        "in_band": 0.9583333333333334,
+        "below": 0,
+        "above": 1
+      },
+      "failures": [],
+      "parse_failures": [
+        {
+          "cell_id": "pilot|science|P2|P3|P2|placebo|openai/gpt-4o-mini|off|r1|p=v3",
+          "call": "grader[secondary]",
+          "attempt": 0,
+          "error": "grader output cues['humor']=False inconsistent with counts['humor']=1",
+          "finish_reason": "stop"
+        },
+        {
+          "cell_id": "pilot|science|P2|P3|P2|placebo|openai/gpt-4o-mini|off|r1|p=v3",
+          "call": "grader[secondary]",
+          "attempt": 1,
+          "error": "grader output cues['humor']=False inconsistent with counts['humor']=1",
+          "finish_reason": "stop"
+        }
+      ],
+      "n_cells": 24,
+      "n_complete": 24
+    }
+  },
+  "all_models_pass": true,
+  "failed_cells_by_condition_all_models": {
+    "placebo": 1
+  }
+}

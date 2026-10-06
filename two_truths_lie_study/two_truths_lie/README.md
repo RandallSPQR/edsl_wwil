@@ -101,6 +101,17 @@ two_truths_lie/
 pytest tests/ -v
 ```
 
+## The Perfect Lie (target-conditioned adaptation study)
+
+A second study built on this harness. Brief, design, and TODO live in
+[`../PERFECT_LIE.md`](../PERFECT_LIE.md). Code is in `src/perfect_lie/`, stimuli
+in `data/perfect_lie/`, invariant tests in `tests/test_perfect_lie_invariants.py`.
+
+```bash
+python run_perfect_lie.py --dry-run      # cell count and cost estimate, no model calls
+python -m pytest tests/test_perfect_lie_invariants.py -q
+```
+
 ## Documentation
 
 See the design documents in the parent directory:

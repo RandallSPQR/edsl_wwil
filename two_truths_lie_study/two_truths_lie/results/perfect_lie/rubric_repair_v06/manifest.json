@@ -1,0 +1,18 @@
+{
+  "source": "results/perfect_lie/stage1_v3_controls",
+  "namespace": "regrade_rubric_v06",
+  "graders": [
+    "anthropic/claude-sonnet-4.5",
+    "google/gemini-2.5-flash"
+  ],
+  "lies": 95,
+  "gradings_written": 190,
+  "gradings_planned": 190,
+  "spend_usd": 1.3508,
+  "spend_counted_usd": 1.3508,
+  "billed_delta_usd": 1.1164,
+  "cap_usd": 5.0,
+  "killed_on_breach": false,
+  "rubric_sha256": "36d97192487edd17677bcff5137cf76e3bda87085f3d297b5ea62dff069ec494",
+  "finished_at": "2026-10-06T15:51:44+00:00"
+}

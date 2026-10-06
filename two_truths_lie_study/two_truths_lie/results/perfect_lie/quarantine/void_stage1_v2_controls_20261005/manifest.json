@@ -1,0 +1,64 @@
+{
+  "mode": "pilot",
+  "run_namespace": "pilot",
+  "run_dir": "results/perfect_lie/stage1_v2_controls",
+  "git_sha": "cb70dc542c89fae3e4220344922f1e38136a94da",
+  "git_dirty": true,
+  "started_at": "2026-10-05T23:28:17+00:00",
+  "updated_at": "2026-10-05T23:38:30+00:00",
+  "finished_at": null,
+  "hashes": {
+    "cues": "c1da58a88758c0446c7d19f902ba89c2f8a4aabf6bc85fc1771d70e57ba64116",
+    "personas": "6f8ccd60facbe225835a9f67602b434afe8177358e4efe47a44a7b357c204666",
+    "prompts": "c9b62d1c98881290d3925bb385184ee1f701a9019af9e4e3a0ece23dc631f520",
+    "design": "f0e1fd340f6c20914359eb3f0ee5190487c274854bb1800f75d24c55ec0838e1",
+    "models": "da5da51300d68effed189d889fe55090077d3362ae84c6f188beb55f5f79a5cc",
+    "grader_rubric": "c638fea116fbb397631f2c7a28dac8f01a63cd8990fcb70365dbb7e98f3a303f"
+  },
+  "liar_models": [
+    "google/gemini-2.5-flash-lite",
+    "google/gemma-3-27b-it",
+    "meta-llama/llama-3.1-8b-instruct",
+    "openai/gpt-4o-mini"
+  ],
+  "reasoning_levels": [
+    "off"
+  ],
+  "replicates": [
+    1
+  ],
+  "class_id": "C1",
+  "class_status": "approved",
+  "target_models": [
+    "meta-llama/llama-3.1-8b-instruct",
+    "google/gemma-3-27b-it",
+    "openai/gpt-4o-mini",
+    "google/gemini-2.5-flash-lite",
+    "openai/gpt-4.1-mini"
+  ],
+  "graders": [
+    "anthropic/claude-sonnet-4.5",
+    "openai/gpt-5",
+    "google/gemini-2.5-flash",
+    "meta-llama/llama-4-maverick"
+  ],
+  "trace_probe": "anthropic/claude-sonnet-4.5",
+  "stages": [
+    "liar",
+    "target",
+    "graders"
+  ],
+  "price_source": "openrouter.ai/api/v1/models",
+  "price_fetched_at": "2026-10-05T17:04:53+00:00",
+  "n_cells_planned": 96,
+  "n_complete": 73,
+  "n_error": 3,
+  "spend_usd": 1.3849,
+  "spend_counted_usd": 1.3849,
+  "openrouter_billed_delta_usd": 1.2647,
+  "spend_cap_usd": 9.0,
+  "spend_cap_reached": false,
+  "trace_probe_locked": true,
+  "python": "3.11.15",
+  "edsl_version": "1.0.5.dev1"
+}

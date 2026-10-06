@@ -1,0 +1,59 @@
+{
+  "run_dir": "results/perfect_lie/smoke_20261005T171650Z",
+  "mode": "smoke",
+  "n_records": 16,
+  "smoke": [
+    {
+      "model_id": "google/gemini-2.5-flash-lite",
+      "level": "off",
+      "n": 4,
+      "n_ok": 4,
+      "median_completion_tokens": 447.0,
+      "median_reasoning_tokens": 0.0,
+      "cap": 1500,
+      "trace_kinds": [
+        "None"
+      ],
+      "flags": []
+    },
+    {
+      "model_id": "google/gemma-3-27b-it",
+      "level": "off",
+      "n": 4,
+      "n_ok": 4,
+      "median_completion_tokens": 541.0,
+      "median_reasoning_tokens": 0.0,
+      "cap": 1500,
+      "trace_kinds": [
+        "None"
+      ],
+      "flags": []
+    },
+    {
+      "model_id": "meta-llama/llama-3.1-8b-instruct",
+      "level": "off",
+      "n": 4,
+      "n_ok": 4,
+      "median_completion_tokens": 439.0,
+      "median_reasoning_tokens": 0.0,
+      "cap": 1500,
+      "trace_kinds": [
+        "None"
+      ],
+      "flags": []
+    },
+    {
+      "model_id": "openai/gpt-4o-mini",
+      "level": "off",
+      "n": 4,
+      "n_ok": 4,
+      "median_completion_tokens": 520.5,
+      "median_reasoning_tokens": 0.0,
+      "cap": 1500,
+      "trace_kinds": [
+        "None"
+      ],
+      "flags": []
+    }
+  ]
+}

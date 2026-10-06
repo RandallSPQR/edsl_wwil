@@ -1,0 +1,11 @@
+{
+  "note": "Run control, not instrument: not hashed into run manifests. Only the study owner unlocks an entry, by setting locked to false in a commit that says why. Locked by owner instruction on 2026-10-05.",
+  "full_run": {
+    "locked": true,
+    "reason": "Owner: Tiers 1 + 2 with both graders and the trace probe are not ready. Do not run. The full run (any tier) stays locked until the owner unlocks it."
+  },
+  "trace_probe": {
+    "locked": true,
+    "reason": "Owner: the trace probe is a final set waiting on another run. Do not run it in any mode."
+  }
+}

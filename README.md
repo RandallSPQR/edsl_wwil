@@ -21,6 +21,8 @@ EDSL makes it easy to conduct computational social science and market research w
 6. Join our <a href="https://discord.com/invite/mxAYkjfy9m" target="_blank" rel="noopener noreferrer">Discord</a> for updates and discussions! 
 
 ## Code & Docs
+
+- **The Perfect Lie** (target-conditioned strategic adaptation): [two_truths_lie_study/PERFECT_LIE.md](two_truths_lie_study/PERFECT_LIE.md)
 - <a href="https://github.com/expectedparrot/edsl" target="_blank" rel="noopener noreferrer">GitHub</a>
 - <a href="https://pypi.org/project/edsl/" target="_blank" rel="noopener noreferrer">PyPI</a>
 - <a href="https://docs.expectedparrot.com" target="_blank" rel="noopener noreferrer">Documentation</a>

@@ -1,0 +1,1721 @@
+{
+  "version": "0.5-classes",
+  "price_source": "openrouter.ai/api/v1/models",
+  "price_fetched_at": "2026-10-05T17:04:53+00:00",
+  "service": "open_router",
+  "env_key": "OPEN_ROUTER_API_KEY",
+  "reasoning_design": {
+    "note": "Reasoning budget is a within-weights factor: each family's levels use one model id and differ only in OpenRouter's unified `reasoning` request field. Tier 1 = level `off` for every family (the primary preregistered test). Tier 2 = every other level. Thinking tokens are billed as output; expected_thinking_tokens is a cost assumption replaced by pilot measurement. max_output_tokens is sent as max_tokens and must exceed thinking budget + story.",
+    "levels_order": [
+      "off",
+      "low",
+      "high"
+    ],
+    "story_output_tokens": 700,
+    "temperature_note": "Temperature is fixed per family and identical at every reasoning level, so a change of level never also changes temperature. All liar families use 1.0: Anthropic requires temperature 1 when extended thinking is on, and gpt-5 accepts only 1. EDSL sends this value verbatim (openai/gpt-5 does not match EDSL's reasoning-model list, so EDSL does not override it)."
+  },
+  "graders": [
+    {
+      "role": "primary",
+      "id": "anthropic/claude-sonnet-4.5",
+      "usd_per_1k_input": 0.003,
+      "usd_per_1k_output": 0.015000000000000001,
+      "reasoning": {
+        "enabled": false
+      },
+      "temperature": 0.0,
+      "expected_thinking_tokens": 0,
+      "note": "Preregistered cue grader. Non-thinking, temperature 0. Blind by construction (grader.py). Shares a family with one liar; the secondary grader is the robustness check.",
+      "max_output_tokens": 2000,
+      "openrouter_supported_parameters": [
+        "include_reasoning",
+        "max_completion_tokens",
+        "max_tokens",
+        "reasoning",
+        "response_format",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_k",
+        "top_p"
+      ],
+      "family": "anthropic",
+      "price_verified_at": "2026-10-05T17:04:53+00:00"
+    },
+    {
+      "role": "secondary",
+      "id": "openai/gpt-5",
+      "usd_per_1k_input": 0.00125,
+      "usd_per_1k_output": 0.01,
+      "reasoning": {
+        "effort": "minimal"
+      },
+      "temperature": 1.0,
+      "expected_thinking_tokens": 150,
+      "note": "Robustness grader (owner decision 2026-10-06T15:36:09Z): kappa vs the primary grader and the primary test re-run on the subsample; reported as robustness only.",
+      "max_output_tokens": 4000,
+      "openrouter_supported_parameters": [
+        "include_reasoning",
+        "max_completion_tokens",
+        "max_tokens",
+        "reasoning",
+        "reasoning_effort",
+        "response_format",
+        "seed",
+        "structured_outputs",
+        "tool_choice",
+        "tools",
+        "verbosity"
+      ],
+      "family": "openai",
+      "price_verified_at": "2026-10-05T17:04:53+00:00",
+      "subsample": {
+        "fraction": 0.25,
+        "seed": 20261006,
+        "strata": [
+          "model_id",
+          "condition"
+        ],
+        "per_look": true,
+        "note": "Robustness grader only, on a seeded, random 25% subsample of lies, stratified by liar model x condition and drawn separately within each look (interim replicates 1-15; extension 16-35). Codes both the story and the stated B-hat of each sampled lie."
+      }
+    },
+    {
+      "role": "google",
+      "family": "google",
+      "id": "google/gemini-2.5-flash",
+      "reasoning": {
+        "enabled": false
+      },
+      "temperature": 0.0,
+      "max_output_tokens": 2000,
+      "expected_thinking_tokens": 0,
+      "usd_per_1k_input": 0.0003,
+      "usd_per_1k_output": 0.0025,
+      "note": "Gate grader: primary vs Google on every lie for the per-cue kappa/AC1 gate. Thinking off.",
+      "price_verified_at": "2026-10-05T17:04:53+00:00",
+      "openrouter_supported_parameters": [
+        "include_reasoning",
+        "max_tokens",
+        "reasoning",
+        "response_format",
+        "seed",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_p"
+      ]
+    }
+  ],
+  "trace_probe": {
+    "id": "anthropic/claude-sonnet-4.5",
+    "usd_per_1k_input": 0.003,
+    "usd_per_1k_output": 0.015000000000000001,
+    "note": "Secondary process measure on thinking-tier lies whose provider returns a trace: does the trace refer to the audience's beliefs? Separate blind pass; the trace never enters the cue grader (invariant 5).",
+    "temperature": 0.0,
+    "reasoning": {
+      "enabled": false
+    },
+    "max_output_tokens": 400,
+    "openrouter_supported_parameters": [
+      "include_reasoning",
+      "max_completion_tokens",
+      "max_tokens",
+      "reasoning",
+      "response_format",
+      "stop",
+      "structured_outputs",
+      "temperature",
+      "tool_choice",
+      "tools",
+      "top_k",
+      "top_p"
+    ],
+    "price_verified_at": "2026-10-05T17:04:53+00:00"
+  },
+  "token_assumptions": {
+    "note": "Per-call token estimates used by --dry-run. Liar user prompt is the measured FibberPrompt render; system prompt is measured per condition; the rest are conservative round numbers. Phase 2 pilot replaces them with measured means.",
+    "liar_output_tokens": 700,
+    "target_output_tokens": 80,
+    "grader_output_tokens": 300,
+    "trace_probe_output_tokens": 60,
+    "trace_probe_input_tokens": 3500,
+    "words_to_tokens": 1.35
+  },
+  "class_design": {
+    "note": "Classes run in order, old and cheap first. Within a class, open-weight models are mixed with closed models of similar vintage and size. Every class's liars also serve as its target panel (liar family x target family crossing), plus one anchor target held fixed across classes. The grader panel is fixed across classes. A class runs only when its status is 'approved' (owner).",
+    "order": [
+      "C1",
+      "C2",
+      "C3",
+      "C4"
+    ]
+  },
+  "classes": {
+    "C1": {
+      "name": "Small, 2024 to early 2025, non-thinking",
+      "status": "approved",
+      "liar_models": [
+        {
+          "id": "meta-llama/llama-3.1-8b-instruct",
+          "family": "meta",
+          "weights": "open",
+          "released": "2024-07",
+          "temperature": 0.6,
+          "reasoning_capable": false,
+          "system_role": true,
+          "true_off_available": true,
+          "usd_per_1k_input": 4.9999999999999996e-05,
+          "usd_per_1k_output": 8e-05,
+          "levels": {
+            "off": {
+              "reasoning": null,
+              "expected_thinking_tokens": 0,
+              "max_output_tokens": 1500
+            }
+          },
+          "provider": {
+            "only": [
+              "coreweave"
+            ],
+            "quantizations": [
+              "bf16"
+            ],
+            "allow_fallbacks": false
+          },
+          "hf_checkpoint": "meta-llama/Llama-3.1-8B-Instruct",
+          "note": "Owner's probe model. Pinned to CoreWeave bf16 so pod replay matches the weights.",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "frequency_penalty",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+          ],
+          "pinned_endpoints_verified": [
+            "CoreWeave:bf16"
+          ],
+          "top_p": 0.9,
+          "sampling_exception": "Owner decision 2026-10-05: Meta's recommended sampling for Llama 3.1 (temperature 0.6, top-p 0.9) instead of the liar default 1.0. At 1.0, 13 of 48 C1 pilot lies degenerated into word salad. Recorded exception; fixed at every reasoning level."
+        },
+        {
+          "id": "google/gemma-3-27b-it",
+          "family": "google",
+          "weights": "open",
+          "released": "2025-03",
+          "temperature": 1.0,
+          "reasoning_capable": false,
+          "system_role": false,
+          "true_off_available": true,
+          "usd_per_1k_input": 8e-05,
+          "usd_per_1k_output": 0.00045,
+          "levels": {
+            "off": {
+              "reasoning": null,
+              "expected_thinking_tokens": 0,
+              "max_output_tokens": 1500
+            }
+          },
+          "provider": {
+            "only": [
+              "novita"
+            ],
+            "quantizations": [
+              "bf16"
+            ],
+            "allow_fallbacks": false
+          },
+          "hf_checkpoint": "google/gemma-3-27b-it",
+          "note": "Owner's probe model. Pinned to Novita bf16. No system role: the private block is folded into the user turn exactly as Gemma 3's chat template does (system text, blank line, user text).",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "frequency_penalty",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+          ],
+          "pinned_endpoints_verified": [
+            "Novita:bf16"
+          ]
+        },
+        {
+          "id": "openai/gpt-4o-mini",
+          "family": "openai",
+          "weights": "closed",
+          "released": "2024-07",
+          "temperature": 1.0,
+          "reasoning_capable": false,
+          "system_role": true,
+          "true_off_available": true,
+          "usd_per_1k_input": 0.00015,
+          "usd_per_1k_output": 0.0006,
+          "levels": {
+            "off": {
+              "reasoning": null,
+              "expected_thinking_tokens": 0,
+              "max_output_tokens": 1500
+            }
+          },
+          "note": "Closed partner of similar vintage and size to the open pair (proposed).",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "frequency_penalty",
+            "logit_bias",
+            "logprobs",
+            "max_completion_tokens",
+            "max_tokens",
+            "prediction",
+            "presence_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_logprobs",
+            "top_p",
+            "web_search_options"
+          ]
+        },
+        {
+          "id": "google/gemini-2.5-flash-lite",
+          "family": "google",
+          "weights": "closed",
+          "released": "2025-07",
+          "temperature": 1.0,
+          "reasoning_capable": true,
+          "system_role": true,
+          "true_off_available": true,
+          "usd_per_1k_input": 9.999999999999999e-05,
+          "usd_per_1k_output": 0.00039999999999999996,
+          "levels": {
+            "off": {
+              "reasoning": {
+                "enabled": false
+              },
+              "expected_thinking_tokens": 0,
+              "max_output_tokens": 1500
+            }
+          },
+          "note": "Oldest small Gemini still served; thinking disabled (proposed). Gives Google an open (Gemma) and a closed model in the same class.",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_p"
+          ]
+        }
+      ],
+      "target_models": [
+        {
+          "id": "meta-llama/llama-3.1-8b-instruct",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": null,
+          "usd_per_1k_input": 4.9999999999999996e-05,
+          "usd_per_1k_output": 8e-05,
+          "system_role": true,
+          "family": "meta",
+          "provider": {
+            "only": [
+              "coreweave"
+            ],
+            "quantizations": [
+              "bf16"
+            ],
+            "allow_fallbacks": false
+          },
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "frequency_penalty",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+          ],
+          "pinned_endpoints_verified": [
+            "CoreWeave:bf16"
+          ]
+        },
+        {
+          "id": "google/gemma-3-27b-it",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": null,
+          "usd_per_1k_input": 8e-05,
+          "usd_per_1k_output": 0.00045,
+          "system_role": false,
+          "family": "google",
+          "provider": {
+            "only": [
+              "novita"
+            ],
+            "quantizations": [
+              "bf16"
+            ],
+            "allow_fallbacks": false
+          },
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "frequency_penalty",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+          ],
+          "pinned_endpoints_verified": [
+            "Novita:bf16"
+          ]
+        },
+        {
+          "id": "openai/gpt-4o-mini",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": null,
+          "usd_per_1k_input": 0.00015,
+          "usd_per_1k_output": 0.0006,
+          "system_role": true,
+          "family": "openai",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "frequency_penalty",
+            "logit_bias",
+            "logprobs",
+            "max_completion_tokens",
+            "max_tokens",
+            "prediction",
+            "presence_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_logprobs",
+            "top_p",
+            "web_search_options"
+          ]
+        },
+        {
+          "id": "google/gemini-2.5-flash-lite",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": {
+            "enabled": false
+          },
+          "usd_per_1k_input": 9.999999999999999e-05,
+          "usd_per_1k_output": 0.00039999999999999996,
+          "system_role": true,
+          "family": "google",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_p"
+          ]
+        }
+      ],
+      "note": "Open pair chosen by the owner (probes exist for both). Closed partners proposed. No Anthropic model of this size or age is still served.",
+      "approved": {
+        "by": "owner",
+        "on": "2026-10-05"
+      },
+      "frozen": {
+        "on": "2026-10-06",
+        "by": "owner",
+        "note": "Model set frozen at the four pilot models, as liars and as judges. No anchor judge in this phase."
+      }
+    },
+    "C2": {
+      "name": "Mid-size, 2025, non-thinking",
+      "status": "proposed",
+      "liar_models": [
+        {
+          "id": "meta-llama/llama-4-maverick",
+          "family": "meta",
+          "weights": "open",
+          "released": "2025-04",
+          "temperature": 1.0,
+          "reasoning_capable": false,
+          "system_role": true,
+          "true_off_available": true,
+          "usd_per_1k_input": 0.0001875,
+          "usd_per_1k_output": 0.0006525,
+          "levels": {
+            "off": {
+              "reasoning": null,
+              "expected_thinking_tokens": 0,
+              "max_output_tokens": 1500
+            }
+          },
+          "note": "Proposed; pin to a bf16 provider before approval.",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "frequency_penalty",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "presence_penalty",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+          ]
+        },
+        {
+          "id": "qwen/qwen3-235b-a22b-2507",
+          "family": "qwen",
+          "weights": "open",
+          "released": "2025-07",
+          "temperature": 1.0,
+          "reasoning_capable": false,
+          "system_role": true,
+          "true_off_available": true,
+          "usd_per_1k_input": 8.75e-05,
+          "usd_per_1k_output": 0.00035,
+          "levels": {
+            "off": {
+              "reasoning": null,
+              "expected_thinking_tokens": 0,
+              "max_output_tokens": 1500
+            }
+          },
+          "note": "Non-thinking instruct release (proposed).",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "frequency_penalty",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+          ]
+        },
+        {
+          "id": "deepseek/deepseek-chat-v3-0324",
+          "family": "deepseek",
+          "weights": "open",
+          "released": "2025-03",
+          "temperature": 1.0,
+          "reasoning_capable": false,
+          "system_role": true,
+          "true_off_available": true,
+          "usd_per_1k_input": 0.00029,
+          "usd_per_1k_output": 0.0011400000000000002,
+          "levels": {
+            "off": {
+              "reasoning": null,
+              "expected_thinking_tokens": 0,
+              "max_output_tokens": 1500
+            }
+          },
+          "note": "Proposed.",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "frequency_penalty",
+            "logprobs",
+            "max_tokens",
+            "response_format",
+            "seed",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+          ]
+        },
+        {
+          "id": "openai/gpt-4.1-mini",
+          "family": "openai",
+          "weights": "closed",
+          "released": "2025-04",
+          "temperature": 1.0,
+          "reasoning_capable": false,
+          "system_role": true,
+          "true_off_available": true,
+          "usd_per_1k_input": 0.00039999999999999996,
+          "usd_per_1k_output": 0.0015999999999999999,
+          "levels": {
+            "off": {
+              "reasoning": null,
+              "expected_thinking_tokens": 0,
+              "max_output_tokens": 1500
+            }
+          },
+          "note": "Proposed.",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "max_completion_tokens",
+            "max_tokens",
+            "response_format",
+            "seed",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_p"
+          ]
+        },
+        {
+          "id": "anthropic/claude-haiku-4.5",
+          "family": "anthropic",
+          "weights": "closed",
+          "released": "2025-10",
+          "temperature": 1.0,
+          "reasoning_capable": true,
+          "system_role": true,
+          "true_off_available": true,
+          "usd_per_1k_input": 0.001,
+          "usd_per_1k_output": 0.005,
+          "levels": {
+            "off": {
+              "reasoning": {
+                "enabled": false
+              },
+              "expected_thinking_tokens": 0,
+              "max_output_tokens": 1500
+            }
+          },
+          "note": "Smallest Anthropic model still served; thinking disabled (proposed). No older Anthropic model is available on OpenRouter.",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "max_completion_tokens",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_p"
+          ]
+        },
+        {
+          "id": "google/gemini-2.5-flash",
+          "family": "google",
+          "weights": "closed",
+          "released": "2025-06",
+          "temperature": 1.0,
+          "reasoning_capable": true,
+          "system_role": true,
+          "true_off_available": true,
+          "usd_per_1k_input": 0.0003,
+          "usd_per_1k_output": 0.0025,
+          "levels": {
+            "off": {
+              "reasoning": {
+                "enabled": false
+              },
+              "expected_thinking_tokens": 0,
+              "max_output_tokens": 1500
+            }
+          },
+          "note": "Thinking disabled (proposed).",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_p"
+          ]
+        }
+      ],
+      "target_models": [
+        {
+          "id": "meta-llama/llama-4-maverick",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": null,
+          "usd_per_1k_input": 0.0001875,
+          "usd_per_1k_output": 0.0006525,
+          "system_role": true,
+          "family": "meta",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "frequency_penalty",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "presence_penalty",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+          ]
+        },
+        {
+          "id": "qwen/qwen3-235b-a22b-2507",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": null,
+          "usd_per_1k_input": 8.75e-05,
+          "usd_per_1k_output": 0.00035,
+          "system_role": true,
+          "family": "qwen",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "frequency_penalty",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+          ]
+        },
+        {
+          "id": "deepseek/deepseek-chat-v3-0324",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": null,
+          "usd_per_1k_input": 0.00029,
+          "usd_per_1k_output": 0.0011400000000000002,
+          "system_role": true,
+          "family": "deepseek",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "frequency_penalty",
+            "logprobs",
+            "max_tokens",
+            "response_format",
+            "seed",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+          ]
+        },
+        {
+          "id": "openai/gpt-4.1-mini",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": null,
+          "usd_per_1k_input": 0.00039999999999999996,
+          "usd_per_1k_output": 0.0015999999999999999,
+          "system_role": true,
+          "family": "openai",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "max_completion_tokens",
+            "max_tokens",
+            "response_format",
+            "seed",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_p"
+          ]
+        },
+        {
+          "id": "anthropic/claude-haiku-4.5",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": {
+            "enabled": false
+          },
+          "usd_per_1k_input": 0.001,
+          "usd_per_1k_output": 0.005,
+          "system_role": true,
+          "family": "anthropic",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "max_completion_tokens",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_p"
+          ]
+        },
+        {
+          "id": "google/gemini-2.5-flash",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": {
+            "enabled": false
+          },
+          "usd_per_1k_input": 0.0003,
+          "usd_per_1k_output": 0.0025,
+          "system_role": true,
+          "family": "google",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_p"
+          ]
+        }
+      ]
+    },
+    "C3": {
+      "name": "Frontier 2025 with reasoning tier",
+      "status": "proposed",
+      "liar_models": [
+        {
+          "family": "openai",
+          "id": "openai/gpt-5",
+          "usd_per_1k_input": 0.00125,
+          "usd_per_1k_output": 0.01,
+          "true_off_available": false,
+          "true_off_note": "gpt-5 has no non-thinking mode on the same weights; `off` is effort=minimal. Preregistered as a partial replication of the off level.",
+          "levels": {
+            "off": {
+              "reasoning": {
+                "effort": "minimal"
+              },
+              "expected_thinking_tokens": 150,
+              "max_output_tokens": 2000
+            },
+            "low": {
+              "reasoning": {
+                "effort": "low"
+              },
+              "expected_thinking_tokens": 1200,
+              "max_output_tokens": 6000
+            },
+            "high": {
+              "reasoning": {
+                "effort": "high"
+              },
+              "expected_thinking_tokens": 5000,
+              "max_output_tokens": 16000
+            }
+          },
+          "temperature": 1.0,
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "max_completion_tokens",
+            "max_tokens",
+            "reasoning",
+            "reasoning_effort",
+            "response_format",
+            "seed",
+            "structured_outputs",
+            "tool_choice",
+            "tools",
+            "verbosity"
+          ],
+          "weights": "closed",
+          "reasoning_capable": true,
+          "system_role": true,
+          "released": "2025-08",
+          "price_verified_at": "2026-10-05T17:04:53+00:00"
+        },
+        {
+          "family": "anthropic",
+          "id": "anthropic/claude-sonnet-4.5",
+          "usd_per_1k_input": 0.003,
+          "usd_per_1k_output": 0.015000000000000001,
+          "true_off_available": true,
+          "levels": {
+            "off": {
+              "reasoning": {
+                "enabled": false
+              },
+              "expected_thinking_tokens": 0,
+              "max_output_tokens": 1500
+            },
+            "low": {
+              "reasoning": {
+                "max_tokens": 2048
+              },
+              "expected_thinking_tokens": 1500,
+              "max_output_tokens": 4000
+            },
+            "high": {
+              "reasoning": {
+                "max_tokens": 8192
+              },
+              "expected_thinking_tokens": 5000,
+              "max_output_tokens": 10000
+            }
+          },
+          "temperature": 1.0,
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "max_completion_tokens",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_p"
+          ],
+          "weights": "closed",
+          "reasoning_capable": true,
+          "system_role": true,
+          "released": "2025-09",
+          "price_verified_at": "2026-10-05T17:04:53+00:00"
+        },
+        {
+          "family": "google",
+          "id": "google/gemini-2.5-flash",
+          "usd_per_1k_input": 0.0003,
+          "usd_per_1k_output": 0.0025,
+          "true_off_available": true,
+          "levels": {
+            "off": {
+              "reasoning": {
+                "enabled": false
+              },
+              "expected_thinking_tokens": 0,
+              "max_output_tokens": 1500
+            },
+            "low": {
+              "reasoning": {
+                "max_tokens": 2048
+              },
+              "expected_thinking_tokens": 1500,
+              "max_output_tokens": 4000
+            },
+            "high": {
+              "reasoning": {
+                "max_tokens": 8192
+              },
+              "expected_thinking_tokens": 5000,
+              "max_output_tokens": 10000
+            }
+          },
+          "temperature": 1.0,
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_p"
+          ],
+          "weights": "closed",
+          "reasoning_capable": true,
+          "system_role": true,
+          "released": "2025-06",
+          "price_verified_at": "2026-10-05T17:04:53+00:00"
+        },
+        {
+          "family": "deepseek",
+          "id": "deepseek/deepseek-chat-v3.1",
+          "usd_per_1k_input": 0.00025,
+          "usd_per_1k_output": 0.00095,
+          "true_off_available": true,
+          "levels_note": "Hybrid thinking model with an on/off switch but no budget control, so it has two levels. `high` is used for the on state so that it aligns with the other families' upper level; there is no `low`.",
+          "levels": {
+            "off": {
+              "reasoning": {
+                "enabled": false
+              },
+              "expected_thinking_tokens": 0,
+              "max_output_tokens": 1500
+            },
+            "high": {
+              "reasoning": {
+                "enabled": true
+              },
+              "expected_thinking_tokens": 3000,
+              "max_output_tokens": 10000
+            }
+          },
+          "temperature": 1.0,
+          "openrouter_supported_parameters": [
+            "frequency_penalty",
+            "include_reasoning",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "reasoning",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+          ],
+          "weights": "open",
+          "reasoning_capable": true,
+          "system_role": true,
+          "released": "2025-08",
+          "price_verified_at": "2026-10-05T17:04:53+00:00"
+        }
+      ],
+      "target_models": [
+        {
+          "id": "openai/gpt-5",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": {
+            "effort": "minimal"
+          },
+          "usd_per_1k_input": 0.00125,
+          "usd_per_1k_output": 0.01,
+          "system_role": true,
+          "family": "openai",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "max_completion_tokens",
+            "max_tokens",
+            "reasoning",
+            "reasoning_effort",
+            "response_format",
+            "seed",
+            "structured_outputs",
+            "tool_choice",
+            "tools",
+            "verbosity"
+          ]
+        },
+        {
+          "id": "anthropic/claude-sonnet-4.5",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": {
+            "enabled": false
+          },
+          "usd_per_1k_input": 0.003,
+          "usd_per_1k_output": 0.015000000000000001,
+          "system_role": true,
+          "family": "anthropic",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "max_completion_tokens",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_p"
+          ]
+        },
+        {
+          "id": "google/gemini-2.5-flash",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": {
+            "enabled": false
+          },
+          "usd_per_1k_input": 0.0003,
+          "usd_per_1k_output": 0.0025,
+          "system_role": true,
+          "family": "google",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_p"
+          ]
+        },
+        {
+          "id": "deepseek/deepseek-chat-v3.1",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": {
+            "enabled": false
+          },
+          "usd_per_1k_input": 0.00025,
+          "usd_per_1k_output": 0.00095,
+          "system_role": true,
+          "family": "deepseek",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "frequency_penalty",
+            "include_reasoning",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "reasoning",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+          ]
+        },
+        {
+          "id": "openai/gpt-4.1-mini",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": null,
+          "usd_per_1k_input": 0.00039999999999999996,
+          "usd_per_1k_output": 0.0015999999999999999,
+          "family": "openai",
+          "system_role": true,
+          "note": "Anchor target in every class, so acceptance compares across classes.",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "max_completion_tokens",
+            "max_tokens",
+            "response_format",
+            "seed",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_p"
+          ]
+        }
+      ],
+      "note": "The original four-family design; the 2026-10-05 smoke test ran this class's liars."
+    },
+    "C4": {
+      "name": "Current state of the art, 2026",
+      "status": "proposed",
+      "liar_models": [
+        {
+          "id": "anthropic/claude-opus-5.5",
+          "family": "anthropic",
+          "weights": "closed",
+          "released": "2026-09",
+          "temperature": 1.0,
+          "reasoning_capable": true,
+          "system_role": true,
+          "true_off_available": true,
+          "usd_per_1k_input": 0.004,
+          "usd_per_1k_output": 0.02,
+          "levels": {
+            "off": {
+              "reasoning": {
+                "enabled": false
+              },
+              "expected_thinking_tokens": 0,
+              "max_output_tokens": 1500
+            }
+          },
+          "note": "Proposed; reasoning levels to be set after a smoke test.",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "max_completion_tokens",
+            "max_tokens",
+            "reasoning",
+            "reasoning_effort",
+            "response_format",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "verbosity"
+          ]
+        },
+        {
+          "id": "openai/gpt-5.6-sol",
+          "family": "openai",
+          "weights": "closed",
+          "released": "2026-07",
+          "temperature": 1.0,
+          "reasoning_capable": true,
+          "system_role": true,
+          "true_off_available": false,
+          "usd_per_1k_input": 0.002,
+          "usd_per_1k_output": 0.01,
+          "levels": {
+            "off": {
+              "reasoning": {
+                "effort": "minimal"
+              },
+              "expected_thinking_tokens": 0,
+              "max_output_tokens": 1500
+            }
+          },
+          "note": "Proposed.",
+          "true_off_note": "Assumed, like gpt-5, to have no true off; confirm in smoke test.",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "max_completion_tokens",
+            "max_tokens",
+            "reasoning",
+            "reasoning_effort",
+            "response_format",
+            "seed",
+            "structured_outputs",
+            "tool_choice",
+            "tools",
+            "verbosity"
+          ]
+        },
+        {
+          "id": "google/gemini-3.8-flash",
+          "family": "google",
+          "weights": "closed",
+          "released": "2026-09",
+          "temperature": 1.0,
+          "reasoning_capable": true,
+          "system_role": true,
+          "true_off_available": true,
+          "usd_per_1k_input": 0.00075,
+          "usd_per_1k_output": 0.0037500000000000003,
+          "levels": {
+            "off": {
+              "reasoning": {
+                "enabled": false
+              },
+              "expected_thinking_tokens": 0,
+              "max_output_tokens": 1500
+            }
+          },
+          "note": "Proposed.",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "reasoning_effort",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_p"
+          ]
+        },
+        {
+          "id": "x-ai/grok-4.7",
+          "family": "xai",
+          "weights": "closed",
+          "released": "2026-09",
+          "temperature": 1.0,
+          "reasoning_capable": true,
+          "system_role": true,
+          "true_off_available": true,
+          "usd_per_1k_input": 0.002,
+          "usd_per_1k_output": 0.006,
+          "levels": {
+            "off": {
+              "reasoning": {
+                "enabled": false
+              },
+              "expected_thinking_tokens": 0,
+              "max_output_tokens": 1500
+            }
+          },
+          "note": "Proposed.",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "logprobs",
+            "max_tokens",
+            "reasoning",
+            "reasoning_effort",
+            "response_format",
+            "seed",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_logprobs",
+            "top_p"
+          ]
+        },
+        {
+          "id": "google/gemma-4-31b-it",
+          "family": "google",
+          "weights": "open",
+          "released": "2026-04",
+          "temperature": 1.0,
+          "reasoning_capable": true,
+          "system_role": true,
+          "true_off_available": true,
+          "usd_per_1k_input": 8.999999999999999e-05,
+          "usd_per_1k_output": 0.00033999999999999997,
+          "levels": {
+            "off": {
+              "reasoning": {
+                "enabled": false
+              },
+              "expected_thinking_tokens": 0,
+              "max_output_tokens": 1500
+            }
+          },
+          "note": "Open successor to the class 1 Gemma (proposed).",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "frequency_penalty",
+            "include_reasoning",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "reasoning",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+          ]
+        },
+        {
+          "id": "qwen/qwen3.8-27b",
+          "family": "qwen",
+          "weights": "open",
+          "released": "2026-08",
+          "temperature": 1.0,
+          "reasoning_capable": true,
+          "system_role": true,
+          "true_off_available": true,
+          "usd_per_1k_input": 0.00042500000000000003,
+          "usd_per_1k_output": 0.00255,
+          "levels": {
+            "off": {
+              "reasoning": {
+                "enabled": false
+              },
+              "expected_thinking_tokens": 0,
+              "max_output_tokens": 1500
+            }
+          },
+          "note": "Proposed.",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "frequency_penalty",
+            "include_reasoning",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "reasoning",
+            "reasoning_effort",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_a",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+          ]
+        }
+      ],
+      "target_models": [
+        {
+          "id": "anthropic/claude-opus-5.5",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": {
+            "enabled": false
+          },
+          "usd_per_1k_input": 0.004,
+          "usd_per_1k_output": 0.02,
+          "system_role": true,
+          "family": "anthropic",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "max_completion_tokens",
+            "max_tokens",
+            "reasoning",
+            "reasoning_effort",
+            "response_format",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "verbosity"
+          ]
+        },
+        {
+          "id": "openai/gpt-5.6-sol",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": {
+            "effort": "minimal"
+          },
+          "usd_per_1k_input": 0.002,
+          "usd_per_1k_output": 0.01,
+          "system_role": true,
+          "family": "openai",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "max_completion_tokens",
+            "max_tokens",
+            "reasoning",
+            "reasoning_effort",
+            "response_format",
+            "seed",
+            "structured_outputs",
+            "tool_choice",
+            "tools",
+            "verbosity"
+          ]
+        },
+        {
+          "id": "google/gemini-3.8-flash",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": {
+            "enabled": false
+          },
+          "usd_per_1k_input": 0.00075,
+          "usd_per_1k_output": 0.0037500000000000003,
+          "system_role": true,
+          "family": "google",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "reasoning_effort",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_p"
+          ]
+        },
+        {
+          "id": "x-ai/grok-4.7",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": {
+            "enabled": false
+          },
+          "usd_per_1k_input": 0.002,
+          "usd_per_1k_output": 0.006,
+          "system_role": true,
+          "family": "xai",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "include_reasoning",
+            "logprobs",
+            "max_tokens",
+            "reasoning",
+            "reasoning_effort",
+            "response_format",
+            "seed",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_logprobs",
+            "top_p"
+          ]
+        },
+        {
+          "id": "google/gemma-4-31b-it",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": {
+            "enabled": false
+          },
+          "usd_per_1k_input": 8.999999999999999e-05,
+          "usd_per_1k_output": 0.00033999999999999997,
+          "system_role": true,
+          "family": "google",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "frequency_penalty",
+            "include_reasoning",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "reasoning",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+          ]
+        },
+        {
+          "id": "qwen/qwen3.8-27b",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": {
+            "enabled": false
+          },
+          "usd_per_1k_input": 0.00042500000000000003,
+          "usd_per_1k_output": 0.00255,
+          "system_role": true,
+          "family": "qwen",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "frequency_penalty",
+            "include_reasoning",
+            "logit_bias",
+            "logprobs",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "reasoning",
+            "reasoning_effort",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_a",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+          ]
+        },
+        {
+          "id": "openai/gpt-4.1-mini",
+          "temperature": 0.0,
+          "max_output_tokens": 300,
+          "reasoning": null,
+          "usd_per_1k_input": 0.00039999999999999996,
+          "usd_per_1k_output": 0.0015999999999999999,
+          "family": "openai",
+          "system_role": true,
+          "note": "Anchor target in every class, so acceptance compares across classes.",
+          "price_verified_at": "2026-10-05T17:04:53+00:00",
+          "openrouter_supported_parameters": [
+            "max_completion_tokens",
+            "max_tokens",
+            "response_format",
+            "seed",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_p"
+          ]
+        }
+      ],
+      "note": "Reasoning levels per model to be set from a smoke test before approval."
+    }
+  },
+  "grader_design": "Primary (Claude Sonnet 4.5) and Google (gemini-2.5-flash) grade every lie, story and B-hat. gpt-5 grades a seeded, stratified 25% subsample as a robustness grader. Llama 4 Maverick retired 2026-10-06T15:36:09Z.",
+  "retired_graders": [
+    {
+      "role": "meta",
+      "family": "meta",
+      "id": "meta-llama/llama-4-maverick",
+      "reasoning": null,
+      "temperature": 0.0,
+      "max_output_tokens": 2000,
+      "expected_thinking_tokens": 0,
+      "usd_per_1k_input": 0.0001875,
+      "usd_per_1k_output": 0.0006525,
+      "note": "Same-family grader for Llama lies (self-preference check).",
+      "price_verified_at": "2026-10-05T17:04:53+00:00",
+      "openrouter_supported_parameters": [
+        "frequency_penalty",
+        "logit_bias",
+        "logprobs",
+        "max_tokens",
+        "presence_penalty",
+        "repetition_penalty",
+        "response_format",
+        "seed",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_k",
+        "top_logprobs",
+        "top_p"
+      ],
+      "retired": {
+        "on": "2026-10-06T15:36:09Z",
+        "by": "owner",
+        "reason": "Three strict-schema self-contradictions (a cue marked present with a count of 0, or absent with a count above 0): Stage 1 cell technology|P5|placebo|gemini-2.5-flash-lite, Stage 2 B-hat codings technology|P6|full|gemini-2.5-flash-lite and culture|P6|full|llama-3.1-8b-instruct. Dropped before any full-run data."
+      }
+    }
+  ]
+}

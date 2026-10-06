@@ -12,7 +12,7 @@ import os
 import re
 import time
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from functools import wraps
 
 from edsl import Agent, Model, QuestionFreeText
@@ -802,3 +802,343 @@ class EDSLAdapter:
             "confidence": confidence,
             "reasoning": reasoning
         }
+
+
+# ---------------------------------------------------------------------------
+# The Perfect Lie: private-block channel (PERFECT_LIE.md §2, invariant 1)
+# ---------------------------------------------------------------------------
+#
+# The existing story path (generate_story -> _run_question) cannot carry a
+# private block safely: it silently drops agent traits for several model
+# families (_should_skip_agent_traits) and, on the direct-Anthropic path,
+# prepends traits to the USER prompt. Either would let B_hat_j vanish or leak
+# into E_t without any error. This method is the one channel the study uses.
+# It is additive; nothing above changes.
+
+PERFECT_LIE_AGENT_TRAITS = {"role": "storyteller"}  # constant; EDSL ignores `instruction` on a trait-less agent
+
+# Constant traits per study role. Each is identical in every condition, so the rendered
+# system prompt differs across conditions only by the private note (tested).
+PERFECT_LIE_ROLE_TRAITS = {
+    "liar": PERFECT_LIE_AGENT_TRAITS,
+    "target": {"role": "listener"},
+    "grader": {"role": "annotator"},
+    "trace_probe": {"role": "annotator"},
+}
+
+# Every live call runs locally against the service key. All four flags are needed:
+# with use_api_proxy=False and disable_remote_inference left at its default (False),
+# EDSL sets offload_execution=True and, whenever EXPECTED_PARROT_API_KEY is set, ships
+# the whole job to Expected Parrot's servers. Their code has neither the `reasoning`
+# passthrough nor the OpenRouter key, so every reasoning level would silently run at
+# the provider default. disable_remote_cache keeps responses out of the shared cache.
+PERFECT_LIE_RUN_FLAGS = dict(
+    use_api_proxy=False,
+    disable_remote_inference=True,
+    offload_execution=False,
+    disable_remote_cache=True,
+    progress_bar=False,
+    stop_on_exception=False,
+)
+
+
+class PrivateBlockChannelError(RuntimeError):
+    """Raised when the rendered prompts do not carry the private block as intended."""
+
+
+class PerfectLieCallError(RuntimeError):
+    """A live call returned no usable answer."""
+
+
+def fold_system_into_user(system_prompt: str, user_prompt: str) -> str:
+    """How Gemma 3's chat template delivers a system message: prepended to the first user
+    turn, separated by a blank line. Doing it ourselves makes the delivered text exact and
+    recorded, instead of depending on each provider's handling of a system role."""
+    return f"{system_prompt}\n\n{user_prompt}" if system_prompt else user_prompt
+
+
+def _perfect_lie_build_job(user_prompt: str, system_prompt: str, model_name: str,
+                           temperature: float, replicate: int, service_name: str,
+                           question_name: str = "story", skip_api_key_check: bool = False,
+                           reasoning: Optional[Dict] = None, max_output_tokens: Optional[int] = None,
+                           role: str = "liar", run_namespace: str = "", attempt: int = 0,
+                           provider: Optional[Dict] = None, system_role: bool = True,
+                           draw_key: str = "", response_format: Optional[Dict] = None,
+                           top_p: Optional[float] = None):
+    """Build (but do not run) the EDSL job for one call and verify its rendered prompts.
+
+    reasoning: OpenRouter's unified `reasoning` request field for this cell's budget level
+    (e.g. {"enabled": False}, {"max_tokens": 2048}, {"effort": "low"}). It is stored in
+    model.parameters so it enters the cache key, and the open_router service forwards it to
+    the request (see edsl/inference_services/services/open_ai_service.py,
+    _filter_parameters_for_service). max_output_tokens is sent as max_completion_tokens and
+    must exceed thinking + story.
+
+    replicate, run_namespace and attempt are cache-key fields only; none is sent to the API.
+    replicate separates independent draws. run_namespace ("smoke", "pilot", "full") keeps a
+    pilot response from being served back from cache inside the full run, where pilot data
+    would otherwise leak into inference. attempt lets a retry after a malformed answer
+    reach the model again instead of the cached malformed answer.
+    """
+    model_kwargs = dict(temperature=temperature)
+    if top_p is not None:
+        model_kwargs["top_p"] = float(top_p)
+    if max_output_tokens is not None:
+        model_kwargs["max_tokens"] = int(max_output_tokens)
+    if skip_api_key_check:
+        model_kwargs["skip_api_key_check"] = True
+    if service_name:
+        model = Model(model_name, service_name=service_name, **model_kwargs)
+    else:
+        model = Model(model_name, **model_kwargs)
+    model.parameters["replicate"] = replicate
+    # draw_key separates draws whose prompts are identical by design: in `none` and
+    # `placebo` the liar sees the same input for both targets of a pair, and without this
+    # the second lie is the first one served from cache (found in the C1 pilot: all 48
+    # such units held one lie twice, forcing T = 0). Cache-key only; never sent.
+    if draw_key:
+        model.parameters["draw"] = draw_key
+    if run_namespace:
+        model.parameters["run_namespace"] = run_namespace
+    if attempt:
+        model.parameters["attempt"] = attempt
+    if reasoning is not None:
+        model.parameters["reasoning"] = dict(reasoning)
+    if provider:
+        model.parameters["provider"] = dict(provider)
+    if response_format:
+        model.parameters["response_format"] = dict(response_format)
+
+    if system_role:
+        traits = dict(PERFECT_LIE_ROLE_TRAITS[role])
+        agent = Agent(traits=traits, instruction=system_prompt)
+        question = QuestionFreeText(question_text=user_prompt, question_name=question_name)
+        job = question.by(agent).by(model)
+        expected_user = user_prompt
+    else:
+        # No system role (Gemma): one user turn, private block first, exactly as the model's
+        # chat template would place a system message. No agent, so EDSL sends no system message.
+        expected_user = fold_system_into_user(system_prompt, user_prompt)
+        question = QuestionFreeText(question_text=expected_user, question_name=question_name)
+        job = question.by(model)
+
+    rendered = job.prompts().to_dicts()[0]
+    rendered_user = str(rendered["user_prompt"])
+    rendered_system = str(rendered["system_prompt"])
+    if rendered_user != expected_user:
+        raise PrivateBlockChannelError("rendered user prompt differs from what this model must receive")
+    if system_role and not rendered_system.startswith(system_prompt):
+        raise PrivateBlockChannelError("rendered system prompt does not begin with the private block")
+    if not system_role and rendered_system != "":
+        raise PrivateBlockChannelError("a model without a system role must receive no system message")
+    return job, rendered_user, rendered_system
+
+
+def delivered_messages(rendered_user: str, rendered_system: str) -> List[Dict[str, str]]:
+    """The chat messages EDSL sends (it drops an empty system message). Stored with every
+    call so the pod can replay the exact sequence through the same weights."""
+    msgs = [{"role": "system", "content": rendered_system}] if rendered_system else []
+    return msgs + [{"role": "user", "content": rendered_user}]
+
+
+def _perfect_lie_parse_results(results, question_name: str) -> Dict:
+    """Pull answer, raw response, usage, finish reason and any thinking trace out of Results."""
+    text = results.select(f"answer.{question_name}").first()
+    try:
+        raw = results.select(f"raw_model_response.{question_name}_raw_model_response").first()
+    except Exception:
+        raw = None
+    usage, finish_reason = {}, None
+    if isinstance(raw, dict):
+        u = raw.get("usage") or {}
+        details = u.get("completion_tokens_details") or {}
+        usage = {
+            "prompt_tokens": u.get("prompt_tokens"),
+            "completion_tokens": u.get("completion_tokens"),
+            "reasoning_tokens": details.get("reasoning_tokens"),
+        }
+        choices = raw.get("choices") or []
+        if choices and isinstance(choices[0], dict):
+            finish_reason = choices[0].get("finish_reason")
+    trace, trace_kind = _perfect_lie_extract_trace_from_raw(raw)
+    generation_id = raw.get("id") if isinstance(raw, dict) else None
+    served_provider = raw.get("provider") if isinstance(raw, dict) else None
+    return {"text": text, "raw": raw, "usage": usage, "finish_reason": finish_reason,
+            "thinking_trace": trace, "thinking_trace_kind": trace_kind,
+            # OpenRouter's id for this call; GET /api/v1/generation?id=... returns its billed cost.
+            "generation_id": generation_id,
+            # Which upstream provider OpenRouter used; checked against the pin.
+            "served_provider": served_provider}
+
+
+def _perfect_lie_extract_trace_from_raw(raw) -> Tuple[Optional[str], Optional[str]]:
+    """Return (trace_text, kind) from an OpenAI-shaped raw response.
+
+    kind is "text" for a readable trace, "summary" for a provider summary (typical for
+    OpenAI reasoning models), "encrypted" when only an opaque blob came back, None when
+    nothing came back. Only "text" and "summary" yield trace text for the trace probe.
+    """
+    try:
+        message = raw["choices"][0]["message"]
+    except Exception:
+        return None, None
+    if not isinstance(message, dict):
+        return None, None
+    for key in ("reasoning", "reasoning_content"):
+        if message.get(key):
+            return str(message[key]), "text"
+    details = [d for d in (message.get("reasoning_details") or []) if isinstance(d, dict)]
+    texts = [d["text"] for d in details if d.get("text")]
+    if texts:
+        return "\n".join(texts), "text"
+    summaries = [d["summary"] for d in details if d.get("summary")]
+    if summaries:
+        return "\n".join(str(x) for x in summaries), "summary"
+    if any(d.get("data") or "encrypted" in str(d.get("type", "")) for d in details):
+        return None, "encrypted"
+    return None, None
+
+
+def _perfect_lie_extract_trace(results) -> Optional[str]:
+    """Backward-compatible helper: trace text from a Results object, or None."""
+    try:
+        raw = results.select("raw_model_response.story_raw_model_response").first()
+    except Exception:
+        return None
+    return _perfect_lie_extract_trace_from_raw(raw)[0]
+
+
+class PerfectLieAdapter:
+    """One call = (system_prompt private, user_prompt public), always executed locally."""
+
+    def __init__(self, service_name: Optional[str] = "open_router"):
+        self.service_name = service_name
+
+    def render(self, user_prompt: str, system_prompt: str, model_name: str,
+               temperature: float, replicate: int, skip_api_key_check: bool = True,
+               reasoning: Optional[Dict] = None, max_output_tokens: Optional[int] = None,
+               role: str = "liar", provider: Optional[Dict] = None, system_role: bool = True) -> Dict:
+        """Return the exact prompts and request parameters EDSL would send, without calling any model."""
+        job, u, s = _perfect_lie_build_job(user_prompt, system_prompt, model_name, temperature, replicate,
+                                           self.service_name, skip_api_key_check=skip_api_key_check,
+                                           reasoning=reasoning, max_output_tokens=max_output_tokens, role=role,
+                                           provider=provider, system_role=system_role)
+        model = job.models[0]
+        params = {"model": model_name, "messages": [], "max_completion_tokens": getattr(model, "max_tokens", None),
+                  "logprobs": False, "top_logprobs": 3}
+        if hasattr(model, "_filter_parameters_for_service"):
+            params = model._filter_parameters_for_service(params)
+        return {"user_prompt": u, "system_prompt": s, "request_params": params,
+                "delivered_messages": delivered_messages(u, s)}
+
+    async def acall(self, *, role: str, user_prompt: str, system_prompt: str, model_name: str,
+                    temperature: float, replicate: int, run_namespace: str,
+                    reasoning: Optional[Dict] = None, max_output_tokens: Optional[int] = None,
+                    attempt: int = 0, cache=None, provider: Optional[Dict] = None,
+                    system_role: bool = True, draw_key: str = "",
+                    response_format: Optional[Dict] = None, top_p: Optional[float] = None) -> Dict:
+        """Run one live call locally. Never invoked by --dry-run or by the offline tests' render paths."""
+        qname = {"liar": "story", "target": "verdict", "grader": "annotation", "trace_probe": "probe"}[role]
+        job, u, s = _perfect_lie_build_job(user_prompt, system_prompt, model_name, temperature, replicate,
+                                           self.service_name, question_name=qname, reasoning=reasoning,
+                                           max_output_tokens=max_output_tokens, role=role,
+                                           run_namespace=run_namespace, attempt=attempt,
+                                           skip_api_key_check=self.service_name is None,
+                                           provider=provider, system_role=system_role,
+                                           draw_key=draw_key, response_format=response_format,
+                                           top_p=top_p)
+        start = time.time()
+        kwargs = dict(PERFECT_LIE_RUN_FLAGS)
+        if cache is not None:
+            kwargs["cache"] = cache
+        results = await job.run_async(**kwargs)
+        out = _perfect_lie_parse_results(results, qname)
+        if out["text"] is None:
+            raise PerfectLieCallError(f"{role} call to {model_name} returned no answer: {_perfect_lie_exception_text(results)}")
+        out.update({
+            "latency_ms": int((time.time() - start) * 1000),
+            "model": model_name, "temperature": temperature, "replicate": replicate,
+            "reasoning": reasoning, "max_output_tokens": max_output_tokens,
+            "attempt": attempt, "run_namespace": run_namespace,
+            "system_prompt": s, "user_prompt": u, "delivered_messages": delivered_messages(u, s),
+            "provider_pin": provider, "system_role": system_role, "top_p": top_p,
+        })
+        return out
+
+    async def achat(self, messages: List[Dict[str, str]], model_name: str, temperature: float,
+                    max_output_tokens: int, **kw) -> Dict:
+        """Multi-turn call (post-story elicitation); see perfect_lie_chat."""
+        return await perfect_lie_chat(messages, model_name, temperature, max_output_tokens, **kw)
+
+    def generate(self, user_prompt: str, system_prompt: str, model_name: str,
+                 temperature: float, replicate: int,
+                 reasoning: Optional[Dict] = None, max_output_tokens: Optional[int] = None,
+                 run_namespace: str = "adhoc", cache=None) -> Tuple[str, Dict]:
+        """Synchronous single liar call (kept for ad-hoc use). Same local-only flags."""
+        import asyncio
+        out = asyncio.run(self.acall(role="liar", user_prompt=user_prompt, system_prompt=system_prompt,
+                                     model_name=model_name, temperature=temperature, replicate=replicate,
+                                     run_namespace=run_namespace, reasoning=reasoning,
+                                     max_output_tokens=max_output_tokens, cache=cache))
+        if out["text"] is None:
+            raise StoryGenerationError(f"{model_name} returned no answer")
+        return out["text"], {k: v for k, v in out.items() if k not in ("text", "raw")}
+
+
+def _perfect_lie_exception_text(results) -> str:
+    """Best-effort: the underlying exception EDSL caught, so a failed call records its cause."""
+    try:
+        th = results.task_history
+        for interview in getattr(th, "total_interviews", []) or []:
+            for qname, excs in (getattr(interview, "exceptions", {}) or {}).items():
+                for e in excs:
+                    exc = getattr(e, "exception", None)
+                    if exc is not None:
+                        return f"{type(exc).__name__}: {exc}"[:800]
+                    return str(e)[:800]
+    except Exception:
+        pass
+    return "no exception detail available"
+
+
+
+async def perfect_lie_chat(messages: List[Dict[str, str]], model_name: str, temperature: float,
+                           max_output_tokens: int, top_p: Optional[float] = None,
+                           provider: Optional[Dict] = None, reasoning: Optional[Dict] = None,
+                           client=None) -> Dict:
+    """One multi-turn call straight to OpenRouter (EDSL cannot send an assistant turn).
+
+    Used only for the post-story elicitation. Runs locally with the OpenRouter key, with the
+    same pin, sampling and reasoning settings as the story call; nothing goes through Expected
+    Parrot. `client` is injectable for tests.
+    """
+    import openai
+    if client is None:
+        client = openai.AsyncOpenAI(api_key=os.environ["OPEN_ROUTER_API_KEY"], base_url="https://openrouter.ai/api/v1")
+    params = {"model": model_name, "messages": messages, "temperature": temperature,
+              "max_completion_tokens": int(max_output_tokens)}
+    if top_p is not None:
+        params["top_p"] = float(top_p)
+    extra = {}
+    if provider:
+        extra["provider"] = dict(provider)
+    if reasoning:
+        extra["reasoning"] = dict(reasoning)
+    if extra:
+        params["extra_body"] = extra
+    start = time.time()
+    resp = await client.chat.completions.create(**params)
+    raw = resp.model_dump()
+    choice = (raw.get("choices") or [{}])[0]
+    u = raw.get("usage") or {}
+    details = u.get("completion_tokens_details") or {}
+    text = (choice.get("message") or {}).get("content")
+    if text is None:
+        raise PerfectLieCallError(f"elicitation call to {model_name} returned no content "
+                                  f"(finish_reason {choice.get('finish_reason')})")
+    return {"text": text, "raw": raw, "finish_reason": choice.get("finish_reason"),
+            "usage": {"prompt_tokens": u.get("prompt_tokens"), "completion_tokens": u.get("completion_tokens"),
+                      "reasoning_tokens": details.get("reasoning_tokens")},
+            "served_provider": raw.get("provider"), "generation_id": raw.get("id"),
+            "latency_ms": int((time.time() - start) * 1000), "messages": messages,
+            "temperature": temperature, "top_p": top_p, "provider_pin": provider}

@@ -1,0 +1,44 @@
+{
+  "version": "0.1-phase1",
+  "generator": "src/perfect_lie/design.py",
+  "seed": 20260915,
+  "status": "Generated once and committed. Do not regenerate.",
+  "rows": [
+    {
+      "prompt_id": "science",
+      "j1": "P2",
+      "j2": "P3",
+      "placebo": "P5"
+    },
+    {
+      "prompt_id": "history",
+      "j1": "P4",
+      "j2": "P5",
+      "placebo": "P1"
+    },
+    {
+      "prompt_id": "biology",
+      "j1": "P3",
+      "j2": "P4",
+      "placebo": "P6"
+    },
+    {
+      "prompt_id": "geography",
+      "j1": "P1",
+      "j2": "P2",
+      "placebo": "P4"
+    },
+    {
+      "prompt_id": "technology",
+      "j1": "P5",
+      "j2": "P6",
+      "placebo": "P2"
+    },
+    {
+      "prompt_id": "culture",
+      "j1": "P6",
+      "j2": "P1",
+      "placebo": "P3"
+    }
+  ]
+}
