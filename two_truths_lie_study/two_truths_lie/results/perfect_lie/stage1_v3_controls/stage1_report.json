@@ -1,0 +1,516 @@
+{
+  "criteria_thresholds": {
+    "baseline": 0.5,
+    "degeneration": 0.05,
+    "parse_failures": 0.03
+  },
+  "exempt_cues": [
+    "mechanism_explanation",
+    "named_expert"
+  ],
+  "baseline_new": {
+    "google/gemini-2.5-flash-lite": {
+      "n": 12,
+      "rates": {
+        "document_citation": 0.0,
+        "institutional_authority": 0.0,
+        "named_expert": 0.0,
+        "historical_anchor": 0.25,
+        "official_failure": 0.0,
+        "first_person_witness": 0.08333333333333333,
+        "family_provenance": 0.0,
+        "sensory_detail": 0.8333333333333334,
+        "direct_quotation": 0.08333333333333333,
+        "mundane_aftermath": 0.0,
+        "mechanism_explanation": 0.8333333333333334,
+        "emotional_appeal": 0.6666666666666666,
+        "hedged_claim": 0.5,
+        "self_deprecation": 0.0,
+        "skeptic_acknowledgment": 0.08333333333333333,
+        "humor": 0.08333333333333333
+      }
+    },
+    "google/gemma-3-27b-it": {
+      "n": 12,
+      "rates": {
+        "document_citation": 0.0,
+        "institutional_authority": 0.3333333333333333,
+        "named_expert": 0.5833333333333334,
+        "historical_anchor": 0.5833333333333334,
+        "official_failure": 0.0,
+        "first_person_witness": 0.25,
+        "family_provenance": 0.25,
+        "sensory_detail": 1.0,
+        "direct_quotation": 0.3333333333333333,
+        "mundane_aftermath": 0.0,
+        "mechanism_explanation": 1.0,
+        "emotional_appeal": 0.4166666666666667,
+        "hedged_claim": 0.5833333333333334,
+        "self_deprecation": 0.0,
+        "skeptic_acknowledgment": 0.08333333333333333,
+        "humor": 0.0
+      }
+    },
+    "meta-llama/llama-3.1-8b-instruct": {
+      "n": 12,
+      "rates": {
+        "document_citation": 0.0,
+        "institutional_authority": 0.16666666666666666,
+        "named_expert": 0.25,
+        "historical_anchor": 0.25,
+        "official_failure": 0.0,
+        "first_person_witness": 0.0,
+        "family_provenance": 0.0,
+        "sensory_detail": 0.75,
+        "direct_quotation": 0.0,
+        "mundane_aftermath": 0.0,
+        "mechanism_explanation": 0.9166666666666666,
+        "emotional_appeal": 0.4166666666666667,
+        "hedged_claim": 0.5833333333333334,
+        "self_deprecation": 0.0,
+        "skeptic_acknowledgment": 0.08333333333333333,
+        "humor": 0.0
+      }
+    },
+    "openai/gpt-4o-mini": {
+      "n": 12,
+      "rates": {
+        "document_citation": 0.0,
+        "institutional_authority": 0.16666666666666666,
+        "named_expert": 0.25,
+        "historical_anchor": 0.5833333333333334,
+        "official_failure": 0.08333333333333333,
+        "first_person_witness": 0.0,
+        "family_provenance": 0.0,
+        "sensory_detail": 0.75,
+        "direct_quotation": 0.25,
+        "mundane_aftermath": 0.08333333333333333,
+        "mechanism_explanation": 0.8333333333333334,
+        "emotional_appeal": 0.3333333333333333,
+        "hedged_claim": 0.3333333333333333,
+        "self_deprecation": 0.0,
+        "skeptic_acknowledgment": 0.3333333333333333,
+        "humor": 0.08333333333333333
+      }
+    }
+  },
+  "baseline_reference": {
+    "google/gemini-2.5-flash-lite": {
+      "n": 12,
+      "rates": {
+        "document_citation": 0.8333333333333334,
+        "institutional_authority": 0.8333333333333334,
+        "named_expert": 0.75,
+        "historical_anchor": 0.6666666666666666,
+        "official_failure": 0.16666666666666666,
+        "first_person_witness": 0.08333333333333333,
+        "family_provenance": 0.0,
+        "sensory_detail": 0.75,
+        "direct_quotation": 0.0,
+        "mundane_aftermath": 0.4166666666666667,
+        "mechanism_explanation": 0.9166666666666666,
+        "emotional_appeal": 0.25,
+        "hedged_claim": 0.5833333333333334,
+        "self_deprecation": 0.0,
+        "skeptic_acknowledgment": 0.25,
+        "humor": 0.16666666666666666
+      }
+    },
+    "google/gemma-3-27b-it": {
+      "n": 12,
+      "rates": {
+        "document_citation": 0.8333333333333334,
+        "institutional_authority": 0.9166666666666666,
+        "named_expert": 0.8333333333333334,
+        "historical_anchor": 0.75,
+        "official_failure": 0.08333333333333333,
+        "first_person_witness": 0.16666666666666666,
+        "family_provenance": 0.08333333333333333,
+        "sensory_detail": 0.5,
+        "direct_quotation": 0.0,
+        "mundane_aftermath": 0.5833333333333334,
+        "mechanism_explanation": 0.9166666666666666,
+        "emotional_appeal": 0.16666666666666666,
+        "hedged_claim": 0.5,
+        "self_deprecation": 0.0,
+        "skeptic_acknowledgment": 0.08333333333333333,
+        "humor": 0.16666666666666666
+      }
+    },
+    "meta-llama/llama-3.1-8b-instruct": {
+      "n": 12,
+      "rates": {
+        "document_citation": 0.9166666666666666,
+        "institutional_authority": 1.0,
+        "named_expert": 1.0,
+        "historical_anchor": 0.6666666666666666,
+        "official_failure": 0.0,
+        "first_person_witness": 0.3333333333333333,
+        "family_provenance": 0.08333333333333333,
+        "sensory_detail": 0.4166666666666667,
+        "direct_quotation": 0.25,
+        "mundane_aftermath": 0.0,
+        "mechanism_explanation": 0.6666666666666666,
+        "emotional_appeal": 0.5,
+        "hedged_claim": 0.08333333333333333,
+        "self_deprecation": 0.0,
+        "skeptic_acknowledgment": 0.0,
+        "humor": 0.0
+      }
+    },
+    "openai/gpt-4o-mini": {
+      "n": 12,
+      "rates": {
+        "document_citation": 0.75,
+        "institutional_authority": 1.0,
+        "named_expert": 0.5,
+        "historical_anchor": 0.4166666666666667,
+        "official_failure": 0.0,
+        "first_person_witness": 0.08333333333333333,
+        "family_provenance": 0.0,
+        "sensory_detail": 0.8333333333333334,
+        "direct_quotation": 0.3333333333333333,
+        "mundane_aftermath": 0.25,
+        "mechanism_explanation": 0.8333333333333334,
+        "emotional_appeal": 0.5,
+        "hedged_claim": 0.4166666666666667,
+        "self_deprecation": 0.0,
+        "skeptic_acknowledgment": 0.16666666666666666,
+        "humor": 0.08333333333333333
+      }
+    }
+  },
+  "models": {
+    "google/gemini-2.5-flash-lite": {
+      "criteria": {
+        "A_no_cue_above_50pct": {
+          "pass": false,
+          "n_none": 12,
+          "cues_over": {
+            "sensory_detail": 0.8333333333333334,
+            "emotional_appeal": 0.6666666666666666
+          },
+          "exempt_cues_over": {
+            "mechanism_explanation": 0.8333333333333334
+          }
+        },
+        "B_degeneration_below_5pct": {
+          "pass": true,
+          "rate": 0.0,
+          "n_degenerate": 0,
+          "n_lies": 24
+        },
+        "C_distinct_draws": {
+          "pass": true,
+          "paired_units": 12,
+          "identical": 0
+        },
+        "D_parse_failures_below_3pct": {
+          "pass": false,
+          "rate": 0.041666666666666664,
+          "cells_with_failure": 1,
+          "cells_attempted": 24
+        }
+      },
+      "pass": false,
+      "degeneration_by_condition": {
+        "none": {
+          "degenerate": 0,
+          "n": 12
+        },
+        "placebo": {
+          "degenerate": 0,
+          "n": 12
+        }
+      },
+      "confessions_by_condition": {
+        "none": {
+          "excluded": 0,
+          "n": 12
+        },
+        "placebo": {
+          "excluded": 0,
+          "n": 12
+        }
+      },
+      "words": {
+        "n": 24,
+        "min": 233,
+        "median": 333.5,
+        "max": 450,
+        "in_band": 0.7083333333333334,
+        "below": 4,
+        "above": 3
+      },
+      "failures": [
+        {
+          "cell_id": "pilot|technology|P5|P6|P5|placebo|google/gemini-2.5-flash-lite|off|r1|p=v3",
+          "status": "error",
+          "error": "ValueError: grader[meta]: no well-formed answer after 3 attempts: grader output cues['direct_quotation']=False inconsistent with counts['direct_quotation']=2"
+        }
+      ],
+      "parse_failures": [
+        {
+          "cell_id": "pilot|technology|P5|P6|P5|placebo|google/gemini-2.5-flash-lite|off|r1|p=v3",
+          "call": "grader[meta]",
+          "attempt": 0,
+          "error": "grader output cues['direct_quotation']=False inconsistent with counts['direct_quotation']=2",
+          "finish_reason": "stop"
+        },
+        {
+          "cell_id": "pilot|technology|P5|P6|P5|placebo|google/gemini-2.5-flash-lite|off|r1|p=v3",
+          "call": "grader[meta]",
+          "attempt": 1,
+          "error": "grader output cues['direct_quotation']=False inconsistent with counts['direct_quotation']=2",
+          "finish_reason": "stop"
+        },
+        {
+          "cell_id": "pilot|technology|P5|P6|P5|placebo|google/gemini-2.5-flash-lite|off|r1|p=v3",
+          "call": "grader[meta]",
+          "attempt": 2,
+          "error": "grader output cues['direct_quotation']=False inconsistent with counts['direct_quotation']=2",
+          "finish_reason": "stop"
+        },
+        {
+          "cell_id": "pilot|technology|P5|P6|P5|placebo|google/gemini-2.5-flash-lite|off|r1|p=v3",
+          "call": "grader[meta]",
+          "attempt": 0,
+          "error": "grader output cues['direct_quotation']=False inconsistent with counts['direct_quotation']=2",
+          "finish_reason": "stop"
+        },
+        {
+          "cell_id": "pilot|technology|P5|P6|P5|placebo|google/gemini-2.5-flash-lite|off|r1|p=v3",
+          "call": "grader[meta]",
+          "attempt": 1,
+          "error": "grader output cues['direct_quotation']=False inconsistent with counts['direct_quotation']=2",
+          "finish_reason": "stop"
+        },
+        {
+          "cell_id": "pilot|technology|P5|P6|P5|placebo|google/gemini-2.5-flash-lite|off|r1|p=v3",
+          "call": "grader[meta]",
+          "attempt": 2,
+          "error": "grader output cues['direct_quotation']=False inconsistent with counts['direct_quotation']=2",
+          "finish_reason": "stop"
+        }
+      ],
+      "n_cells": 24,
+      "n_complete": 23
+    },
+    "google/gemma-3-27b-it": {
+      "criteria": {
+        "A_no_cue_above_50pct": {
+          "pass": false,
+          "n_none": 12,
+          "cues_over": {
+            "historical_anchor": 0.5833333333333334,
+            "sensory_detail": 1.0,
+            "hedged_claim": 0.5833333333333334
+          },
+          "exempt_cues_over": {
+            "named_expert": 0.5833333333333334,
+            "mechanism_explanation": 1.0
+          }
+        },
+        "B_degeneration_below_5pct": {
+          "pass": true,
+          "rate": 0.0,
+          "n_degenerate": 0,
+          "n_lies": 24
+        },
+        "C_distinct_draws": {
+          "pass": true,
+          "paired_units": 12,
+          "identical": 0
+        },
+        "D_parse_failures_below_3pct": {
+          "pass": true,
+          "rate": 0.0,
+          "cells_with_failure": 0,
+          "cells_attempted": 24
+        }
+      },
+      "pass": false,
+      "degeneration_by_condition": {
+        "none": {
+          "degenerate": 0,
+          "n": 12
+        },
+        "placebo": {
+          "degenerate": 0,
+          "n": 12
+        }
+      },
+      "confessions_by_condition": {
+        "none": {
+          "excluded": 0,
+          "n": 12
+        },
+        "placebo": {
+          "excluded": 0,
+          "n": 12
+        }
+      },
+      "words": {
+        "n": 24,
+        "min": 328,
+        "median": 359.5,
+        "max": 408,
+        "in_band": 0.9583333333333334,
+        "below": 0,
+        "above": 1
+      },
+      "failures": [],
+      "parse_failures": [],
+      "n_cells": 24,
+      "n_complete": 24
+    },
+    "meta-llama/llama-3.1-8b-instruct": {
+      "criteria": {
+        "A_no_cue_above_50pct": {
+          "pass": false,
+          "n_none": 12,
+          "cues_over": {
+            "sensory_detail": 0.75,
+            "hedged_claim": 0.5833333333333334
+          },
+          "exempt_cues_over": {
+            "mechanism_explanation": 0.9166666666666666
+          }
+        },
+        "B_degeneration_below_5pct": {
+          "pass": true,
+          "rate": 0.0,
+          "n_degenerate": 0,
+          "n_lies": 24
+        },
+        "C_distinct_draws": {
+          "pass": true,
+          "paired_units": 12,
+          "identical": 0
+        },
+        "D_parse_failures_below_3pct": {
+          "pass": true,
+          "rate": 0.0,
+          "cells_with_failure": 0,
+          "cells_attempted": 24
+        }
+      },
+      "pass": false,
+      "degeneration_by_condition": {
+        "none": {
+          "degenerate": 0,
+          "n": 12
+        },
+        "placebo": {
+          "degenerate": 0,
+          "n": 12
+        }
+      },
+      "confessions_by_condition": {
+        "none": {
+          "excluded": 0,
+          "n": 12
+        },
+        "placebo": {
+          "excluded": 0,
+          "n": 12
+        }
+      },
+      "words": {
+        "n": 24,
+        "min": 279,
+        "median": 334.0,
+        "max": 408,
+        "in_band": 0.875,
+        "below": 2,
+        "above": 1
+      },
+      "failures": [],
+      "parse_failures": [],
+      "n_cells": 24,
+      "n_complete": 24
+    },
+    "openai/gpt-4o-mini": {
+      "criteria": {
+        "A_no_cue_above_50pct": {
+          "pass": false,
+          "n_none": 12,
+          "cues_over": {
+            "historical_anchor": 0.5833333333333334,
+            "sensory_detail": 0.75
+          },
+          "exempt_cues_over": {
+            "mechanism_explanation": 0.8333333333333334
+          }
+        },
+        "B_degeneration_below_5pct": {
+          "pass": true,
+          "rate": 0.0,
+          "n_degenerate": 0,
+          "n_lies": 24
+        },
+        "C_distinct_draws": {
+          "pass": true,
+          "paired_units": 12,
+          "identical": 0
+        },
+        "D_parse_failures_below_3pct": {
+          "pass": false,
+          "rate": 0.041666666666666664,
+          "cells_with_failure": 1,
+          "cells_attempted": 24
+        }
+      },
+      "pass": false,
+      "degeneration_by_condition": {
+        "none": {
+          "degenerate": 0,
+          "n": 12
+        },
+        "placebo": {
+          "degenerate": 0,
+          "n": 12
+        }
+      },
+      "confessions_by_condition": {
+        "none": {
+          "excluded": 0,
+          "n": 12
+        },
+        "placebo": {
+          "excluded": 0,
+          "n": 12
+        }
+      },
+      "words": {
+        "n": 24,
+        "min": 351,
+        "median": 380.5,
+        "max": 422,
+        "in_band": 0.9583333333333334,
+        "below": 0,
+        "above": 1
+      },
+      "failures": [],
+      "parse_failures": [
+        {
+          "cell_id": "pilot|science|P2|P3|P2|placebo|openai/gpt-4o-mini|off|r1|p=v3",
+          "call": "grader[secondary]",
+          "attempt": 0,
+          "error": "grader output cues['humor']=False inconsistent with counts['humor']=1",
+          "finish_reason": "stop"
+        },
+        {
+          "cell_id": "pilot|science|P2|P3|P2|placebo|openai/gpt-4o-mini|off|r1|p=v3",
+          "call": "grader[secondary]",
+          "attempt": 1,
+          "error": "grader output cues['humor']=False inconsistent with counts['humor']=1",
+          "finish_reason": "stop"
+        }
+      ],
+      "n_cells": 24,
+      "n_complete": 24
+    }
+  },
+  "all_models_pass": false
+}
