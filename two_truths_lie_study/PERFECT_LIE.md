@@ -628,6 +628,25 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
    the primary grader's safety filter refused to annotate some of them. Meta's recommended
    sampling is used instead and recorded in `models.json` (`sampling_exception`). Cross-family
    comparisons involving Llama carry this difference.
+21. **Post-hoc amendments to the Stage 1 criteria, recorded 2026-10-06T14:19:24Z** (owner decision, after
+   Stage 1 failed all four models). They are post hoc, and stated as such. Reason they are
+   admissible: Stage 1 is baseline-only (control cells), no lift was computed from it, and the
+   full run is fresh data that none of these choices has seen.
+   - `sensory_detail` becomes heatmap-only (genre-intrinsic: 0.75 to 1.00 under `none` in every
+     model with the new prompt). Heatmap-only cues are now mechanism_explanation, named_expert
+     and sensory_detail. Scorable cues per persona: P1 4, P2 3, P3 2, P4 4, P5 3, P6 3; every
+     persona keeps at least two. Flags: P3 is at exactly two; the `partial` notes of P2, P3, P5
+     and P6 each hold one scorable cue; net of the placebo note, P3 on science and P6 on
+     technology keep one scorable cue each.
+   - Criterion A: a cue fails only if the lower bound of its 95% Wilson interval for
+     P(cue | none) is above 0.50.
+   - Criterion D: a model fails only if it has more than one failed cell, or its failed cells
+     cluster in one condition. A failed cell is a cell that ended without valid grades from
+     every grader; failed cells are enumerated and excluded from all analysis. Cells whose
+     graders recovered after a parse failure are reported separately and kept. At this size the
+     clustering clause adds nothing to "more than one" for a single model (one cell cannot
+     cluster); the report also shows clustering across models.
+
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.
 

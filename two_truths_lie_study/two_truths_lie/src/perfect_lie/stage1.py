@@ -6,17 +6,19 @@ Confessed lies (scoring.CONFESSION_RULE) are excluded before baselines and count
 model x condition.
 
 Criteria, per liar model, on the new-prompt run:
-  A  no cue above 50% baseline: every cue's P(cue | none) <= 0.50 (primary grader),
-     except heatmap-only cues (mechanism_explanation, named_expert; amendment to deviation 17,
-     2026-10-06), which are reported but exempt
+  A  (amended, brief §8 item 21) a cue fails only if the lower bound of the 95% Wilson
+     interval of P(cue | none) is above 0.50 (primary grader); heatmap-only cues are exempt
   B  degeneration below 5% of lies (none + placebo)
   C  none/placebo pairs are distinct draws: no unit whose two lies are identical
-  D  grader parse failures below 3% of cells: cells where any grader call failed to parse
-     at least once (including attempts later recovered), over cells attempted
+  D  (amended, brief §8 item 21) a model fails only if it has more than one failed cell, or
+     its failed cells cluster in one condition. A failed cell ended without valid grades from
+     every grader; failed cells are excluded from all analysis (they never enter baselines,
+     which use complete cells only). Recovered parse failures are reported, not counted.
 """
 
 from __future__ import annotations
 
+import math
 import statistics
 from collections import defaultdict
 from typing import Dict, List, Sequence
@@ -26,6 +28,17 @@ from .scoring import confession, degenerate_tail
 THRESH_BASELINE = 0.50
 THRESH_DEGENERATE = 0.05
 THRESH_PARSE = 0.03
+
+
+def wilson(k: int, n: int, z: float = 1.959964) -> tuple:
+    """95% Wilson score interval for a binomial proportion."""
+    if n == 0:
+        return (float("nan"), float("nan"))
+    p = k / n
+    d = 1 + z * z / n
+    c = (p + z * z / (2 * n)) / d
+    h = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d
+    return (max(0.0, c - h), min(1.0, c + h))
 
 
 def _by_model(records: Sequence[Dict]) -> Dict[str, List[Dict]]:
@@ -42,8 +55,9 @@ def baselines(records: Sequence[Dict], cue_ids: Sequence[str], grader: str = "pr
         none = [r for r in rs if r["condition"] == "none" and r.get("status") == "complete"
                 and grader in (r.get("grades") or {}) and not confession(r.get("lie") or "")]
         n = len(none)
-        out[mid] = {"n": n, "rates": {c: (sum(bool(r["grades"][grader]["cues"][c]) for r in none) / n if n else None)
-                                      for c in cue_ids}}
+        ks = {c: sum(bool(r["grades"][grader]["cues"][c]) for r in none) for c in cue_ids}
+        out[mid] = {"n": n, "rates": {c: (ks[c] / n if n else None) for c in cue_ids},
+                    "wilson95": {c: wilson(ks[c], n) for c in cue_ids}}
     return out
 
 
@@ -56,8 +70,12 @@ def evaluate(new_records: Sequence[Dict], ref_records: Sequence[Dict], cue_ids: 
         lies = [r for r in rs if r.get("lie")]
         # A
         rates = new_base[mid]["rates"]
-        over = {c: v for c, v in rates.items() if v is not None and v > THRESH_BASELINE and c not in exempt_cues}
+        ci = new_base[mid]["wilson95"]
+        over = {c: {"rate": v, "ci95": ci[c]} for c, v in rates.items()
+                if v is not None and ci[c][0] > THRESH_BASELINE and c not in exempt_cues}
         exempt_over = {c: v for c, v in rates.items() if v is not None and v > THRESH_BASELINE and c in exempt_cues}
+        point_over = {c: {"rate": v, "ci95": ci[c]} for c, v in rates.items()
+                      if v is not None and v > THRESH_BASELINE and c not in exempt_cues and c not in over}
         conf = defaultdict(lambda: [0, 0])
         for r in lies:
             conf[r["condition"]][0] += bool(confession(r["lie"]))
@@ -80,11 +98,12 @@ def evaluate(new_records: Sequence[Dict], ref_records: Sequence[Dict], cue_ids: 
         identical = sum(len(set(v.values())) == 1 for v in paired)
         c_pass = bool(paired) and identical == 0
         # D
-        attempted = [r for r in rs if r.get("stage_done") in ("target", "graders", "trace_probe") or r.get("grades")
-                     or any(str(f.get("call", "")).startswith("grader") for f in r.get("parse_failures", []))]
-        with_pf = [r for r in attempted if any(str(f.get("call", "")).startswith("grader") for f in r.get("parse_failures", []))]
-        pf_rate = len(with_pf) / len(attempted) if attempted else None
-        d_pass = pf_rate is not None and pf_rate < THRESH_PARSE
+        failed = [r for r in rs if r.get("status") != "complete"]
+        failed_conds = sorted({r["condition"] for r in failed})
+        clustered = len(failed) > 1 and len(failed_conds) == 1
+        d_pass = len(failed) <= 1 and not clustered
+        recovered = [r for r in rs if r.get("status") == "complete"
+                     and any(str(f.get("call", "")).startswith("grader") for f in r.get("parse_failures", []))]
         # words
         w = [len(r["lie"].split()) for r in lies]
         words = {"n": len(w), "min": min(w) if w else None, "median": statistics.median(w) if w else None,
@@ -98,11 +117,13 @@ def evaluate(new_records: Sequence[Dict], ref_records: Sequence[Dict], cue_ids: 
         models[mid] = {
             "criteria": {
                 "A_no_cue_above_50pct": {"pass": a_pass, "n_none": new_base[mid]["n"], "cues_over": over,
+                                         "point_estimate_over_but_interval_not": point_over,
                                          "exempt_cues_over": exempt_over},
                 "B_degeneration_below_5pct": {"pass": b_pass, "rate": deg_rate, "n_degenerate": n_deg, "n_lies": len(lies)},
                 "C_distinct_draws": {"pass": c_pass, "paired_units": len(paired), "identical": identical},
-                "D_parse_failures_below_3pct": {"pass": d_pass, "rate": pf_rate, "cells_with_failure": len(with_pf),
-                                                "cells_attempted": len(attempted)},
+                "D_failed_cells": {"pass": d_pass, "failed_cells": [r["cell_id"] for r in failed],
+                                   "failed_conditions": failed_conds, "clustered": clustered,
+                                   "recovered_parse_failure_cells": [r["cell_id"] for r in recovered]},
             },
             "pass": a_pass and b_pass and c_pass and d_pass,
             "degeneration_by_condition": {k: {"degenerate": v[0], "n": v[1]} for k, v in sorted(degen.items())},
@@ -114,7 +135,16 @@ def evaluate(new_records: Sequence[Dict], ref_records: Sequence[Dict], cue_ids: 
                                     "parse_failures": THRESH_PARSE},
             "exempt_cues": list(exempt_cues),
             "baseline_new": new_base, "baseline_reference": ref_base, "models": models,
-            "all_models_pass": bool(models) and all(m["pass"] for m in models.values())}
+            "all_models_pass": bool(models) and all(m["pass"] for m in models.values()),
+            "failed_cells_by_condition_all_models": _cond_counts(
+                [r for r in new_records if r.get("status") != "complete"])}
+
+
+def _cond_counts(rs: Sequence[Dict]) -> Dict[str, int]:
+    out: Dict[str, int] = defaultdict(int)
+    for r in rs:
+        out[r["condition"]] += 1
+    return dict(out)
 
 
 def render_markdown(result: Dict, cue_ids: Sequence[str], new_dir: str, ref_dir: str) -> str:
@@ -122,16 +152,21 @@ def render_markdown(result: Dict, cue_ids: Sequence[str], new_dir: str, ref_dir:
          f"New prompt run: `{new_dir}` (none, placebo). Reference: `{ref_dir}` (none, original prompt).",
          "Primary grader. No lift is computed at this stage.", "",
          "## Pass criteria (fixed in advance, applied per model)", "",
-         "| model | A: no cue > 50% | B: degeneration < 5% | C: distinct draws | D: parse failures < 3% | overall |",
+         "| model | A: no cue with 95% lower bound > 0.50 | B: degeneration < 5% | C: distinct draws | D: at most one failed cell, no clustering | overall |",
          "|---|---|---|---|---|---|"]
     yn = lambda b: "PASS" if b else "FAIL"
     for mid, m in result["models"].items():
         c = m["criteria"]
-        a = c["A_no_cue_above_50pct"]; b = c["B_degeneration_below_5pct"]; cc = c["C_distinct_draws"]; d = c["D_parse_failures_below_3pct"]
-        a_txt = yn(a["pass"]) + (f" ({', '.join(f'{k} {v:.2f}' for k, v in a['cues_over'].items())}; n={a['n_none']})" if a["cues_over"] else f" (n={a['n_none']})")
+        a = c["A_no_cue_above_50pct"]; b = c["B_degeneration_below_5pct"]; cc = c["C_distinct_draws"]; d = c["D_failed_cells"]
+        fmt = lambda dd: ", ".join(f"{k} {v['rate']:.2f} [{v['ci95'][0]:.2f}, {v['ci95'][1]:.2f}]" for k, v in dd.items())
+        a_txt = yn(a["pass"]) + (f" ({fmt(a['cues_over'])})" if a["cues_over"] else "")
+        if a["point_estimate_over_but_interval_not"]:
+            a_txt += f"; over 0.50 but interval not: {fmt(a['point_estimate_over_but_interval_not'])}"
+        a_txt += f"; n={a['n_none']}"
         L.append(f"| {mid} | {a_txt} | {yn(b['pass'])} ({b['n_degenerate']}/{b['n_lies']}) | "
                  f"{yn(cc['pass'])} ({cc['identical']} identical of {cc['paired_units']}) | "
-                 f"{yn(d['pass'])} ({d['cells_with_failure']}/{d['cells_attempted']}) | **{yn(m['pass'])}** |")
+                 f"{yn(d['pass'])} ({len(d['failed_cells'])} failed{', clustered' if d['clustered'] else ''}; "
+                 f"{len(d['recovered_parse_failure_cells'])} recovered) | **{yn(m['pass'])}** |")
     L += ["", "## Per-cue baseline P(cue | none): new prompt vs original", ""]
     mids = list(result["models"])
     L.append("| cue | " + " | ".join(f"{m.split('/')[-1]} new / orig" for m in mids) + " |")
@@ -175,5 +210,7 @@ def render_markdown(result: Dict, cue_ids: Sequence[str], new_dir: str, ref_dir:
                      f"(finish_reason {f['finish_reason']})")
     if not any_f:
         L.append("None.")
-    L += ["", f"**All models pass: {yn(result['all_models_pass'])}**", ""]
+    L += ["", "Failed cells by condition, all models together: "
+          + (", ".join(f"{k} {v}" for k, v in result.get("failed_cells_by_condition_all_models", {}).items()) or "none") + ".",
+          "Failed cells are excluded from all analysis.", "", f"**All models pass: {yn(result['all_models_pass'])}**", ""]
     return "\n".join(L)

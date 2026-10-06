@@ -1219,34 +1219,38 @@ def test_length_screen_uses_the_prompt_versions_range():
 
 
 def test_stage1_criteria_are_applied_mechanically():
-    from src.perfect_lie.stage1 import evaluate
-    prose = " ".join(["It was the winter of the flood, and my grandmother kept the ledger in the kitchen."] * 22)  # 352 words
+    """Amended criteria (brief §8 item 21): A on the Wilson lower bound, D on failed cells."""
+    from src.perfect_lie.stage1 import evaluate, wilson
+    prose = " ".join(["It was the winter of the flood, and my grandmother kept the ledger in the kitchen."] * 22)
     salad = prose + " " + " ".join("bbit safer INT Mexican job gym pays youngsters surgery anch hobbies imagined "
                                    "feasibility upcoming respect testimon wax artery commuter rabbits".split() * 10)
-    cues = ["x", "y"]
 
-    def rec(mid, cond, tgt, lie, x, pf=False):
-        r = {"cell_id": f"{mid}|{cond}|{tgt}", "model_id": mid, "prompt_id": "science", "condition": cond, "replicate": 1,
-             "target_id": tgt, "status": "complete", "stage_done": "graders", "lie": lie,
-             "grades": {"primary": {"cues": {"x": x, "y": False}}}}
-        if pf:
-            r["parse_failures"] = [{"call": "grader[primary]", "attempt": 0, "error": "e"}]
-        return r
+    def rec(mid, cond, tgt, lie, x, status="complete", rep=1):
+        return {"cell_id": f"{mid}|{cond}|{tgt}|{rep}", "model_id": mid, "prompt_id": "science", "condition": cond,
+                "replicate": rep, "target_id": tgt, "status": status, "stage_done": "graders", "lie": lie,
+                "grades": {"primary": {"cues": {"x": x, "y": False}}}}
 
-    good = [rec("m/good", c, t, prose + f" {c}{t}", False) for c in ("none", "placebo") for t in ("P1", "P2")]
-    bad = [rec("m/bad", "none", "P1", prose, True), rec("m/bad", "none", "P2", prose, True),       # identical pair, x=1.0
-           rec("m/bad", "placebo", "P1", salad, False), rec("m/bad", "placebo", "P2", prose + " z", False, pf=True)]
-    res = evaluate(good + bad, [], cues)
-    g, b = res["models"]["m/good"]["criteria"], res["models"]["m/bad"]["criteria"]
-    assert res["models"]["m/good"]["pass"] is True
-    assert b["A_no_cue_above_50pct"]["pass"] is False and b["A_no_cue_above_50pct"]["cues_over"] == {"x": 1.0}
-    assert b["B_degeneration_below_5pct"]["n_degenerate"] == 1 and b["B_degeneration_below_5pct"]["pass"] is False
-    assert b["C_distinct_draws"]["identical"] == 1 and b["C_distinct_draws"]["pass"] is False
-    assert b["D_parse_failures_below_3pct"]["cells_with_failure"] == 1 and b["D_parse_failures_below_3pct"]["pass"] is False
-    assert res["all_models_pass"] is False
-    # 50% exactly is not "above 50%"
-    half = [rec("m/h", "none", "P1", prose + " a", True), rec("m/h", "none", "P2", prose + " b", False)]
-    assert evaluate(half, [], cues)["models"]["m/h"]["criteria"]["A_no_cue_above_50pct"]["pass"] is True
+    # 12 none lies with x present 11/12: Wilson lower bound ~0.65 > 0.50 -> A fails.
+    many = [rec("m/a", "none", f"P{i % 2 + 1}", prose + str(i), i != 0, rep=i) for i in range(12)]
+    lo, hi = wilson(11, 12)
+    assert lo > 0.5
+    ra = evaluate(many, [], ["x", "y"])["models"]["m/a"]["criteria"]["A_no_cue_above_50pct"]
+    assert ra["pass"] is False and "x" in ra["cues_over"]
+    # 7/12 = 0.58 point estimate but the interval reaches below 0.50 -> A passes, reported separately.
+    seven = [rec("m/b", "none", f"P{i % 2 + 1}", prose + str(i), i < 7, rep=i) for i in range(12)]
+    rb = evaluate(seven, [], ["x", "y"])["models"]["m/b"]["criteria"]["A_no_cue_above_50pct"]
+    assert rb["pass"] is True and "x" in rb["point_estimate_over_but_interval_not"]
+    # D: one failed cell passes; two fail.
+    one = [rec("m/c", "none", "P1", prose + "a", False), rec("m/c", "placebo", "P1", prose + "b", False, status="error")]
+    assert evaluate(one, [], ["x", "y"])["models"]["m/c"]["criteria"]["D_failed_cells"]["pass"] is True
+    two = one + [rec("m/c", "none", "P2", prose + "c", False, status="error")]
+    d = evaluate(two, [], ["x", "y"])["models"]["m/c"]["criteria"]["D_failed_cells"]
+    assert d["pass"] is False and len(d["failed_cells"]) == 2
+    # B and C unchanged.
+    bad = [rec("m/d", "none", "P1", prose, False), rec("m/d", "none", "P2", prose, False),
+           rec("m/d", "placebo", "P1", salad, False), rec("m/d", "placebo", "P2", prose + " z", False)]
+    cd = evaluate(bad, [], ["x", "y"])["models"]["m/d"]["criteria"]
+    assert cd["C_distinct_draws"]["identical"] == 1 and cd["B_degeneration_below_5pct"]["n_degenerate"] == 1
 
 
 
@@ -1292,7 +1296,7 @@ def test_heatmap_only_cues_are_flagged_graded_and_exempt():
     from src.perfect_lie.grader import build_grader_input
     from src.perfect_lie.stage1 import evaluate
     ins = load_instrument()
-    assert heatmap_only_cues(ins.cues) == {"mechanism_explanation", "named_expert"}
+    assert heatmap_only_cues(ins.cues) == {"mechanism_explanation", "named_expert", "sensory_detail"}
     gi = build_grader_input("P", "L", ins.cues)   # still graded: grader input lists every cue
     assert "mechanism_explanation" in gi.system_prompt and "named_expert" in gi.system_prompt
     prose = " ".join(["It was the winter of the flood, and my grandmother kept the ledger in the kitchen."] * 22)
@@ -1301,7 +1305,7 @@ def test_heatmap_only_cues_are_flagged_graded_and_exempt():
              "grades": {"primary": {"cues": {"named_expert": True, "humor": False}}}} for t in ("P1", "P2")]
     res = evaluate(recs, [], ["named_expert", "humor"], exempt_cues=["named_expert"])
     a = res["models"]["m"]["criteria"]["A_no_cue_above_50pct"]
-    assert a["pass"] is True and a["exempt_cues_over"] == {"named_expert": 1.0}
+    assert a["pass"] is True and a["exempt_cues_over"] == {"named_expert": 1.0} and not a["cues_over"]
 
 
 def test_kill_on_breach_cancels_in_flight_calls(instrument, tmp_path):
@@ -1324,3 +1328,12 @@ def test_kill_on_breach_cancels_in_flight_calls(instrument, tmp_path):
     # In-flight cells were cancelled, not completed: far fewer calls than a full pass would make.
     assert len(fake.calls) < 12 and mf["n_complete"] == 0
     assert all(r["status"] != "complete" for r in load_records(tmp_path / "k"))
+
+
+
+def test_every_persona_keeps_two_scorable_cues():
+    from src.perfect_lie.personas import heatmap_only_cues, load_instrument
+    ins = load_instrument()
+    heat = heatmap_only_cues(ins.cues)
+    for p in ins.personas.values():
+        assert len([c for c in p.cues if c not in heat]) >= 2, p.id
