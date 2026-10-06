@@ -156,3 +156,24 @@ def build_trace_probe_input(trace: str) -> GraderInput:
     return GraderInput(system_prompt=TRACE_PROBE_SYSTEM,
                        user_prompt="TRACE:\n-----\n" + trace + "\n-----\n\nNow output the JSON object.",
                        cue_order=())
+
+
+# ---------------------------------------------------------------- B-hat coding
+
+BHAT_PREAMBLE = (
+    "You are annotating a short answer for the presence of rhetorical cues.\n"
+    "A storyteller was asked what a particular listener finds convincing in a story. "
+    "You will be shown the question and the answer.\n"
+    "For EACH cue in the list below, decide whether the answer names or describes it as something the listener "
+    "finds convincing. Judge only the answer text.\n"
+)
+
+
+def build_bhat_grader_input(question: str, answer: str, cues: Sequence[Cue]) -> GraderInput:
+    """Code a stated B-hat into the cue ontology. Same cue list (fixed order, same definitions),
+    same output section and the same strict schema as story grading; only the framing sentence
+    differs, because the answer describes what persuades the listener rather than being a story."""
+    system_prompt = BHAT_PREAMBLE + "\n" + cue_list_block(cues) + RUBRIC_OUTPUT
+    user_prompt = ("QUESTION:\n-----\n" + question + "\n-----\n\nANSWER:\n-----\n" + answer
+                   + "\n-----\n\nNow output the JSON object.")
+    return GraderInput(system_prompt=system_prompt, user_prompt=user_prompt, cue_order=tuple(c.id for c in cues))

@@ -28,14 +28,15 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from .conditions import build_liar_prompts, prompt_word_range, target_system_prompt, target_user_prompt
-from .grader import (build_trace_probe_input, grader_input_from_record, grader_response_format,
-                     parse_grader_output, RUBRIC_PREAMBLE, RUBRIC_OUTPUT)
+from .conditions import (ELICITATION_QUESTION, SYSTEM_SCAFFOLD, build_liar_prompts, elicitation_messages,
+                         prompt_word_range, target_system_prompt, target_user_prompt)
+from .grader import (build_bhat_grader_input, build_trace_probe_input, grader_input_from_record,
+                     grader_response_format, parse_grader_output, BHAT_PREAMBLE, RUBRIC_PREAMBLE, RUBRIC_OUTPUT)
 from .personas import Instrument, file_sha256
 from .pipeline import Cell
 from .scoring import parse_target_output
 
-STAGES = ("liar", "target", "graders", "trace_probe")
+STAGES = ("liar", "elicitation", "target", "graders", "bhat", "trace_probe")
 
 
 class ProviderPinError(RuntimeError):
@@ -80,7 +81,8 @@ def _git(*args: str) -> str:
 class Run:
     def __init__(self, *, mode: str, run_dir: Path, cells: List[Cell], instrument: Instrument, models: Dict,
                  adapter, spend_cap_usd: float, concurrency: int = 4, models_path: Optional[Path] = None,
-                 stages: tuple = STAGES, trace_probe_locked: bool = True, billing_probe=None):
+                 stages: tuple = STAGES, trace_probe_locked: bool = True, billing_probe=None,
+                 elicitation: bool = True):
         if mode not in ("smoke", "pilot", "full"):
             raise ValueError(f"unknown mode {mode!r}")
         self.mode = mode
@@ -94,6 +96,9 @@ class Run:
         self.concurrency = concurrency
         self.models_path = models_path
         self.stages = stages if mode != "smoke" else ("liar",)
+        # Post-story elicitation ("stated B-hat"): after the story, never seen by the judge.
+        if not elicitation:
+            self.stages = tuple(st for st in self.stages if st not in ("elicitation", "bhat"))
         # Owner lock (data/perfect_lie/run_locks.json): the trace probe never runs while locked.
         self.trace_probe_locked = trace_probe_locked
         if trace_probe_locked:
@@ -154,6 +159,8 @@ class Run:
         if self.models_path:
             h["models"] = file_sha256(self.models_path)
         h["grader_rubric"] = hashlib.sha256((RUBRIC_PREAMBLE + RUBRIC_OUTPUT).encode()).hexdigest()
+        if "elicitation" in self.stages:
+            h["elicitation"] = hashlib.sha256((ELICITATION_QUESTION + BHAT_PREAMBLE).encode()).hexdigest()
         return h
 
     def write_manifest(self, finished: bool = False) -> None:
@@ -268,27 +275,21 @@ class Run:
         cid = cell_id(cell, self.namespace)
         rec = dict(self.records.get(cid) or self._base_record(cell))
         rec["errors"] = []
+        if rec.get("status") == "error":
+            rec["status"] = "in_progress"
+        handlers = {"liar": lambda: self._liar(cell, rec), "elicitation": lambda: self._elicitation(cell, rec),
+                    "target": lambda: self._target(cell, rec), "graders": lambda: self._graders(rec),
+                    "bhat": lambda: self._bhat(rec), "trace_probe": lambda: self._trace_probe(rec)}
+        order = list(STAGES)
+        done = order.index(rec["stage_done"]) if rec.get("stage_done") in order else -1
         try:
-            if rec.get("stage_done") is None:
-                await self._liar(cell, rec)
-                rec["stage_done"] = "liar"
-                rec["status"] = "complete" if self.stages == ("liar",) else "in_progress"
-                await self._append(rec)
-            elif rec.get("status") == "error":
-                rec["status"] = "in_progress"
-            if "target" in self.stages and rec["stage_done"] == "liar":
-                await self._target(cell, rec)
-                rec["stage_done"] = "target"
-                await self._append(rec)
-            if "graders" in self.stages and rec["stage_done"] == "target":
-                await self._graders(rec)
-                rec["stage_done"] = "graders"
-                await self._append(rec)
-            if "trace_probe" in self.stages and rec["stage_done"] == "graders":
-                await self._trace_probe(rec)
-                rec["stage_done"] = "trace_probe"
-            if rec["stage_done"] == self.stages[-1] and rec["status"] != "complete":
-                rec["status"] = "complete"
+            for stage in self.stages:
+                if order.index(stage) <= done:
+                    continue
+                await handlers[stage]()
+                rec["stage_done"] = stage
+                done = order.index(stage)
+                rec["status"] = "complete" if stage == self.stages[-1] else "in_progress"
                 await self._append(rec)
         except asyncio.CancelledError:
             raise  # killed on breach: leave the cell pending, write nothing further
@@ -350,6 +351,40 @@ class Run:
                     "call": label, "attempt": attempt, "error": str(e)[:500],
                     "finish_reason": out.get("finish_reason"), "raw_text": str(out.get("text"))[:1500]})
         raise ValueError(f"{label}: no well-formed answer after {MAX_PARSE_ATTEMPTS} attempts: {last_err}")
+
+    async def _elicitation(self, cell: Cell, rec: Dict) -> None:
+        """Same conversation, new user turn after the finished story. The judge never sees it."""
+        from .scoring import elicitation_flags
+        msgs = elicitation_messages(rec["liar_delivered_messages"], rec["lie"])
+        entry = self.liar_by_id[cell.model_id]
+        try:
+            # Through the adapter like every other call, so tests' fake adapter intercepts it.
+            out = await self.adapter.achat(msgs, cell.model_id, cell.temperature, 400, top_p=cell.top_p,
+                                           provider=cell.provider, reasoning=cell.reasoning)
+        except Exception:
+            await self._charge_failed_call(entry, 400, rec)
+            raise
+        rec["cost_usd"] = rec.get("cost_usd", 0.0) + await self._charge(entry, out["usage"])
+        check_pin(cell.provider, out.get("served_provider"), f"elicitation {cell.model_id}")
+        note = (rec.get("liar_system_prompt") or "")[len(SYSTEM_SCAFFOLD):]
+        rec["elicitation"] = {"question": ELICITATION_QUESTION, "answer": out["text"], "messages": msgs,
+                              "finish_reason": out.get("finish_reason"), "usage": out["usage"],
+                              "served_provider": out.get("served_provider"), "generation_id": out.get("generation_id"),
+                              "flags": elicitation_flags(out["text"], note, out.get("finish_reason"))}
+
+    async def _bhat(self, rec: Dict) -> None:
+        """Code the stated B-hat into the cue ontology with every grader (same cue list, output
+        section and strict schema as story grading)."""
+        cue_order = [c.id for c in self.instrument.cues]
+        gi = build_bhat_grader_input(ELICITATION_QUESTION, rec["elicitation"]["answer"], self.instrument.cues)
+        grades = {}
+        for g in self.models["graders"]:
+            parsed, out, attempt = await self._call_parsed(
+                role="grader", entry=g, system_prompt=gi.system_prompt, user_prompt=gi.user_prompt,
+                parse=lambda txt: parse_grader_output(txt, cue_order), rec=rec, label=f"bhat[{g['role']}]",
+                response_format=grader_response_format(cue_order))
+            grades[g["role"]] = {**parsed, "model": g["id"], "attempt": attempt, "usage": out["usage"]}
+        rec["bhat_grades"] = grades
 
     async def _target(self, cell: Cell, rec: Dict) -> None:
         """Every target model in the class panel reads the same lie (liar family x target family)."""

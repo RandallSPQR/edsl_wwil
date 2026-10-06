@@ -349,6 +349,9 @@ def main(argv=None) -> int:
                       help="mark cells for regeneration (filter with --conditions, --models, --status); no model calls")
     ap.add_argument("--conditions", nargs="*", help="--pilot/--invalidate: only these conditions")
     ap.add_argument("--prompt-version", help="public prompt version for a new run (prompts.json; default: active)")
+    ap.add_argument("--no-elicitation", action="store_true", help="skip the post-story elicitation (stated B-hat)")
+    mode.add_argument("--reachability-report", type=Path, metavar="RUN_DIR",
+                      help="Stage 2 reachability check (completion, failures, elicitation rates); no cue rates, no lift")
     mode.add_argument("--stage1-report", nargs=2, type=Path, metavar=("NEW_RUN_DIR", "REF_RUN_DIR"),
                       help="Stage 1 pass criteria: new-prompt control cells vs original-prompt reference; no model calls")
     ap.add_argument("--status", nargs="*", help="--invalidate: only cells whose current status is one of these")
@@ -386,6 +389,16 @@ def main(argv=None) -> int:
         md = render_markdown(res, cue_ids, str(new_dir), str(ref_dir))
         (new_dir / "stage1_report.md").write_text(md)
         (new_dir / "stage1_report.json").write_text(json.dumps(res, indent=2, default=str) + "\n")
+        print(md)
+        return 0
+    if args.reachability_report:
+        from src.perfect_lie.runner import load_records
+        from src.perfect_lie.reachability import reachability, render
+        d = args.reachability_report
+        res = reachability(load_records(d), json.loads((d / "manifest.json").read_text()))
+        md = render(res, str(d))
+        (d / "reachability_report.md").write_text(md)
+        (d / "reachability_report.json").write_text(json.dumps(res, indent=2, default=str) + "\n")
         print(md)
         return 0
     if args.invalidate:
@@ -444,7 +457,8 @@ def main(argv=None) -> int:
 
     probe_locked = run_locks().get("trace_probe", {}).get("locked", True)
     est = estimate_cost(instrument, models, cells, liar_only=(run_mode == "smoke"),
-                        include_trace_probe=not probe_locked)
+                        include_trace_probe=not probe_locked,
+                        include_elicitation=(run_mode != "smoke" and not args.no_elicitation))
     print("instrument hashes:")
     for k, v in instrument.hashes.items():
         print(f"  {k:9s} {v}")
@@ -479,6 +493,7 @@ def main(argv=None) -> int:
               adapter=PerfectLieAdapter(service_name=models.get("service", "open_router")),
               spend_cap_usd=args.confirm_spend, concurrency=args.concurrency, models_path=models_path,
               trace_probe_locked=locks.get("trace_probe", {}).get("locked", True),
+              elicitation=not args.no_elicitation,
               billing_probe=openrouter_billed_usd)
     manifest = asyncio.run(run.run())
     print(f"\n{run_mode}: {manifest['n_complete']}/{manifest['n_cells_planned']} complete, "

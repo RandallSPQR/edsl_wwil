@@ -216,7 +216,7 @@ def _usd(price: Dict, in_tok: int, out_tok: int) -> float:
 
 
 def estimate_cost(instrument: Instrument, models: Dict, cells: List[Cell], liar_only: bool = False,
-                  include_trace_probe: bool = False) -> CostEstimate:
+                  include_trace_probe: bool = False, include_elicitation: bool = False) -> CostEstimate:
     ta = models["token_assumptions"]
     w2t = ta["words_to_tokens"]
     liar_by_id = {m["id"]: m for m in models["liar_models"]}
@@ -283,6 +283,29 @@ def estimate_cost(instrument: Instrument, models: Dict, cells: List[Cell], liar_
     for g in models["graders"]:
         out = grader_out + len(cells) * g.get("expected_thinking_tokens", 0)
         grader_lines.append(CostLine(f"grader[{g['role']}]", g["id"], len(cells), grader_in, out, _usd(g, grader_in, out)))
+    if include_elicitation and cells:
+        # One more liar call per cell (the conversation so far + the question; a short answer),
+        # and every grader codes the answer (rubric + short answer).
+        from .grader import build_bhat_grader_input
+        from .conditions import ELICITATION_QUESTION
+        el_out = 120
+        bh = build_bhat_grader_input(ELICITATION_QUESTION, " ".join(["word"] * 90), instrument.cues)
+        bh_in = _tokens(bh.system_prompt + bh.user_prompt, w2t)
+        el_lines: Dict[str, CostLine] = {}
+        for c in cells:
+            in_tok = sys_cache[(c.prompt_id, c.condition, c.target_id, c.prompt_version)] + user_cache[c.prompt_id] \
+                + story_out + _tokens(ELICITATION_QUESTION, w2t)
+            line = el_lines.setdefault(c.model_id, CostLine(f"elicit[{c.model_family}]", c.model_id, 0, 0, 0, 0.0))
+            line.calls += 1
+            line.input_tokens += in_tok
+            line.output_tokens += el_out
+        for mid, line in el_lines.items():
+            line.usd = _usd(liar_by_id[mid], line.input_tokens, line.output_tokens)
+        target_lines = target_lines + list(el_lines.values())
+        for g in models["graders"]:
+            n = len(cells)
+            out = n * (ta["grader_output_tokens"] + g.get("expected_thinking_tokens", 0))
+            grader_lines.append(CostLine(f"bhat[{g['role']}]", g["id"], n, n * bh_in, out, _usd(g, n * bh_in, out)))
     tp = models.get("trace_probe")
     if include_trace_probe and tp and trace_cells:
         tin = trace_cells * ta["trace_probe_input_tokens"]

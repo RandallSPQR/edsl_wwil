@@ -1065,6 +1065,11 @@ class PerfectLieAdapter:
         })
         return out
 
+    async def achat(self, messages: List[Dict[str, str]], model_name: str, temperature: float,
+                    max_output_tokens: int, **kw) -> Dict:
+        """Multi-turn call (post-story elicitation); see perfect_lie_chat."""
+        return await perfect_lie_chat(messages, model_name, temperature, max_output_tokens, **kw)
+
     def generate(self, user_prompt: str, system_prompt: str, model_name: str,
                  temperature: float, replicate: int,
                  reasoning: Optional[Dict] = None, max_output_tokens: Optional[int] = None,
@@ -1094,3 +1099,46 @@ def _perfect_lie_exception_text(results) -> str:
     except Exception:
         pass
     return "no exception detail available"
+
+
+
+async def perfect_lie_chat(messages: List[Dict[str, str]], model_name: str, temperature: float,
+                           max_output_tokens: int, top_p: Optional[float] = None,
+                           provider: Optional[Dict] = None, reasoning: Optional[Dict] = None,
+                           client=None) -> Dict:
+    """One multi-turn call straight to OpenRouter (EDSL cannot send an assistant turn).
+
+    Used only for the post-story elicitation. Runs locally with the OpenRouter key, with the
+    same pin, sampling and reasoning settings as the story call; nothing goes through Expected
+    Parrot. `client` is injectable for tests.
+    """
+    import openai
+    if client is None:
+        client = openai.AsyncOpenAI(api_key=os.environ["OPEN_ROUTER_API_KEY"], base_url="https://openrouter.ai/api/v1")
+    params = {"model": model_name, "messages": messages, "temperature": temperature,
+              "max_completion_tokens": int(max_output_tokens)}
+    if top_p is not None:
+        params["top_p"] = float(top_p)
+    extra = {}
+    if provider:
+        extra["provider"] = dict(provider)
+    if reasoning:
+        extra["reasoning"] = dict(reasoning)
+    if extra:
+        params["extra_body"] = extra
+    start = time.time()
+    resp = await client.chat.completions.create(**params)
+    raw = resp.model_dump()
+    choice = (raw.get("choices") or [{}])[0]
+    u = raw.get("usage") or {}
+    details = u.get("completion_tokens_details") or {}
+    text = (choice.get("message") or {}).get("content")
+    if text is None:
+        raise PerfectLieCallError(f"elicitation call to {model_name} returned no content "
+                                  f"(finish_reason {choice.get('finish_reason')})")
+    return {"text": text, "raw": raw, "finish_reason": choice.get("finish_reason"),
+            "usage": {"prompt_tokens": u.get("prompt_tokens"), "completion_tokens": u.get("completion_tokens"),
+                      "reasoning_tokens": details.get("reasoning_tokens")},
+            "served_provider": raw.get("provider"), "generation_id": raw.get("id"),
+            "latency_ms": int((time.time() - start) * 1000), "messages": messages,
+            "temperature": temperature, "top_p": top_p, "provider_pin": provider}
