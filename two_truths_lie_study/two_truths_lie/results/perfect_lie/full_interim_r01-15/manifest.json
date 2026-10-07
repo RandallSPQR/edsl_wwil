@@ -1,0 +1,83 @@
+{
+  "mode": "full",
+  "run_namespace": "full",
+  "run_dir": "results/perfect_lie/full_interim_r01-15",
+  "git_sha": "6a4882c6e980d4f1e848a1e2fc0fea965ea943ab",
+  "git_dirty": true,
+  "started_at": "2026-10-07T17:56:03+00:00",
+  "updated_at": "2026-10-07T17:56:55+00:00",
+  "finished_at": null,
+  "hashes": {
+    "cues": "aee8391e509a22c083a72ef1e04971772bab64d52da414521e300bb1d722def4",
+    "personas": "6f8ccd60facbe225835a9f67602b434afe8177358e4efe47a44a7b357c204666",
+    "prompts": "e32771f294d7fe7df4cbb2fa5b7fbae9c81a485e872e01de259265d382ecfc97",
+    "design": "f0e1fd340f6c20914359eb3f0ee5190487c274854bb1800f75d24c55ec0838e1",
+    "models": "e7902567d21385798c90fd50718585dff18c8e9bcdbb1243f78132504bd0ed85",
+    "grader_rubric": "c638fea116fbb397631f2c7a28dac8f01a63cd8990fcb70365dbb7e98f3a303f",
+    "elicitation": "a12fd428f6e1d630b0ba001432d30f69382d372971240c5f089c156416d74268"
+  },
+  "liar_models": [
+    "google/gemini-2.5-flash-lite",
+    "google/gemma-3-27b-it",
+    "meta-llama/llama-3.1-8b-instruct",
+    "openai/gpt-4o-mini"
+  ],
+  "reasoning_levels": [
+    "off"
+  ],
+  "replicates": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "class_id": "C1",
+  "class_status": "approved",
+  "target_models": [
+    "meta-llama/llama-3.1-8b-instruct",
+    "google/gemma-3-27b-it",
+    "openai/gpt-4o-mini",
+    "google/gemini-2.5-flash-lite"
+  ],
+  "graders": [
+    "anthropic/claude-sonnet-4.5",
+    "openai/gpt-5",
+    "google/gemini-2.5-flash"
+  ],
+  "robustness_subsamples": {
+    "secondary": 540
+  },
+  "trace_probe": "anthropic/claude-sonnet-4.5",
+  "stages": [
+    "liar",
+    "elicitation",
+    "target",
+    "graders",
+    "bhat"
+  ],
+  "price_source": "openrouter.ai/api/v1/models",
+  "price_fetched_at": "2026-10-05T17:04:53+00:00",
+  "n_cells_planned": 2160,
+  "n_complete": 0,
+  "n_error": 0,
+  "spend_usd": 0.0051,
+  "spend_counted_usd": 0.0034,
+  "openrouter_billed_delta_usd": 0.0051,
+  "spend_cap_usd": 80.0,
+  "spend_cap_reached": false,
+  "trace_probe_locked": true,
+  "killed_on_breach": false,
+  "python": "3.11.15",
+  "edsl_version": "1.0.5.dev1"
+}
