@@ -857,6 +857,11 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
         instrument hash against the run manifest and refuses on any change.
     - **Spend.** The $30.21 already spent counts toward the cap, and the runner keeps a running
       cumulative tally. The $80 kill cap applies to the total.
+    - **Container restart, 2026-10-08.** The resume started at 00:16Z from 910bdb5. At about 00:35Z the
+      session's container restarted and killed the runner. All 6,172 record lines parsed afterwards;
+      1,065 cells were complete. The run was resumed at 00:37Z with the same approved settings. The code
+      was identical to 910bdb5; only results had changed. Calls in flight at the restart were re-made
+      from each cell's last completed stage.
 
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.
