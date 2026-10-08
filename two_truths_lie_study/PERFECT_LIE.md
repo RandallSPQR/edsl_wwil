@@ -862,6 +862,35 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
       1,065 cells were complete. The run was resumed at 00:37Z with the same approved settings. The code
       was identical to 910bdb5; only results had changed. Calls in flight at the restart were re-made
       from each cell's last completed stage.
+31. **Interim look, blinded (2026-10-08T08:28:10Z).** Records frozen at 36c214e. Run with
+    `results/perfect_lie/interim_look/blind_interim.py` (committed d2dd430, before the run ended); output
+    in `interim_look/interim_blind.json`. No lift, interval or test statistic was printed or written.
+    - **Cells:** 2,110 of 2,160 complete; 50 failed, excluded and counted.
+      - Failures by cause:
+
+        | cause | cells |
+        |---|---|
+        | grader content filter (primary story 19, primary B-hat 5) | 24 |
+        | parse or consistency (primary B-hat 14, Google story 4, judge 4, Google B-hat 1, primary story 1) | 24 |
+        | empty elicitation at the token limit | 2 |
+
+      - Transport retries: 312 cells re-run, 306 completed.
+    - **Gate** (primary vs Google, 2,110 lies): **excluded `emotional_appeal`**. No cue was flagged for
+      fewer than 30 positives.
+    - **Primary pool:** P1, P2, P3, P5, P6.
+    - **Units per model:** 130 / 130 / 128 / 122 (Llama, Gemma, gpt-4o-mini, Gemini Flash-Lite).
+    - **Units excluded:**
+
+      | reason | units |
+      |---|---|
+      | missing or failed cell | 29 |
+      | confessed | 1 |
+      | empty placebo-net cue set | 60 |
+
+    - **Decisions:** all four models **stop for efficacy at the interim** under the pre-registered
+      boundaries with Holm by the graphical approach. The efficacy alpha is fully used, and no model
+      extends. The direction of each effect is withheld until the final analysis.
+    - **Spend:** $63.73 counted ($62.09 billed), cap $80 not reached.
 
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.
