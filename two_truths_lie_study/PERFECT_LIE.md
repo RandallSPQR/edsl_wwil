@@ -958,6 +958,28 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
       - Confession screen: 3 matches, all false positives (one excludes a unit).
       - Refusal pattern: 11 matches, all false positives.
       - The owner decides how to treat them before unblinding.
+34. **Screen adjudication, sign test and blinded re-run, before unblinding (2026-10-08T19:42:44Z).**
+    - **Owner decision, option 1.** All 14 matches (3 confession, 11 refusal) were adjudicated by hand,
+      blind to condition, against the written confession rule and the refusal definition. All 14 are
+      recorded as not confessions or not refusals in `interim_look/screen_adjudication.json`
+      (sha256-keyed by cell id; rule texts quoted; written by `make_screen_adjudication.py`).
+      - The patterns are unchanged in code.
+      - `sequential.is_confession()` and `nonviable_reasons()` override them for these records only.
+      - The one confessed unit returns to the primary pool. Unit exclusions are now 29 missing or
+        failed, 0 confessed and 60 with an empty cue set.
+    - **Sign test** (`final_analysis/sign_test.py`, synthetic data only, through the real runner):
+      - when full lies carry more named cues, all four lifts are positive (+0.56 to +0.61), labelled
+        "more named cues under full";
+      - in the reverse case, all four are negative (-0.48 to -0.60), labelled "fewer named cues under
+        full (more under placebo)";
+      - both labels appear in `final_report.md`.
+    - **Blinded re-run of the interim decisions** (`interim_look/blind_interim_postfix.py`; fixed code,
+      frozen gate, the returned unit):
+      - four efficacy stops, as before; no decision changed;
+      - local alpha at decision: Gemma 0.0125, gpt-4o-mini 0.0167, Llama 0.025, Gemini Flash-Lite 0.05,
+        all in the efficacy family at the interim;
+      - units 131 / 130 / 128 / 122 (Llama, Gemma, gpt-4o-mini, Gemini);
+      - the Holm order reveals only the models' rank by |Z|.
 
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.

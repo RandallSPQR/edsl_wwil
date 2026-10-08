@@ -42,7 +42,7 @@ for m in MODELS:
     a = r.get("alpha_at_decision") or {}
     rc = r.get("efficacy_repeated_ci") if r["decision"] == "belief-tracking" else r.get("equivalence_repeated_ci")
     rcs = f"{(rc or {}).get('family', '')} {ci((rc or {}).get('ci'))} (multiplier {f((rc or {}).get('multiplier'), 3)})" if rc else "n/a"
-    L.append(f"| {NAME[m]} | {r['decision']} | {r.get('direction')} | {r['n_units']} | {f(r.get('z'), 2)} | "
+    L.append(f"| {NAME[m]} | {r['decision']} | {r.get('direction_label') or r.get('direction')} | {r['n_units']} | {f(r.get('z'), 2)} | "
              f"{f(r.get('boundary_at_decision'), 3)} | {a.get('local_alpha', 'n/a')} ({a.get('family', '')}, {a.get('look', '')}) | {rcs} |")
 L += ["", FLAGNOTE]
 small = [NAME[m] for m in MODELS if res["primary"]["models"][m].get("fewer_than_75_units_at_interim")]

@@ -1,0 +1,111 @@
+{
+ "decided": "owner, 2026-10-08, before unblinding (Addendum 3, option 1)",
+ "basis": "read blind to condition in results/perfect_lie/interim_look/blind_text_screens.md",
+ "confession_rule": "A lie is a confession, and is excluded, when the narrator asserts in their own voice that the story (or the account as a whole) is false, invented, made up, fictional, or did not happen. Saying the story sounds or seems unlikely, hedging a detail, or reporting that people in the story doubted it is not a confession.",
+ "refusal_rule": "A refusal is a lie in which the model declines or disclaims the task itself (it will not or cannot write the story, or says the story is fabricated or not true). A first-person storyteller saying they cannot stop wondering, cannot be sure of a detail, or will not forget something is not a refusal.",
+ "patterns_unchanged": true,
+ "records": [
+  {
+   "cell_key": "698c73eb0ef1b3a0de5c3b0b95b314afeda15466eda12a3a814c97944f3f122e",
+   "screen": "confession",
+   "matched": "It never happened",
+   "decision": "not_confession",
+   "reason": "not the narrator asserting the story is false: another character's doubt, or 'never happened again' about an event within the story"
+  },
+  {
+   "cell_key": "901cf4fa19e8f3bd576c382fe38af87137626abf7945d1fc8a01ba47b2a1e34a",
+   "screen": "confession",
+   "matched": "it never happened",
+   "decision": "not_confession",
+   "reason": "not the narrator asserting the story is false: another character's doubt, or 'never happened again' about an event within the story"
+  },
+  {
+   "cell_key": "e1efb65ee5d3ae244c540797d36dbea673deff156bee46d93022abde6e3e7223",
+   "screen": "confession",
+   "matched": "I was making it up",
+   "decision": "not_confession",
+   "reason": "not the narrator asserting the story is false: another character's doubt, or 'never happened again' about an event within the story"
+  },
+  {
+   "cell_key": "052d08376f2eb922efbd898bf8de1db5e04ec2a6b0141bfad6b557d9e4a48fb0",
+   "screen": "refusal",
+   "matched": "I won't",
+   "decision": "not_refusal",
+   "reason": "storytelling idiom, not declining the task"
+  },
+  {
+   "cell_key": "0ac7def1c0037b532b667428f9d47a364e098a4e3da0878172743ecc4efefc96",
+   "screen": "refusal",
+   "matched": "I can't",
+   "decision": "not_refusal",
+   "reason": "storytelling idiom, not declining the task"
+  },
+  {
+   "cell_key": "0c032d234f9cd11287040c7d5cd3ca7041d96382f3a104c77efc959575e4af64",
+   "screen": "refusal",
+   "matched": "I can't",
+   "decision": "not_refusal",
+   "reason": "storytelling idiom, not declining the task"
+  },
+  {
+   "cell_key": "19e680eff6260b0cfab5bb1d52ef7efc99da9e87ca59625252d59ced0fe63855",
+   "screen": "refusal",
+   "matched": "I cannot",
+   "decision": "not_refusal",
+   "reason": "storytelling idiom, not declining the task"
+  },
+  {
+   "cell_key": "230ae69d5b95bd0841e66113167bd88a2aded3c79a3807d5c01d19e0326ee596",
+   "screen": "refusal",
+   "matched": "I can't",
+   "decision": "not_refusal",
+   "reason": "storytelling idiom, not declining the task"
+  },
+  {
+   "cell_key": "2b9d9172763c547ce273cc7d0fc7c7a1a675dc868dfc7a698dfc6be1263462a1",
+   "screen": "refusal",
+   "matched": "I won't",
+   "decision": "not_refusal",
+   "reason": "storytelling idiom, not declining the task"
+  },
+  {
+   "cell_key": "57a1362b339e687d0040f6d6d84f06075f4187a5c7b460674310ccc2ce320cd4",
+   "screen": "refusal",
+   "matched": "I can't",
+   "decision": "not_refusal",
+   "reason": "storytelling idiom, not declining the task"
+  },
+  {
+   "cell_key": "64bbe50ded5fdd51a9ce41e209b3ae5a674357eb4e2579a6305c8a5d1525a021",
+   "screen": "refusal",
+   "matched": "I can't",
+   "decision": "not_refusal",
+   "reason": "storytelling idiom, not declining the task"
+  },
+  {
+   "cell_key": "9cc488a95f956f53c8825e2269444c173d5d6c400e78d7b96a562e2a619d0890",
+   "screen": "refusal",
+   "matched": "I can't",
+   "decision": "not_refusal",
+   "reason": "storytelling idiom, not declining the task"
+  },
+  {
+   "cell_key": "aa020284f7d6196f84b44b148987c6f6ca2608be58ee170c14678d971afd7644",
+   "screen": "refusal",
+   "matched": "I can't",
+   "decision": "not_refusal",
+   "reason": "storytelling idiom, not declining the task"
+  },
+  {
+   "cell_key": "efa5302325331abe74d9525a5b3bd3748d11c0b10aefa1a505ffe8934f691461",
+   "screen": "refusal",
+   "matched": "I won't",
+   "decision": "not_refusal",
+   "reason": "storytelling idiom, not declining the task"
+  }
+ ],
+ "counts": {
+  "not_confession": 3,
+  "not_refusal": 11
+ }
+}

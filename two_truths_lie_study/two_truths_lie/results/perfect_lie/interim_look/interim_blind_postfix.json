@@ -1,0 +1,49 @@
+{
+  "gate_excluded_frozen": [
+    "emotional_appeal"
+  ],
+  "units_excluded": {
+    "missing_or_failed": 29,
+    "confessed": 0,
+    "empty_cue_set": 60,
+    "nonviable": 0
+  },
+  "decisions": {
+    "meta-llama/llama-3.1-8b-instruct": {
+      "decision": "efficacy stop",
+      "n_units": 131,
+      "decided_at": {
+        "family": "efficacy",
+        "local_alpha": 0.025,
+        "look": "interim"
+      }
+    },
+    "google/gemma-3-27b-it": {
+      "decision": "efficacy stop",
+      "n_units": 130,
+      "decided_at": {
+        "family": "efficacy",
+        "local_alpha": 0.0125,
+        "look": "interim"
+      }
+    },
+    "openai/gpt-4o-mini": {
+      "decision": "efficacy stop",
+      "n_units": 128,
+      "decided_at": {
+        "family": "efficacy",
+        "local_alpha": 0.016666666666666666,
+        "look": "interim"
+      }
+    },
+    "google/gemini-2.5-flash-lite": {
+      "decision": "efficacy stop",
+      "n_units": 122,
+      "decided_at": {
+        "family": "efficacy",
+        "local_alpha": 0.05,
+        "look": "interim"
+      }
+    }
+  }
+}

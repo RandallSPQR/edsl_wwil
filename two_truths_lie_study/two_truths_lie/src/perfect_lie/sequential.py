@@ -15,7 +15,10 @@ a mean, an interval or a statistic. `final_analysis` is the only function that r
 from __future__ import annotations
 
 import functools
+import hashlib
+import json
 import math
+from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
 import numpy as np
@@ -145,9 +148,40 @@ def note_named(instrument, row, target_id: str, scorable: Sequence[str]) -> List
 NONVIABLE_REASONS = ("too_short", "too_long", "refusal_or_disclaimer")
 
 
+# Owner adjudication, before unblinding (Addendum 3): the confession and refusal patterns are
+# unchanged, but the listed records were read blind to condition against the written rules and
+# found to be neither confessions nor refusals. Records are keyed by sha256 of their cell id.
+ADJUDICATION_PATH = Path(__file__).resolve().parents[2] / "results" / "perfect_lie" / "interim_look" / "screen_adjudication.json"
+
+
+def cell_key(record: Dict) -> Optional[str]:
+    cid = record.get("cell_id")
+    return hashlib.sha256(cid.encode()).hexdigest() if cid else None
+
+
+@functools.lru_cache(maxsize=None)
+def _adjudicated(kind: str, path: str = str(ADJUDICATION_PATH)) -> frozenset:
+    p = Path(path)
+    if not p.exists():
+        return frozenset()
+    data = json.loads(p.read_text())
+    return frozenset(x["cell_key"] for x in data.get("records", []) if x.get("decision") == kind)
+
+
+def is_confession(record: Dict) -> bool:
+    """The confession screen, overridden for records adjudicated "not_confession"."""
+    if cell_key(record) in _adjudicated("not_confession"):
+        return False
+    return bool(confession(record.get("lie") or ""))
+
+
 def nonviable_reasons(record: Dict) -> List[str]:
-    """Word-range failures and refusals only (degenerate text is reported separately, never excluded)."""
-    return [r for r in lie_viability(record) if r.split("(")[0] in NONVIABLE_REASONS]
+    """Word-range failures and refusals only (degenerate text is reported separately, never excluded).
+    The refusal reason is dropped for records adjudicated "not_refusal"."""
+    out = [r for r in lie_viability(record) if r.split("(")[0] in NONVIABLE_REASONS]
+    if cell_key(record) in _adjudicated("not_refusal"):
+        out = [r for r in out if not r.startswith("refusal_or_disclaimer")]
+    return out
 
 
 def nonviable_counts(records: Iterable[Dict]) -> Dict[str, Dict[str, int]]:
@@ -190,7 +224,7 @@ def unit_lifts(records: Iterable[Dict], instrument, scorable: Sequence[str], poo
                  for c in ("full", "placebo"))
         if not ok:
             counts["missing_or_failed"] += 1; continue
-        if any(confession(pair[c].get("lie") or "") for c in ("full", "placebo")):
+        if any(is_confession(pair[c]) for c in ("full", "placebo")):
             counts["confessed"] += 1; continue
         if exclude_nonviable and any(nonviable_reasons(pair[c]) for c in ("full", "placebo")):
             counts["nonviable"] += 1; continue
@@ -294,7 +328,8 @@ def interim_decisions(units: List[Dict], models: Sequence[str]) -> Dict:
     for m in models:
         dec = state["decision"][m]
         decisions[m] = {"decision": {"belief-tracking": "efficacy stop", "flat": "equivalence stop",
-                                     "extend": "extend"}[dec], "n_units": len(d[m])}
+                                     "extend": "extend"}[dec], "n_units": len(d[m]),
+                        "decided_at": state.get("alpha_at_decision", {}).get(m)}
     return {"decisions": decisions,
             "alpha_after_interim": {"efficacy": dict(state["eff_alpha"]), "equivalence": dict(state["eq_alpha"])}}
 

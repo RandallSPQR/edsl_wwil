@@ -213,6 +213,8 @@ def primary(units: List[Dict], models: Sequence[str]) -> Dict:
                 r["equivalence_repeated_ci"] = {"family": "equivalence", "local_alpha": aq, "multiplier": e,
                                                 "ci": [mean - e * se, mean + e * se], "margin": sq.MARGIN}
         r["alpha_at_decision"] = info
+        r["direction_label"] = {"positive": "more named cues under full",
+                                "negative": "fewer named cues under full (more under placebo)"}.get(r.get("direction"))
         # Added before unblinding (Addendum 3): naive 95% CI and stagewise median-unbiased estimate.
         r["ci95_naive"] = [mean - 1.96 * se, mean + 1.96 * se]
         a_eff_interim = (info["local_alpha"] if info and info["family"] == "efficacy" and info["look"] == "interim"
@@ -392,7 +394,7 @@ def _pairs(records: List[Dict], pool: Sequence[str], conds=("full", "placebo")) 
     cells: Dict[tuple, Dict[str, Dict]] = {}
     for r in records:
         if r.get("status") == "complete" and r.get("condition") in conds and r.get("target_id") in pool \
-                and r.get("replicate") in BALANCED and not confession(r.get("lie") or ""):
+                and r.get("replicate") in BALANCED and not sq.is_confession(r):
             cells.setdefault((r["model_id"], r["prompt_id"], r["target_id"], r["replicate"]), {})[r["condition"]] = r
     return cells
 
@@ -404,7 +406,7 @@ def _share(cues: Dict, named: Sequence[str]) -> float:
 def secondaries(records: List[Dict], inst, scorable: Sequence[str], models: Sequence[str]) -> Dict:
     # Confessed lies are excluded from every secondary analysis (PREREG section 2; review finding F9).
     recs = [r for r in records if r.get("status") == "complete" and r.get("replicate") in BALANCED
-            and not confession(r.get("lie") or "")]
+            and not sq.is_confession(r)]
     pool = sq.primary_pool(inst, scorable)
     rows = {r.prompt_id: r for r in inst.design}
     cat = {p.id: p.category for p in inst.prompts}
@@ -560,7 +562,7 @@ def _t_and_none(recs, inst, rows, scorable, pool, models) -> Dict:
     # T per (model, prompt, condition, replicate), across the pair's two targets
     by = defaultdict(dict)
     for r in recs:
-        if not confession(r.get("lie") or "") and r["grades"].get("primary"):
+        if not sq.is_confession(r) and r["grades"].get("primary"):
             by[(r["model_id"], r["prompt_id"], r["condition"], r["replicate"])][r["target_id"]] = r
     T = defaultdict(list)
     excl = {c.id for c in inst.cues if c.id not in set(scorable)}
@@ -604,7 +606,7 @@ def empty_cue_breakdown(records: List[Dict], inst, scorable: Sequence[str], pool
 def failure_tables(all_records: List[Dict]) -> Dict:
     by = Counter((r["model_id"], r["condition"]) for r in all_records if r.get("status") == "error")
     deg = Counter(r["condition"] for r in all_records if r.get("status") == "complete" and degenerate_tail(r.get("lie") or ""))
-    conf = Counter(r["condition"] for r in all_records if r.get("status") == "complete" and confession(r.get("lie") or ""))
+    conf = Counter(r["condition"] for r in all_records if r.get("status") == "complete" and sq.is_confession(r))
     return {"failed_by_model_condition": {f"{m}|{c}": n for (m, c), n in sorted(by.items())},
             "degenerate_by_condition": dict(deg), "confessed_by_condition": dict(conf)}
 
