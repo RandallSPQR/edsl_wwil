@@ -1,0 +1,46 @@
+{
+ "V1 theta 0.073": {
+  "P(mue<theta)": 0.491,
+  "coverage95": 0.9495,
+  "stage1_stops": 50,
+  "stage1_mue_equals_naive": 50.0
+ },
+ "V1 theta 0.146": {
+  "P(mue<theta)": 0.5105,
+  "coverage95": 0.951,
+  "stage1_stops": 970,
+  "stage1_mue_equals_naive": 970.0
+ },
+ "V1 theta 0.0": {
+  "P(mue<theta)": 0.4985,
+  "coverage95": 0.9455,
+  "stage1_stops": 1,
+  "stage1_mue_equals_naive": 1.0
+ },
+ "V2": {
+  "median_naive": 0.172009197621889,
+  "median_conditional_mue": 0.1477578599728322,
+  "theta": 0.146,
+  "p_below": 0.486,
+  "not_identified": 79
+ },
+ "V3": {
+  "ok_stage1_equal": true,
+  "decisions": {
+   "meta-llama/llama-3.1-8b-instruct": "belief-tracking",
+   "google/gemma-3-27b-it": "extend (extension not run)",
+   "openai/gpt-4o-mini": "extend (extension not run)",
+   "google/gemini-2.5-flash-lite": "extend (extension not run)"
+  }
+ },
+ "V4": {
+  "z": 4.166743233999,
+  "delta": -0.05643270180111683,
+  "z_at_delta": 4.016283006341412,
+  "boundary": 4.016283006341413
+ },
+ "V5": {
+  "unit_lifts": 60,
+  "breakdown": 60
+ }
+}

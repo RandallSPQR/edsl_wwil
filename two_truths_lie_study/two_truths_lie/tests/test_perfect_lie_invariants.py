@@ -1685,3 +1685,31 @@ def test_resume_filter_retries_only_transport_failures(instrument, tmp_path):
     assert [cell_id(c, ns) for c in run.pending()] == [cell_id(cells[3], ns)]
     run.retry_failed = "all"
     assert len(run.pending()) == 3
+
+
+# ---------------------------------------------------------------- final analysis (offline)
+
+def test_stagewise_mue_equals_naive_at_first_look_and_conditional_shrinks():
+    from src.perfect_lie.final_analysis import conditional_mue, stagewise_mue
+    from src.perfect_lie.sequential import efficacy_bounds
+    c1 = efficacy_bounds(0.0125)[0]
+    sd, n, mean = 0.45, 150, 0.17
+    z = mean / (sd / n ** 0.5)
+    r = stagewise_mue(1, z, n, None, sd, c1)
+    assert abs(r["mue"] - mean) < 1e-6 and abs(r["ci"][0] - (mean - 1.96 * sd / n ** 0.5)) < 1e-3
+    c = conditional_mue(z, n, sd, c1)
+    assert c["mue"] < mean  # conditioning on an early stop pulls the estimate down
+
+
+def test_tipping_point_delta_puts_z_on_the_boundary():
+    import math
+    import numpy as np
+    from src.perfect_lie.final_analysis import tipping_point
+    from src.perfect_lie.sequential import efficacy_bounds
+    c1 = efficacy_bounds(0.0125)[0]
+    rng = np.random.default_rng(5); d = 0.20 + 0.45 * rng.standard_normal(140)
+    units = [{"model_id": "m", "replicate": 1, "d": float(x)} for x in d]
+    prim = {"models": {"m": {"decision": "belief-tracking", "direction": "positive", "boundary_at_decision": c1, "look": "interim"}}}
+    tp = tipping_point(units, [{"model_id": "m"}] * 10, ["m"], prim)["m"]["at_decision_boundary"]
+    x = np.concatenate([d, np.full(10, tp["delta"])])
+    assert tp["reversible"] and abs(x.mean() / (x.std(ddof=1) / math.sqrt(len(x))) - c1) < 1e-6

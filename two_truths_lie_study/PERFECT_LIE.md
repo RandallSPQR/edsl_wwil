@@ -891,6 +891,46 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
       boundaries with Holm by the graphical approach. The efficacy alpha is fully used, and no model
       extends. The direction of each effect is withheld until the final analysis.
     - **Spend:** $63.73 counted ($62.09 billed), cap $80 not reached.
+32. **Blinded permutation check and final-analysis code, before unblinding (2026-10-08T16:37:22Z).**
+    - **Permutation check** (`interim_look/perm_check.py`):
+      - 10,000 random swaps of `full` and `placebo` within each unit on the real interim units, run
+        through the real decision code.
+      - Share of permutations stopping for efficacy: Llama 0, Gemma 0, gpt-4o-mini 0.0001, Gemini
+        Flash-Lite 0.0001. The design's per-model interim rate is 0.000059, so these are single events
+        (2 stops against 2.4 expected).
+      - Passed under the owner's ~2x rule. The unpermuted statistics were never computed for output.
+    - **Final-analysis code** (`src/perfect_lie/final_analysis.py`, runner
+      `results/perfect_lie/final_analysis/run_final.py`). Written and validated on simulated data only;
+      not run on real data.
+    - **Pre-registered analyses:**
+      - per-model decision, direction, naive mean, SE, 95% CI, repeated CI and Z;
+      - stagewise-ordering median-unbiased estimate and CI;
+      - mixed model `d ~ 1 + (1 | prompt)` (statsmodels 0.15.0);
+      - sensitivity analyses: flagged cues dropped, and the pooled gate;
+      - gpt-5 robustness;
+      - P4;
+      - secondary analyses 1-6 on the balanced replicates 1-15.
+    - **Added after registration, before data** (owner instruction, item 29): exclusion of non-viable
+      lies.
+    - **Owner-requested additions, 2026-10-08, before unblinding:**
+      - a tipping point for the failed cells: the common value every missing unit would need for |Z|
+        to fall below the boundary, at the decision's local alpha and at 0.0125;
+      - the 60 empty-cue exclusions broken down by persona x model.
+    - **Not pre-registered and labelled as such:** a conditional median-unbiased estimate given the
+      early stop, as a check on winner's-curse inflation.
+    - **Validation** (`final_analysis/validate_final.*`):
+      - the stagewise estimate is median-unbiased (P(estimate < theta) 0.491-0.510), with 95% CI
+        coverage 0.946-0.951;
+      - it equals the naive mean for every stage-1 stop;
+      - the conditional estimate removes the inflation (median 0.148 against theta 0.146; naive
+        0.172);
+      - the tipping-point root is self-consistent;
+      - the empty-cue breakdown matches the scoring code (60 units, all technology x P6, when
+        `emotional_appeal` is excluded);
+      - the end-to-end synthetic run renders the full report.
+    - If the rules call for extension but no extension data exist, a model is reported as "extend
+      (extension not run)" and no final look is taken. This does not arise at this interim, since all
+      four models stopped.
 
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.
