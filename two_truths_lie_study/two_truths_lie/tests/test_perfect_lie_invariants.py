@@ -1713,3 +1713,22 @@ def test_tipping_point_delta_puts_z_on_the_boundary():
     tp = tipping_point(units, [{"model_id": "m"}] * 10, ["m"], prim)["m"]["at_decision_boundary"]
     x = np.concatenate([d, np.full(10, tp["delta"])])
     assert tp["reversible"] and abs(x.mean() / (x.std(ddof=1) / math.sqrt(len(x))) - c1) < 1e-6
+
+
+def test_holm_alpha_at_decision_follows_p_value_order_not_list_order():
+    import numpy as np
+    from src.perfect_lie.final_analysis import primary
+    rng = np.random.default_rng(1); M = ["A", "B", "C", "D"]; units = []
+    for m, mu in zip(M, [0.15, 0.18, 0.35, 0.40]):
+        units += [{"model_id": m, "replicate": 1 + i % 15, "d": float(mu + 0.45 * rng.standard_normal())} for i in range(150)]
+    a1, a2 = primary(units, M)["alpha_at_decision"], primary(units, M[::-1])["alpha_at_decision"]
+    assert {m: (a1.get(m) or {}).get("local_alpha") for m in M} == {m: (a2.get(m) or {}).get("local_alpha") for m in M}
+
+
+def test_no_final_look_without_extension_data():
+    import numpy as np
+    from src.perfect_lie.sequential import final_analysis
+    rng = np.random.default_rng(2)
+    units = [{"model_id": "E", "replicate": 1 + i % 15, "d": float(0.10 + 0.45 * rng.standard_normal())} for i in range(150)]
+    r = final_analysis(units, ["E"])
+    assert r["models"]["E"]["decision"] == "extend" and r["models"]["E"]["look"] == "interim"

@@ -22,7 +22,7 @@
   "median_conditional_mue": 0.1477578599728322,
   "theta": 0.146,
   "p_below": 0.486,
-  "not_identified": 79
+  "not_identified": 1
  },
  "V3": {
   "ok_stage1_equal": true,
@@ -42,5 +42,14 @@
  "V5": {
   "unit_lifts": 60,
   "breakdown": 60
+ },
+ "V7": {
+  "F1_order_invariant": true,
+  "F8": {
+   "A": "extend (extension not run)",
+   "E": "extend (extension not run)"
+  },
+  "F6_family": "equivalence",
+  "F11_mue": -1.1243983175521928
  }
 }

@@ -4,7 +4,7 @@ V1. Stagewise median-unbiased estimate and 95% CI, single model at local 0.0125,
   theta 0.0: P(MUE < theta) 0.498 (target 0.5, SE 0.011); CI coverage 0.946 (target 0.95, SE 0.005); stage-1 stops 1, of which MUE == naive: 1
 
 V2. Conditional MUE (additional) given a stage-1 stop: median relative to theta
-  theta 0.146: median naive 0.172 (inflated); median conditional MUE 0.148; P(cond MUE < theta) 0.486 (target 0.5); not identified 79 of 1500
+  theta 0.146: median naive 0.172 (inflated); median conditional MUE 0.148; P(cond MUE < theta) 0.486 (target 0.5); not identified 1 of 1500
 
 V3. run_final on synthetic graded records (known effects)
   meta-llama/llama-3.1-8b-instruct   true +0.25-scaled | decision belief-tracking dir positive mean +0.218 MUE +0.218 n 147
@@ -27,3 +27,9 @@ V4. Tipping point on a constructed case near the boundary
 
 V5. Empty-cue breakdown vs unit_lifts with emotional_appeal excluded (as at the real interim)
   unit_lifts empty_cue_set 60 vs breakdown total 60; by prompt x persona {'technology|P6': 60}
+
+V7. Review fixes
+  F1 alpha at decision independent of list order: True; |Z| {'A': 3.51, 'B': 3.5, 'C': 10.8, 'D': 10.58}; alpha {'A': None, 'B': None, 'C': 0.0125, 'D': 0.016666666666666666} (largest |Z| decided first, at 0.0125)
+  F8 no extension data -> decisions {'A': 'extend (extension not run)', 'E': 'extend (extension not run)'}; final efficacy alpha {'A': 0.025, 'E': 0.025}
+  F6 flat model: decision flat; repeated CI family equivalence at alpha 0.05, e 2.776
+  F11 conditional MUE at Z = c1 + 0.02: estimate -1.1243983175521928, ci [-6.6287700048836, 0.12340574059939656], note None

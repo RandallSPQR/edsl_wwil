@@ -95,8 +95,8 @@ for m in MODELS:
 ok_eq = all(abs(res["primary"]["models"][m]["stagewise"]["mue"] - res["primary"]["models"][m]["mean_lift"]) < 1e-6
             for m in MODELS if "stagewise" in res["primary"]["models"][m])
 say(f"  stage-1 MUE equals naive mean for every model stopped at the interim: {ok_eq}")
-say(f"  empty-cue exclusions: breakdown total {res['empty_cue_exclusions']['total']} vs unit_lifts count {res['units_excluded']['empty_cue_set']}")
-tp = res["tipping_point"]
+say(f"  empty-cue exclusions: breakdown total {res['empty_cue_exclusions_added_before_unblinding']['total']} vs unit_lifts count {res['units_excluded']['empty_cue_set']}")
+tp = res["tipping_point_added_before_unblinding"]
 say(f"  tipping point: missing units {tp['missing_units_total']}")
 for m, t in tp["models"].items():
     if "at_decision_boundary" in t:
@@ -152,3 +152,28 @@ if os.environ.get("DRY_DIR"):
     dry = Path(os.environ["DRY_DIR"]); dry.mkdir(parents=True, exist_ok=True)
     with open(dry / "records.jsonl", "w") as fh:
         for r in recs: fh.write(json.dumps(r) + "\n")
+
+
+# ---------------- V7: review fixes (F1, F6, F8, F11)
+say("\nV7. Review fixes")
+rng = np.random.default_rng(1); M = ["A", "B", "C", "D"]; units = []
+for m, mu in zip(M, [0.15, 0.18, 0.35, 0.40]):
+    for i in range(150): units.append({"model_id": m, "replicate": 1 + i % 15, "d": float(mu + 0.45 * rng.standard_normal()), "prompt_id": "science"})
+a1 = fa.primary(units, M)["alpha_at_decision"]; a2 = fa.primary(units, M[::-1])["alpha_at_decision"]
+same = {m: (a1.get(m) or {}).get("local_alpha") for m in M} == {m: (a2.get(m) or {}).get("local_alpha") for m in M}
+zs = {m: fa.primary(units, M)["models"][m]["z"] for m in M}
+say(f"  F1 alpha at decision independent of list order: {same}; |Z| {dict((m, round(abs(v), 2)) for m, v in zs.items())}; "
+    f"alpha {dict((m, (a1.get(m) or {}).get('local_alpha')) for m in M)} (largest |Z| decided first, at 0.0125)")
+ext = [u for u in units if u["model_id"] in ("A",)] + [{"model_id": "E", "replicate": 1 + i % 15, "d": float(0.10 + 0.45 * rng.standard_normal())} for i in range(150)]
+r8 = fa.primary(ext, ["A", "E"])
+say(f"  F8 no extension data -> decisions {dict((m, r8['models'][m]['decision']) for m in ['A', 'E'])}; final efficacy alpha {r8['alpha_final']['efficacy']}")
+flat = [{"model_id": "F", "replicate": 1 + i % 15, "d": float(0.0 + 0.25 * rng.standard_normal())} for i in range(150)]
+rf = fa.primary(flat, ["F"])["models"]["F"]
+say(f"  F6 flat model: decision {rf['decision']}; repeated CI family {rf.get('equivalence_repeated_ci', {}).get('family')} at alpha "
+    f"{rf.get('equivalence_repeated_ci', {}).get('local_alpha')}, e {rf.get('equivalence_repeated_ci', {}).get('multiplier', 0):.3f}")
+cm = fa.conditional_mue(c1 + 0.02, 150, 0.45, c1)
+say(f"  F11 conditional MUE at Z = c1 + 0.02: estimate {cm['mue']}, ci {cm['ci']}, note {cm.get('note')}")
+out["V7"] = {"F1_order_invariant": same, "F8": {m: r8["models"][m]["decision"] for m in ["A", "E"]},
+             "F6_family": rf.get("equivalence_repeated_ci", {}).get("family"), "F11_mue": cm["mue"]}
+json.dump(out, open(HERE / "validate_final.json", "w"), indent=1, default=float)
+(HERE / "validate_final.log.md").write_text("\n".join(lines) + "\n")

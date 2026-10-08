@@ -226,39 +226,52 @@ def _split(alpha: Dict[str, float], done: str, open_: Iterable[str]) -> None:
     alpha[done] = 0.0
 
 
+def _tost_p(d: Sequence[float]) -> float:
+    """TOST p-value for |mean| < MARGIN (the larger of the two one-sided p-values)."""
+    d = np.asarray(d, float)
+    se = d.std(ddof=1) / math.sqrt(len(d))
+    if se == 0:
+        return 0.0 if abs(d.mean()) < MARGIN else 1.0
+    from scipy.stats import norm
+    return float(norm.sf((MARGIN - abs(d.mean())) / se))
+
+
 def _decide(d_by_model: Dict[str, Sequence[float]], look: str, state: Dict) -> Dict:
     """Apply one look. `state` carries local alphas and earlier decisions across looks. Each look
     compares that look's statistic with the boundary at the model's current local alpha; when a
     hypothesis is rejected its alpha is split equally among the models still under test in that
-    family, and they are retested at the same look (section 4)."""
+    family, and they are retested at the same look (section 4).
+
+    Holm order (review finding F1, Addendum 3): within a family, among the hypotheses that clear
+    their current boundary, the one with the smallest p-value (largest |Z| for efficacy; smallest
+    TOST p for equivalence) is rejected first. The set of rejections does not depend on the order;
+    the local alpha recorded for each rejection (state["alpha_at_decision"]) does."""
     idx = 0 if look == "interim" else 1
     eff, eq, dec = state["eff_alpha"], state["eq_alpha"], state["decision"]
+    at = state.setdefault("alpha_at_decision", {})
     active = [m for m in d_by_model if dec.get(m) in (None, "extend")]
-    # Efficacy family to a fixpoint: a rejection passes its alpha on, and the others are retested.
-    changed = True
-    while changed:
-        changed = False
-        for m in active:
-            if dec.get(m) in ("belief-tracking",):
-                continue
-            z = _z(d_by_model[m])
-            if abs(z) >= efficacy_bounds(eff[m])[idx]:
-                dec[m] = "belief-tracking"
-                state["direction"][m] = "positive" if z > 0 else "negative"
-                _split(eff, m, [x for x in eff if dec.get(x) in (None, "extend")])
-                changed = True
-    # Equivalence family to a fixpoint, for models not stopped for efficacy.
-    changed = True
-    while changed:
-        changed = False
-        for m in active:
-            if dec.get(m) in ("belief-tracking", "flat"):
-                continue
-            e = equivalence_multipliers(eq[m])[idx]
-            if _flat(d_by_model[m], e):
-                dec[m] = "flat"
-                _split(eq, m, [x for x in eq if dec.get(x) in (None, "extend")])
-                changed = True
+    z = {m: _z(d_by_model[m]) for m in active}
+    # Efficacy family: reject, in p-value order, until nothing more clears its boundary.
+    while True:
+        cand = [m for m in active if dec.get(m) not in ("belief-tracking",)
+                and abs(z[m]) >= efficacy_bounds(eff[m])[idx]]
+        if not cand:
+            break
+        m = max(cand, key=lambda x: abs(z[x]))
+        at[m] = {"family": "efficacy", "local_alpha": eff[m], "look": look}
+        dec[m] = "belief-tracking"
+        state["direction"][m] = "positive" if z[m] > 0 else "negative"
+        _split(eff, m, [x for x in eff if dec.get(x) in (None, "extend")])
+    # Equivalence family, for models not stopped for efficacy, in TOST p-value order.
+    while True:
+        cand = [m for m in active if dec.get(m) not in ("belief-tracking", "flat")
+                and _flat(d_by_model[m], equivalence_multipliers(eq[m])[idx])]
+        if not cand:
+            break
+        m = min(cand, key=lambda x: _tost_p(d_by_model[x]))
+        at[m] = {"family": "equivalence", "local_alpha": eq[m], "look": look}
+        dec[m] = "flat"
+        _split(eq, m, [x for x in eq if dec.get(x) in (None, "extend")])
     for m in active:
         if dec.get(m) in (None, "extend"):
             dec[m] = "extend" if look == "interim" else "inconclusive"
@@ -293,12 +306,16 @@ def final_analysis(units: List[Dict], models: Sequence[str]) -> Dict:
     state = _decide(interim, "interim", new_state(models))
     at_interim = dict(state["decision"])
     alpha_interim = {"efficacy": dict(state["eff_alpha"]), "equivalence": dict(state["eq_alpha"])}
-    final_d = {m: [u["d"] for u in units if u["model_id"] == m] for m in models if at_interim[m] == "extend"}
+    # Final look only for models that were extended AND have extension data (review finding F8):
+    # a model marked "extend" without extension data keeps "extend" and gets no final look.
+    final_d = {m: [u["d"] for u in units if u["model_id"] == m] for m in models
+               if at_interim[m] == "extend"
+               and any(u["model_id"] == m and u["replicate"] not in INTERIM_REPLICATES for u in units)}
     if final_d:
         state = _decide(final_d, "final", state)
     out = {}
     for m in models:
-        look = "interim" if at_interim[m] != "extend" else "final"
+        look = "final" if m in final_d else "interim"
         d = np.asarray(interim[m] if look == "interim" else final_d[m], float)
         se = float(d.std(ddof=1) / math.sqrt(len(d)))
         out[m] = {"decision": state["decision"][m], "direction": state["direction"].get(m), "look": look,
@@ -306,4 +323,5 @@ def final_analysis(units: List[Dict], models: Sequence[str]) -> Dict:
                   "z": float(d.mean() / se) if se else None,
                   "interim_decision": at_interim[m]}
     return {"models": out, "alpha_after_interim": alpha_interim,
-            "alpha_final": {"efficacy": dict(state["eff_alpha"]), "equivalence": dict(state["eq_alpha"])}}
+            "alpha_final": {"efficacy": dict(state["eff_alpha"]), "equivalence": dict(state["eq_alpha"])},
+            "alpha_at_decision": dict(state.get("alpha_at_decision", {}))}

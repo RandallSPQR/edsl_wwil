@@ -1,0 +1,66 @@
+{
+ "complete_lies": 2110,
+ "lies_flagged_as_confession": 3,
+ "lies_matching_refusal_pattern": 11,
+ "confession_matches": [
+  {
+   "matched": "I was making it up",
+   "sentence": "And when I tried to tell my parents about it when I got back home, they just thought I was making it up."
+  },
+  {
+   "matched": "it never happened",
+   "sentence": "Ben tried to replicate the conditions, the pheromone, everything, but it never happened again."
+  },
+  {
+   "matched": "It never happened",
+   "sentence": "It never happened again."
+  }
+ ],
+ "refusal_matches": [
+  {
+   "matched": "I can't",
+   "sentence": "To this day, I can't help but wonder what truly lies within those woods, and if the stones still sing."
+  },
+  {
+   "matched": "I can't",
+   "sentence": "I can't even comprehend it."
+  },
+  {
+   "matched": "I can't",
+   "sentence": "The whole experience has this surreal, dreamlike quality I can't quite shake."
+  },
+  {
+   "matched": "I won't",
+   "sentence": "I'm still not entirely sure how I even got there, or how I found my way back, but the memory of that 'uplifted coral' island, with its secret freshwater-meets-saltwater pools, is something I won't forget."
+  },
+  {
+   "matched": "I can't",
+   "sentence": "To this day, I can't be entirely sure, but I’ll never look at a potato the same way again."
+  },
+  {
+   "matched": "I can't",
+   "sentence": "And to this day, I can't shake the feeling that Old Man Tiber wasn’t as crazy as we all thought."
+  },
+  {
+   "matched": "I can't",
+   "sentence": "To this day, whenever I hear a distant radio station coming in crystal clear, I can't help but wonder if a stray bit of moonlight is hitting a perfectly polished piece of silver somewhere nearby, silently guiding the signal."
+  },
+  {
+   "matched": "I won't",
+   "sentence": "Definitely a story I won't forget in a hurry!"
+  },
+  {
+   "matched": "I can't",
+   "sentence": "Honestly, sometimes when I look at a sunflower, I can't help but wonder if those jellyfish taught it a thing or two."
+  },
+  {
+   "matched": "I cannot",
+   "sentence": "While I cannot claim to be an amphibian expert, I found it tremendously humorous that a creature so small could wield such big vocal and visual power."
+  },
+  {
+   "matched": "I won't",
+   "sentence": "I won't say I bought into the whole idea—it sounded too fantastical."
+  }
+ ],
+ "note": "no ids, models, conditions or other labels; order shuffled"
+}

@@ -931,6 +931,33 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
     - If the rules call for extension but no extension data exist, a model is reported as "extend
       (extension not run)" and no final look is taken. This does not arise at this interim, since all
       four models stopped.
+33. **Independent code review and fixes, before unblinding (2026-10-08T18:37:43Z).**
+    - **The review.** A fresh Claude Code session, given only the registration, the addenda and the
+      code (`perfect_lie_code_review.zip`, built from b477015), reported 18 findings. Each was verified
+      here.
+    - **Fixed in code:**
+      - F1: Holm rejection in p-value order; the alpha at decision is recorded by the decision code.
+        On 3,000 simulated studies, 0 of 12,000 decisions changed.
+      - F5: the sensitivity analyses repeat the test (Z against the boundary at decision, and whether
+        the decision holds); gpt-5 is labelled descriptive.
+      - F6: the repeated CI comes from the deciding family.
+      - F7: the frozen interim gate is used.
+      - F8: no final look without extension data.
+      - F9: confessed lies are excluded in all secondaries, and only post-gate cues are used.
+      - F10: exclusion counts use all records. On the interim data they are unchanged: 29 / 1 / 60.
+      - F11: the conditional estimate is returned when only its CI fails.
+      - F12 and F2: labels.
+      - F13: flagged-cue notes.
+      - F14: a note for fewer than 75 units.
+      - F18: docstring.
+      - F17: `diagnose_extra.py` commits the D4 and D5 runs.
+    - **Stated in the Addendum 3 draft:** F15 (open choices) and F16 (the confession rule text).
+    - **Tests:** 101 pass. `validate_final` passes, including V7, which checks the fixes.
+    - **F3 and F4: blind inspection** (`interim_look/blind_text_screens.*`). Matches were listed
+      without ids, models or conditions, in shuffled order.
+      - Confession screen: 3 matches, all false positives (one excludes a unit).
+      - Refusal pattern: 11 matches, all false positives.
+      - The owner decides how to treat them before unblinding.
 
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.

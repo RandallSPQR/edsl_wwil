@@ -2,7 +2,7 @@
 instruction of 2026-10-08).
 
 Unblinded. Every function here reports estimates; nothing in this module is used by the blinded
-interim. Run only after the owner confirms the code is registered (OSF Addendum 2 references the
+interim. Run only after the owner confirms the code is registered (OSF Addendum 3 references the
 commit that holds this file).
 
 Contents
@@ -69,6 +69,26 @@ def _by_model(units: List[Dict], models: Sequence[str]) -> Dict[str, List[float]
     return {m: [u["d"] for u in units if u["model_id"] == m] for m in models}
 
 
+def _repeat_test(d_by_model: Dict[str, List[float]], prim: Dict) -> Dict:
+    """Repeat the primary test (review finding F5): |Z| against the boundary at which each model
+    was decided in the primary analysis, and whether the same decision and direction result. For
+    models not decided for efficacy, the equivalence repeated CI at the deciding level is used."""
+    out = {}
+    for m, d in d_by_model.items():
+        s_ = _summ(d)
+        r = prim["models"].get(m, {})
+        res = dict(s_)
+        if r.get("decision") == "belief-tracking" and s_.get("z") is not None:
+            b = r["boundary_at_decision"]
+            same = abs(s_["z"]) >= b and ((s_["z"] > 0) == (r["direction"] == "positive"))
+            res.update(boundary=b, decision_holds=bool(same))
+        elif r.get("decision") == "flat" and s_.get("se"):
+            e = r["equivalence_repeated_ci"]["multiplier"]
+            res.update(multiplier=e, decision_holds=bool(abs(s_["mean"]) + e * s_["se"] < sq.MARGIN))
+        out[m] = res
+    return out
+
+
 # ------------------------------------------------------------------ stagewise inference
 
 def _bounds(alpha: float):
@@ -109,86 +129,105 @@ def stagewise_mue(stage: int, z_obs: float, n1: int, n2: Optional[int], sd: floa
 
 
 def conditional_mue(z_obs: float, n1: int, sd: float, c1: float, conf: float = 0.95) -> Dict:
-    """ADDITIONAL, not pre-registered. Median-unbiased given the trial stopped at the interim in the
-    observed direction: solves P_mu(Z1 >= |z| | Z1 >= c1) = 0.5 on the z scale (log survival
-    functions avoid underflow), then converts mu to the d scale."""
+    """NOT PRE-REGISTERED. Median-unbiased given the trial stopped at the interim in the observed
+    direction: solves P_mu(Z1 >= |z| | Z1 >= c1) = q on the z scale (log survival functions avoid
+    underflow), then converts mu to the d scale. The estimate and each CI bound are solved
+    separately: a bound that cannot be bracketed is reported as unbounded."""
     sgn = 1.0 if z_obs > 0 else -1.0
     z = abs(z_obs)
     i1 = n1 / sd ** 2
-
-    def g(mu, target):
-        return math.exp(norm.logsf(z - mu) - norm.logsf(c1 - mu)) - target
-    lo, hi = -60.0, z + 60.0
-    a = (1 - conf) / 2
-    try:
-        est = brentq(lambda m: g(m, 0.5), lo, hi)
-        l = brentq(lambda m: g(m, a), lo, hi)
-        u = brentq(lambda m: g(m, 1 - a), lo, hi)
-    except ValueError:
-        # Z only just past the boundary: P(Z1 >= z | stop) stays near 1 for every effect size, so
-        # no conditional median exists (the lower bound is unbounded). Reported, not hidden.
-        return {"mue": None, "ci": None, "note": "not identified: observed Z too close to the stopping boundary"}
+    g = lambda mu, q: math.exp(norm.logsf(z - mu) - norm.logsf(c1 - mu)) - q
+    lo, hi = -200.0, z + 60.0
     to_d = lambda m: sgn * m / math.sqrt(i1)
-    return {"mue": to_d(est), "ci": sorted([to_d(l), to_d(u)])}
+
+    def solve(q):
+        try:
+            return brentq(lambda m: g(m, q), lo, hi)
+        except ValueError:
+            return None
+    a = (1 - conf) / 2
+    est, l, u = solve(0.5), solve(a), solve(1 - a)
+    if est is None:
+        return {"mue": None, "ci": None, "note": "not identified: observed Z too close to the stopping boundary"}
+    lo_d = to_d(l) if l is not None else -sgn * float("inf")
+    hi_d = to_d(u) if u is not None else sgn * float("inf")
+    out = {"mue": to_d(est), "ci": sorted([lo_d, hi_d])}
+    if l is None or u is None:
+        out["note"] = "a CI bound is unbounded (observed Z close to the stopping boundary)"
+    return out
 
 
 # ------------------------------------------------------------------ primary
 
 def primary(units: List[Dict], models: Sequence[str]) -> Dict:
+    """Decision per model (PREREG sections 4-5) plus estimates. Labels: `decision`, `direction`,
+    `z`, `boundary_at_decision` and the repeated CI of the deciding family are the registered
+    quantities. `ci95_naive` and `stagewise` were added before unblinding (Addendum 3).
+    `conditional_mue_not_preregistered` is not pre-registered."""
     fa = sq.final_analysis(units, models)
+    at = fa["alpha_at_decision"]
     out = {}
     for m in models:
         r = dict(fa["models"][m])
-        has_extension = any(u["model_id"] == m and u["replicate"] not in sq.INTERIM_REPLICATES for u in units)
-        if r["interim_decision"] == "extend" and not has_extension:
+        r["fewer_than_75_units_at_interim"] = sum(
+            1 for u in units if u["model_id"] == m and u["replicate"] in sq.INTERIM_REPLICATES) < 75
+        if r["interim_decision"] == "extend" and r["look"] == "interim":
             # The rules say extend, but no extension data exist: no final look is taken.
-            d = [u["d"] for u in units if u["model_id"] == m]
-            s = _summ(d)
+            s_ = _summ([u["d"] for u in units if u["model_id"] == m])
             out[m] = {"decision": "extend (extension not run)", "direction": None, "look": "interim",
-                      "n_units": s["n"], "mean_lift": s["mean"], "sd": s.get("sd"), "se": s["se"], "z": s["z"],
-                      "ci95_naive": s["ci95"], "interim_decision": "extend",
-                      "note": "descriptive only; no stopping decision is made without the extension"}
+                      "n_units": s_["n"], "mean_lift": s_["mean"], "sd": s_.get("sd"), "se": s_["se"], "z": s_["z"],
+                      "ci95_naive": s_["ci95"], "interim_decision": "extend",
+                      "label": "not in any registered document; descriptive only, no stopping decision without the extension",
+                      "fewer_than_75_units_at_interim": r["fewer_than_75_units_at_interim"]}
             continue
         d = [u["d"] for u in units if u["model_id"] == m]
         if r["look"] == "final":
-            d1 = [u["d"] for u in units if u["model_id"] == m and u["replicate"] in sq.INTERIM_REPLICATES]
-            n1, n2 = len(d1), len(d)
+            n1 = sum(1 for u in units if u["model_id"] == m and u["replicate"] in sq.INTERIM_REPLICATES)
+            n2 = len(d)
         else:
             n1, n2 = len(d), None
-        alpha_used = _alpha_at_decision(units, models, m)
-        c1, c2 = _bounds(alpha_used)
         se, mean, sd = r["se"], r["mean_lift"], r["sd"]
+        idx = 0 if r["look"] == "interim" else 1
+        info = at.get(m)
+        if r["decision"] == "belief-tracking":
+            a_ = info["local_alpha"]
+            c = sq.efficacy_bounds(a_)[idx]
+            r["boundary_at_decision"] = c
+            r["efficacy_repeated_ci"] = {"family": "efficacy", "local_alpha": a_, "multiplier": c,
+                                         "ci": [mean - c * se, mean + c * se]}
+        elif r["decision"] == "flat":
+            a_ = info["local_alpha"]
+            e = sq.equivalence_multipliers(a_)[idx]
+            r["boundary_at_decision"] = None
+            r["equivalence_repeated_ci"] = {"family": "equivalence", "local_alpha": a_, "multiplier": e,
+                                            "ci": [mean - e * se, mean + e * se], "margin": sq.MARGIN}
+        else:  # inconclusive: both families at their final local levels
+            ae, aq = fa["alpha_final"]["efficacy"][m], fa["alpha_final"]["equivalence"][m]
+            r["boundary_at_decision"] = None
+            if ae > 0:
+                c = sq.efficacy_bounds(ae)[idx]
+                r["efficacy_repeated_ci"] = {"family": "efficacy", "local_alpha": ae, "multiplier": c,
+                                             "ci": [mean - c * se, mean + c * se]}
+            if aq > 0:
+                e = sq.equivalence_multipliers(aq)[idx]
+                r["equivalence_repeated_ci"] = {"family": "equivalence", "local_alpha": aq, "multiplier": e,
+                                                "ci": [mean - e * se, mean + e * se], "margin": sq.MARGIN}
+        r["alpha_at_decision"] = info
+        # Added before unblinding (Addendum 3): naive 95% CI and stagewise median-unbiased estimate.
         r["ci95_naive"] = [mean - 1.96 * se, mean + 1.96 * se]
-        cbound = c1 if r["look"] == "interim" else c2
-        r["repeated_ci"] = {"local_alpha": alpha_used, "multiplier": cbound,
-                            "ci": [mean - cbound * se, mean + cbound * se]}
-        r["boundary_at_decision"] = cbound
+        a_eff_interim = (info["local_alpha"] if info and info["family"] == "efficacy" and info["look"] == "interim"
+                         else fa["alpha_after_interim"]["efficacy"].get(m) or 0.0125)
+        c1 = sq.efficacy_bounds(a_eff_interim if a_eff_interim > 0 else 0.0125)[0]
         stage = 1 if r["look"] == "interim" else 2
-        z_for_order = r["z"] if stage == 1 else mean / se
-        r["stagewise"] = stagewise_mue(stage, z_for_order, n1, n2, sd, c1)
-        r["conditional_mue_additional"] = conditional_mue(r["z"], n1, sd, c1) if stage == 1 else None
+        r["stagewise"] = stagewise_mue(stage, r["z"] if stage == 1 else mean / se, n1, n2, sd, c1)
+        r["stagewise"]["c1_used"] = c1
+        # Not pre-registered: conditional median-unbiased estimate given an efficacy stop at the interim.
+        r["conditional_mue_not_preregistered"] = (conditional_mue(r["z"], n1, sd, c1)
+                                                  if stage == 1 and r["decision"] == "belief-tracking" else None)
         out[m] = r
-    return {"models": out, "alpha_after_interim": fa["alpha_after_interim"], "alpha_final": fa["alpha_final"]}
-
-
-def _alpha_at_decision(units: List[Dict], models: Sequence[str], target: str) -> float:
-    """Local efficacy alpha at which `target` was decided, replaying the Holm sequence."""
-    d = {m: [u["d"] for u in units if u["model_id"] == m and u["replicate"] in sq.INTERIM_REPLICATES] for m in models}
-    st = sq.new_state(models)
-    eff = st["eff_alpha"]
-    changed = True
-    while changed:
-        changed = False
-        for m in models:
-            if st["decision"].get(m) == "belief-tracking":
-                continue
-            if abs(sq._z(d[m])) >= sq.efficacy_bounds(eff[m])[0]:
-                st["decision"][m] = "belief-tracking"
-                if m == target:
-                    return eff[m]
-                sq._split(eff, m, [x for x in eff if st["decision"].get(x) is None])
-                changed = True
-    return eff[target]
+    return {"models": out, "alpha_after_interim": fa["alpha_after_interim"], "alpha_final": fa["alpha_final"],
+            "alpha_at_decision": at,
+            "holm_order_rule": "within a family, the hypothesis with the smallest p-value among those clearing their boundary is rejected first"}
 
 
 # ------------------------------------------------------------------ mixed model
@@ -224,14 +263,15 @@ def pooled_kappa(records: Iterable[Dict], cues: Sequence[str]) -> float:
     return sq._kappa(np.array(a), np.array(b))
 
 
-def sensitivity(records: List[Dict], inst, gate: Dict, models: Sequence[str], base_scorable: Sequence[str]) -> Dict:
+def sensitivity(records: List[Dict], inst, gate: Dict, models: Sequence[str], base_scorable: Sequence[str],
+                prim: Dict) -> Dict:
     out = {}
     # S1: drop flagged (<30 positives) cues
     flagged = gate["flagged"]
     if flagged:
         sc = [c for c in base_scorable if c not in flagged]
         ul = sq.unit_lifts(records, inst, sc, sq.primary_pool(inst, sc))
-        out["drop_flagged_cues"] = {"dropped": flagged, "models": {m: _summ(v) for m, v in _by_model(ul["units"], models).items()}}
+        out["drop_flagged_cues"] = {"dropped": flagged, "models": _repeat_test(_by_model(ul["units"], models), prim)}
     else:
         out["drop_flagged_cues"] = {"dropped": [], "note": "no cue was flagged at the interim; identical to the primary analysis"}
     # S2: all scorable cues under a pooled gate
@@ -242,7 +282,7 @@ def sensitivity(records: List[Dict], inst, gate: Dict, models: Sequence[str], ba
         ul = sq.unit_lifts(records, inst, all_sc, sq.primary_pool(inst, all_sc))
         s2["cues"] = all_sc
         s2["pool"] = sq.primary_pool(inst, all_sc)
-        s2["models"] = {m: _summ(v) for m, v in _by_model(ul["units"], models).items()}
+        s2["models"] = _repeat_test(_by_model(ul["units"], models), prim)
     else:
         s2["note"] = "pooled kappa below 0.70: the pooled-gate analysis keeps no cue set"
     out["pooled_gate_all_scorable"] = s2
@@ -251,7 +291,7 @@ def sensitivity(records: List[Dict], inst, gate: Dict, models: Sequence[str], ba
     ul = sq.unit_lifts(records, inst, base_scorable, pool, exclude_nonviable=True)
     out["nonviable_excluded_added_post_registration_before_data"] = {
         "units_dropped": ul["excluded"]["nonviable"],
-        "models": {m: _summ(v) for m, v in _by_model(ul["units"], models).items()}}
+        "models": _repeat_test(_by_model(ul["units"], models), prim)}
     out["nonviable_counts_by_condition"] = sq.nonviable_counts(records)
     return out
 
@@ -315,10 +355,10 @@ def tipping_point(units: List[Dict], missing: List[Dict], models: Sequence[str],
 
 # ------------------------------------------------------------------ gpt-5 robustness
 
-def gpt5_robustness(records: List[Dict], inst, scorable: Sequence[str], models: Sequence[str]) -> Dict:
+def gpt5_robustness(records: List[Dict], inst, scorable: Sequence[str], models: Sequence[str], prim: Dict) -> Dict:
     sub = [r for r in records if (r.get("grades") or {}).get("secondary") and (r.get("grades") or {}).get("primary")]
     agree = {}
-    for c in sq.scorable_cues(inst):
+    for c in scorable:  # post-gate scorable cues, as in the pooled figure (review finding F9)
         a = np.array([bool(r["grades"]["primary"]["cues"][c]) for r in sub])
         b = np.array([bool(r["grades"]["secondary"]["cues"][c]) for r in sub])
         agree[c] = {"kappa": sq._kappa(a, b), "ac1": sq._ac1(a, b), "positives": int((a | b).sum())}
@@ -327,7 +367,7 @@ def gpt5_robustness(records: List[Dict], inst, scorable: Sequence[str], models: 
     ul = sq.unit_lifts(records, inst, scorable, sq.primary_pool(inst, scorable), grader="secondary")
     return {"lies_in_subsample": len(sub), "agreement_per_cue": agree,
             "pooled": {"kappa": sq._kappa(a, b), "ac1": sq._ac1(a, b)},
-            "primary_test_on_gpt5_annotations": {m: _summ(v) for m, v in _by_model(ul["units"], models).items()},
+            "primary_test_on_gpt5_annotations": _repeat_test(_by_model(ul["units"], models), prim),
             "note": "low-powered by design (about 1 unit in 16); read for sign and rough size only"}
 
 
@@ -362,7 +402,9 @@ def _share(cues: Dict, named: Sequence[str]) -> float:
 
 
 def secondaries(records: List[Dict], inst, scorable: Sequence[str], models: Sequence[str]) -> Dict:
-    recs = [r for r in records if r.get("status") == "complete" and r.get("replicate") in BALANCED]
+    # Confessed lies are excluded from every secondary analysis (PREREG section 2; review finding F9).
+    recs = [r for r in records if r.get("status") == "complete" and r.get("replicate") in BALANCED
+            and not confession(r.get("lie") or "")]
     pool = sq.primary_pool(inst, scorable)
     rows = {r.prompt_id: r for r in inst.design}
     cat = {p.id: p.category for p in inst.prompts}
@@ -379,7 +421,7 @@ def secondaries(records: List[Dict], inst, scorable: Sequence[str], models: Sequ
     # 2. judge acceptance by cue (lie-level acceptance = mean over the four judges)
     acc_rows = [(r, _acc(r)) for r in recs if _acc(r) is not None and r["grades"].get("primary")]
     cue_acc = {}
-    for c in sq.scorable_cues(inst):
+    for c in scorable:  # post-gate scorable cues (PREREG section 3 definition)
         on = [a for r, a in acc_rows if r["grades"]["primary"]["cues"][c]]
         off = [a for r, a in acc_rows if not r["grades"]["primary"]["cues"][c]]
         if len(on) > 1 and len(off) > 1:
@@ -404,7 +446,7 @@ def secondaries(records: List[Dict], inst, scorable: Sequence[str], models: Sequ
     other_model = [x for (a, b), v in mat.items() if a != b for x in v]
     out["3_liar_x_judge"] = {"matrix": m4,
                              "same_family_minus_other": (np.mean(same) - np.mean(other)) if same and other else None,
-                             "same_model_minus_other": (np.mean(same_model) - np.mean(other_model)) if same_model and other_model else None,
+                             "same_model_minus_other_not_preregistered": (np.mean(same_model) - np.mean(other_model)) if same_model and other_model else None,
                              "n_same_family": len(same), "n_other_family": len(other)}
 
     # 4. IV (Wald ratio): note -> cue use -> acceptance, per model, bootstrap over units
@@ -567,25 +609,36 @@ def failure_tables(all_records: List[Dict]) -> Dict:
             "degenerate_by_condition": dict(deg), "confessed_by_condition": dict(conf)}
 
 
-def run_final(all_records: List[Dict], inst, models: Sequence[str]) -> Dict:
+def run_final(all_records: List[Dict], inst, models: Sequence[str], frozen_gate: Optional[Dict] = None) -> Dict:
+    """`frozen_gate` holds the interim gate's excluded and flagged cues (PREREG section 6: the cue set
+    is frozen at the interim). If it is not given, the gate is recomputed from the complete records,
+    which is identical when no model was extended (review finding F7)."""
     complete = [r for r in all_records if r.get("status") == "complete"]
     gate = sq.agreement_gate(complete, sq.scorable_cues(inst))
-    scorable = sq.scorable_cues(inst, gate["excluded"])
+    if frozen_gate is not None:
+        gate_used = {"excluded": list(frozen_gate["excluded"]), "flagged": list(frozen_gate.get("flagged", [])),
+                     "source": "frozen at the interim (interim_blind.json)",
+                     "recomputed_matches_frozen": sorted(gate["excluded"]) == sorted(frozen_gate["excluded"])}
+    else:
+        gate_used = {"excluded": gate["excluded"], "flagged": gate["flagged"], "source": "recomputed"}
+    gate_used.update(per_cue_recomputed=gate["per_cue"], lies=gate["n_lies"])
+    scorable = sq.scorable_cues(inst, gate_used["excluded"])
     pool = sq.primary_pool(inst, scorable)
-    ul = sq.unit_lifts(complete, inst, scorable, pool)
+    # All records go to unit_lifts so that units with two failed lies are counted (review finding F10).
+    ul = sq.unit_lifts(all_records, inst, scorable, pool)
     units = ul["units"]
     prim = primary(units, models)
     miss = missing_units(all_records, inst, scorable, pool)
     return {
-        "gate": {"excluded": gate["excluded"], "flagged": gate["flagged"], "per_cue": gate["per_cue"], "lies": gate["n_lies"]},
-        "scorable_cues": scorable, "primary_pool": pool, "units_excluded": ul["excluded"],
+        "gate": gate_used, "scorable_cues": scorable, "primary_pool": pool, "units_excluded": ul["excluded"],
         "primary": prim,
         "mixed_model": mixed_model(units, models),
-        "sensitivity": sensitivity(complete, inst, gate, models, scorable),
-        "tipping_point": {"missing_units_total": len(miss), "models": tipping_point(units, miss, models, prim)},
-        "gpt5_robustness": gpt5_robustness(complete, inst, scorable, models),
+        "sensitivity": sensitivity(complete, inst, {"flagged": gate_used["flagged"]}, models, scorable, prim),
+        "tipping_point_added_before_unblinding": {"missing_units_total": len(miss),
+                                                  "models": tipping_point(units, miss, models, prim)},
+        "gpt5_robustness": gpt5_robustness(complete, inst, scorable, models, prim),
         "p4_secondary": p4_secondary(complete, inst, scorable, models),
         "secondaries": secondaries(complete, inst, scorable, models),
-        "empty_cue_exclusions": empty_cue_breakdown(complete, inst, scorable, pool),
+        "empty_cue_exclusions_added_before_unblinding": empty_cue_breakdown(all_records, inst, scorable, pool),
         "failures": failure_tables(all_records),
     }
