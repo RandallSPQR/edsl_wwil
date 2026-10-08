@@ -811,6 +811,52 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
       and a Stage 2 label permutation; `results/perfect_lie/validation_sequential/`). An OSF addendum
       is drafted for the owner to post. The interim starts only after the owner confirms the
       addendum is posted and the tree is clean.
+30. **Interim paused; infrastructure retry approved (owner decision, recorded 2026-10-08T00:13:09Z, before any
+    interim analysis).**
+    - **What happened.** The interim started 2026-10-07T17:56Z from 6a4882c with a clean tree.
+      - The runner writes `git_dirty` each time it saves the manifest, and its own output folder made
+        that true after launch.
+      - Later snapshot commits touched only the run directory. The raw `records.jsonl` (52 MB at the
+        time) was moved out of git and is committed as `records.jsonl.gz`.
+      - From about 22:10Z the bf16-pinned Llama 3.1 8B provider returned HTTP 429 (rate limit). Every
+        lie is read by all four judges, so this failed cells for every liar.
+      - Bursts of dropped connections in this session's egress proxy added timeouts and connection
+        errors. In 20 minutes, 212 cells failed and 18 completed.
+      - The run was paused at 22:30Z by interrupt. Records are intact.
+    - **State at the pause.**
+
+      | status | cells |
+      |---|---|
+      | complete | 984 |
+      | failed | 346 |
+      | in flight | 17 |
+      | never started | 813 |
+
+      Spend was $30.21 counted ($29.52 billed).
+    - **Failures by cause.**
+
+      | cause | cells |
+      |---|---|
+      | rate limit (429) | 210 |
+      | timeout | 65 |
+      | connection dropped | 37 |
+      | content filter | 19 |
+      | parse or consistency failure | 13 |
+      | empty elicitation at the token limit | 2 |
+
+    - **Decision (option 1).** Resume the never-started and in-flight cells, and re-run the 312
+      transport-failed cells (rate limit, timeout or dropped connection) from the stage where each
+      stopped. Nothing completed is regenerated.
+      - The 34 other failed cells stay failed and are excluded and counted, as pre-registered: content
+        filter, parse or consistency failures, and the 2 empty elicitations.
+      - Concurrency drops from 24 to 8.
+      - Single calls that fail on a rate limit, timeout or dropped connection are retried with backoff
+        of 5, 15, 45, 90 and 180 s (`src/perfect_lie/transport.py`, `--transport-retry`).
+      - The resume re-runs only transport failures (`--retry-failed transport`).
+      - Instrument, models, provider pins, prompts and grading are unchanged. The resume checks every
+        instrument hash against the run manifest and refuses on any change.
+    - **Spend.** The $30.21 already spent counts toward the cap, and the runner keeps a running
+      cumulative tally. The $80 kill cap applies to the total.
 
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.

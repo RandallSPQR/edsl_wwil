@@ -82,9 +82,13 @@ class Run:
     def __init__(self, *, mode: str, run_dir: Path, cells: List[Cell], instrument: Instrument, models: Dict,
                  adapter, spend_cap_usd: float, concurrency: int = 4, models_path: Optional[Path] = None,
                  stages: tuple = STAGES, trace_probe_locked: bool = True, billing_probe=None,
-                 elicitation: bool = True):
+                 elicitation: bool = True, retry_failed: str = "all"):
         if mode not in ("smoke", "pilot", "full"):
             raise ValueError(f"unknown mode {mode!r}")
+        if retry_failed not in ("all", "transport", "none"):
+            raise ValueError(f"unknown retry_failed {retry_failed!r}")
+        # Which failed cells a resume re-runs: all (default), only transport failures (item 30), or none.
+        self.retry_failed = retry_failed
         self.mode = mode
         self.namespace = mode
         self.run_dir = Path(run_dir)
@@ -202,7 +206,17 @@ class Run:
     # ------------------------------------------------------------ execution
 
     def pending(self) -> List[Cell]:
-        return [c for c in self.cells if self.records.get(cell_id(c, self.namespace), {}).get("status") != "complete"]
+        from .transport import failed_by_transport
+        out = []
+        for c in self.cells:
+            rec = self.records.get(cell_id(c, self.namespace), {})
+            if rec.get("status") == "complete":
+                continue
+            if rec.get("status") == "error" and (self.retry_failed == "none" or
+                                                 (self.retry_failed == "transport" and not failed_by_transport(rec))):
+                continue  # stays failed: excluded and counted
+            out.append(c)
+        return out
 
     async def run(self) -> Dict:
         self.load()

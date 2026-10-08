@@ -1628,3 +1628,60 @@ def test_nonviable_lies_stay_in_and_sensitivity_excludes_them(instrument):
     assert out["units"] == [] and out["excluded"]["nonviable"] == 1            # sensitivity: excluded
     counts = nonviable_counts(recs)
     assert counts["full"]["too_short"] == 1 and counts["placebo"]["any"] == 0
+
+
+# ---------------------------------------------------------------- item 30: transport retry and resume filter
+
+def test_transport_retry_retries_only_transport_errors():
+    import asyncio
+    from src.perfect_lie.transport import TransportRetryAdapter, is_transport_error
+
+    class Flaky:
+        def __init__(self, errs): self.errs = list(errs); self.calls = 0
+        async def acall(self, **kw):
+            self.calls += 1
+            if self.errs:
+                raise self.errs.pop(0)
+            return {"text": "ok"}
+        async def achat(self, *a, **kw):
+            return await self.acall()
+
+    async def no_sleep(_): pass
+    inner = Flaky([RuntimeError("liar call returned no answer: RateLimitError: Error code: 429"),
+                   RuntimeError("APITimeoutError: Request timed out.")])
+    a = TransportRetryAdapter(inner, sleep=no_sleep)
+    assert asyncio.run(a.acall(role="liar")) == {"text": "ok"} and inner.calls == 3 and a.retries == 2
+    bad = Flaky([ValueError("grader output contains no JSON object")])
+    try:
+        asyncio.run(TransportRetryAdapter(bad, sleep=no_sleep).acall())
+        raise AssertionError("content failure must not be retried")
+    except ValueError:
+        assert bad.calls == 1
+    many = Flaky([RuntimeError("APIConnectionError: Connection error.")] * 10)
+    try:
+        asyncio.run(TransportRetryAdapter(many, backoff=(0, 0), sleep=no_sleep).acall())
+        raise AssertionError("gives up after the backoff schedule")
+    except RuntimeError:
+        assert many.calls == 3
+    assert not is_transport_error("returned no content (finish_reason length)")
+
+
+def test_resume_filter_retries_only_transport_failures(instrument, tmp_path):
+    from src.perfect_lie.pipeline import enumerate_cells
+    from src.perfect_lie.runner import Run, cell_id
+    models = _models(class_id="C1", approved=True)
+    cells = list(enumerate_cells(instrument, models, replicates=(1,), levels=("off",), conditions=("none",)))[:4]
+    run = Run(mode="full", run_dir=tmp_path / "r", cells=cells, instrument=instrument, models=models,
+              adapter=None, spend_cap_usd=1.0, retry_failed="transport")
+    ns = run.namespace
+    run.records = {
+        cell_id(cells[0], ns): {"status": "complete"},
+        cell_id(cells[1], ns): {"status": "error", "errors": [{"error": "PerfectLieCallError: target call returned no answer: RateLimitError: Error code: 429"}]},
+        cell_id(cells[2], ns): {"status": "error", "errors": [{"error": "ValueError: grader[primary]: no well-formed answer after 3 attempts"}]},
+        cell_id(cells[3], ns): {"status": "in_progress"},
+    }
+    assert [cell_id(c, ns) for c in run.pending()] == [cell_id(cells[1], ns), cell_id(cells[3], ns)]
+    run.retry_failed = "none"
+    assert [cell_id(c, ns) for c in run.pending()] == [cell_id(cells[3], ns)]
+    run.retry_failed = "all"
+    assert len(run.pending()) == 3
