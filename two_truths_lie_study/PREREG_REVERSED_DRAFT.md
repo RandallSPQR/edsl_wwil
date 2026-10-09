@@ -252,7 +252,15 @@ excludes them. Degenerate lies are reported, not excluded.
 |---|---|---|---|
 | 1 | degeneration | none at T 0.6 or 0.8; 0.6 chosen (one gpt-4o-mini lie over length at 0.8) | $0.04 |
 | 2 | first 24 categories | 21 pass | $5.02 |
-| 3 | 48 drawn + 3 replacements | see `fabricability_report_set2.md` | |
+| 3 | 48 drawn + 3 replacements | 45 of 48 drawn pass, and all 3 replacements; royalty, umbrellas and fireworks fail A | $10.66 |
+
+- **Pilot 3, screen matches:** 4 refusal-screen matches, all false positives on reading ("I can't
+  shake the feeling", ...).
+- **Pilot 3, failures:** 1 failed cell (a Llama liar timeout) and 2 grader blocks.
+- **Pilot spend:** $15.72 in all.
+- **List of 72** (`results/perfect_lie_reversed/category_list.md`): 21 + 3 + 45 piloted, plus
+  **astrology, volcanoes and parks**, the next reserves by the pre-set order, which are not yet
+  piloted.
 
 ## 10. Cost
 
@@ -304,6 +312,14 @@ excludes them. Degenerate lies are reported, not excluded.
     (`pilots/content_filter_reading.md`).
 
 ## 14. Open for the owner
+
+- **Pilot for the last three categories:** astrology, volcanoes and parks, 16 lies each, about
+  $0.65 each and $2 in all. It has not run. A failure moves on to the next reserve (fossils,
+  comics, crafts, ...).
+- **Code fix before the full run (no instrument change).** The transport-retry pattern misses
+  EDSL's `LanguageModelNoResponseError: ... timed out`; Pilot 3 lost one Llama cell that way.
+  Proposed: add "timed out" and "LanguageModelNoResponseError" to the pattern, recorded as a
+  change made before data.
 
 - **[PROPOSED]** Equivalence family for Test B (section 4): TOST ±0.10, Holm across four.
 - **[PROPOSED]** Balance-check method and threshold (section 7): exact multinomial, p < 0.05 flags

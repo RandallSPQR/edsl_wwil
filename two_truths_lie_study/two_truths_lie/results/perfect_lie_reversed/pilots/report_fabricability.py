@@ -77,7 +77,7 @@ out = {"run": str(RUN.relative_to(ROOT)), "temperature": float(T), "top_p": 0.9,
 (HERE / f"{OUT}.json").write_text(json.dumps(out, indent=1, default=str) + "\n")
 L = [f"# Pilot {'2' if SET == 'first' else '3'}: fabricability (placebo, 16 lies per category, T={T}, top_p 0.9)", "",
      "Criterion D as amended 2026-10-09: grader content-filter blocks are counted separately, not as failures.", "",
-     f"Spend ${mf['spend_usd']:.2f} (cap $10). Cells {mf['n_complete']}/{mf['n_cells_planned']} complete, {mf['n_error']} failed.", "",
+     f"Spend ${mf['spend_usd']:.2f} (cap ${10 if SET == 'first' else 12}). Cells {mf['n_complete']}/{mf['n_cells_planned']} complete, {mf['n_error']} failed.", "",
      "| category | new | lies | failed | grader blocks | refusal / confession matches | non-viable | A: highest unnamed cue rate (Wilson LB) | placebo share of target cues (share of lies at 0) | verdict |",
      "|---|---|---|---|---|---|---|---|---|---|"]
 for cat, x in cat_rep.items():
