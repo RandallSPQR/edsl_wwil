@@ -1,0 +1,146 @@
+{
+ "0.6": {
+  "spend_usd": 0.0203,
+  "failed_cells": 0,
+  "models": {
+   "meta-llama/llama-3.1-8b-instruct": {
+    "lies": 24,
+    "failed": 0,
+    "degenerate": 0,
+    "non_viable": 0,
+    "non_viable_detail": [],
+    "confessions": [],
+    "words_min_median_max": [
+     281,
+     335,
+     400
+    ],
+    "min_tail_stopword_rate": 0.30666666666666664,
+    "finish_length": 0
+   },
+   "google/gemma-3-27b-it": {
+    "lies": 24,
+    "failed": 0,
+    "degenerate": 0,
+    "non_viable": 0,
+    "non_viable_detail": [],
+    "confessions": [],
+    "words_min_median_max": [
+     319,
+     370,
+     424
+    ],
+    "min_tail_stopword_rate": 0.23333333333333334,
+    "finish_length": 0
+   },
+   "openai/gpt-4o-mini": {
+    "lies": 24,
+    "failed": 0,
+    "degenerate": 0,
+    "non_viable": 0,
+    "non_viable_detail": [],
+    "confessions": [],
+    "words_min_median_max": [
+     347,
+     383,
+     436
+    ],
+    "min_tail_stopword_rate": 0.28,
+    "finish_length": 0
+   },
+   "google/gemini-2.5-flash-lite": {
+    "lies": 24,
+    "failed": 0,
+    "degenerate": 0,
+    "non_viable": 0,
+    "non_viable_detail": [],
+    "confessions": [],
+    "words_min_median_max": [
+     333,
+     369,
+     436
+    ],
+    "min_tail_stopword_rate": 0.24666666666666667,
+    "finish_length": 0
+   }
+  }
+ },
+ "0.8": {
+  "spend_usd": 0.0203,
+  "failed_cells": 0,
+  "models": {
+   "meta-llama/llama-3.1-8b-instruct": {
+    "lies": 24,
+    "failed": 0,
+    "degenerate": 0,
+    "non_viable": 0,
+    "non_viable_detail": [],
+    "confessions": [],
+    "words_min_median_max": [
+     286,
+     334,
+     386
+    ],
+    "min_tail_stopword_rate": 0.2733333333333333,
+    "finish_length": 0
+   },
+   "google/gemma-3-27b-it": {
+    "lies": 24,
+    "failed": 0,
+    "degenerate": 0,
+    "non_viable": 0,
+    "non_viable_detail": [],
+    "confessions": [],
+    "words_min_median_max": [
+     336,
+     368,
+     413
+    ],
+    "min_tail_stopword_rate": 0.20666666666666667,
+    "finish_length": 0
+   },
+   "openai/gpt-4o-mini": {
+    "lies": 24,
+    "failed": 0,
+    "degenerate": 0,
+    "non_viable": 1,
+    "non_viable_detail": [
+     [
+      "language",
+      [
+       "too_long(508)"
+      ]
+     ]
+    ],
+    "confessions": [],
+    "words_min_median_max": [
+     362,
+     387,
+     508
+    ],
+    "min_tail_stopword_rate": 0.26,
+    "finish_length": 0
+   },
+   "google/gemini-2.5-flash-lite": {
+    "lies": 24,
+    "failed": 0,
+    "degenerate": 0,
+    "non_viable": 0,
+    "non_viable_detail": [],
+    "confessions": [],
+    "words_min_median_max": [
+     290,
+     360,
+     412
+    ],
+    "min_tail_stopword_rate": 0.24,
+    "finish_length": 0
+   }
+  }
+ },
+ "proposal": {
+  "temperature": 0.6,
+  "top_p": 0.9,
+  "rule": "0.8 if every model has 0 degenerate lies and no more non-viable lies at 0.8 than at 0.6; else 0.6"
+ }
+}

@@ -58,7 +58,7 @@ predicts more.
   - gpt-5 on a seeded 25% subsample, stratified by liar × condition (seed 20261009).
   - The rubric is v0.6, unchanged.
 - **Sampling:** common to all four liars. The proposal comes from Pilot 1 (section 9):
-  temperature TBD by pilot, top_p 0.9.
+  temperature **0.6**, top_p 0.9 (Pilot 1 proposal; owner decision D4).
 - **Size:** 24 × 3 conditions × 5 targets × 4 liars × 3 replicates = **4,320 lies**.
 
 ## 3. Primary outcome
@@ -293,7 +293,11 @@ At 72 × 1, equivalence power at δ = 0 is 0.91. The cost is the same as 24 × 3
 - **D2** 72 categories × 1 replicate instead of 24 × 3, at the same cost. Recommended. Needs 48
   more categories and a second fabricability pilot.
 - **D3** Re-apply the gate rule on new data. Recommended.
-- **D4** Common sampling: temperature (Pilot 1 proposal) with top_p 0.9.
+- **D4** Common sampling: **temperature 0.6, top_p 0.9** (Pilot 1 proposal, by the pre-stated rule).
+  - No degenerate lie at either temperature: 0 of 96 at each.
+  - At 0.8, one gpt-4o-mini lie ran to 508 words, past the 480 limit; at 0.6 there were none.
+  - 0.6 is Llama's first-study setting. For Gemma, gpt-4o-mini and Gemini it is lower than their
+    first-study 1.0, so cross-study comparisons carry a sampling change.
 - **D5** Category list: Pilot 2 results; any failures are replaced from the reserves.
 
 PILOT RESULTS: see `results/perfect_lie_reversed/pilots/degeneration_report.md` and
