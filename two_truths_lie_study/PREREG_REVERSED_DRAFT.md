@@ -1,318 +1,314 @@
-# The Perfect Lie, follow-up: reversed note (priming vs belief-tracking). Pre-registration DRAFT 1
+# The Perfect Lie, follow-up: reversed note (priming vs belief-tracking). Pre-registration DRAFT 2
 
-Status: draft for owner review, not frozen. Nothing beyond the two pilots has run. Items marked
-**[DECISION]** are open choices for the owner, each with a recommendation.
+Status: draft for owner review, not frozen. Only pilots have run, and the follow-up's full run is
+locked (`run_locks.json`). Draft 2 applies the owner's decisions of 2026-10-09 (D1-D5, section
+14). Items marked **[PROPOSED]** are additions of mine that need the owner's yes or no.
 
 - **First study:** tag `perfect-lie-prereg-v1` (c2ca8b8), final analysis at `f60ea64`.
-- **Draft files:**
-  - reversed notes: `two_truths_lie/data/perfect_lie_reversed/reversed_notes.json`;
-  - design: `two_truths_lie/data/perfect_lie_reversed/design.json`;
-  - categories: `two_truths_lie/data/perfect_lie_reversed/categories.json`;
-  - note builder and lint: `two_truths_lie/src/perfect_lie/reversed.py`.
-- **Supporting results:**
-  - lint: `two_truths_lie/results/perfect_lie_reversed/lint/reversed_pairs.md`;
-  - power: `two_truths_lie/results/perfect_lie_reversed/design/power.py`, `power.json`;
-  - cost: `two_truths_lie/results/perfect_lie_reversed/design/cost.json`;
-  - pilots: `two_truths_lie/results/perfect_lie_reversed/pilots/`.
+- **Draft files** (in `two_truths_lie/`):
+  - reversed notes: `data/perfect_lie_reversed/reversed_notes.json`;
+  - design: `design.json`;
+  - categories: `categories.json`;
+  - category rule and draw: `category_pool.py`, `category_draw.json`;
+  - note builder and lint: `src/perfect_lie/reversed.py`.
+- **Supporting results** (in `two_truths_lie/results/perfect_lie_reversed/`):
+  - lint: `lint/reversed_pairs.md`;
+  - power: `design/power_testB.py` and `.json` (primary), `design/power.py` and `.json` (Test A);
+  - cost: `design/cost.json`;
+  - pilots: `pilots/` (rules in `PILOT_RULES.md`, committed before each pilot).
 
 ## 1. Question
 
-The first study found that all four small liar models put more of the note-named cues into a
-lie when the private note described the judge's beliefs (full) than when it described someone
-else's (placebo). That is consistent with two different mechanisms:
-
-- **Belief-tracking:** the liar models what the judge finds convincing and writes to it.
+In the first study, all four small liar models put more note-named cues into a lie when the
+private note described the judge's beliefs (full) than when it described someone else's
+(placebo). Two mechanisms fit that result:
+- **Belief-tracking:** the liar models what this judge finds convincing and writes to it.
 - **Priming:** naming a cue makes the liar use it, whatever the note says about it.
 
-The reversed note separates them. It names the same cues in the same words but says the judge
-**distrusts** them. Belief-tracking predicts fewer of those cues than under placebo; priming
-predicts more.
+The **reversed** note names the same cues in the same words but says the judge *distrusts* them.
+- **Full − reversed** holds the words fixed and flips only their valence.
+- Priming predicts about zero; belief-tracking predicts a positive difference.
 
 ## 2. Design
 
-- **Liar models:** the four C1 models, reasoning off, as in the first study.
+- **Liar models:** the four C1 models, reasoning off.
 - **Conditions:** placebo, full and reversed. `none` and the post-story B-hat elicitation are
   dropped.
 - **Notes.** The scaffold, header and wording are as frozen in the first study.
-  - **Full:** the target persona's beliefs, unchanged from `personas.json`.
-  - **Reversed:** the same beliefs with valence flipped by the smallest natural edit. The header
-    becomes "tends to find a story *suspect* when it has these qualities".
-    - All 20 belief pairs and the header pass a mechanical lint: a word-level diff in which every
-      difference is an allowed valence substitution (`reversed_pairs.md`).
+  - **Full:** the target's beliefs from `personas.json`, unchanged.
+  - **Reversed:** valence flipped by the smallest natural edit; the header becomes "tends to find
+    a story *suspect* when it has these qualities".
+    - All 20 belief pairs and the header pass a mechanical word-level lint: only listed valence
+      substitutions differ.
     - Cue vocabulary is identical, and word counts differ by at most one word.
-  - **Placebo:** a pool persona whose 4 cues are disjoint from the target's. The cycle is
-    P1→P2→P3→P1 and P5↔P6, which is forced because P6 is the only persona disjoint from P5.
-  - **Length:** all three notes for a target carry the **same** neutral filler sentences, so
-    they differ only in the header word and the belief lines.
-- **Targets:** the primary pool, P1, P2, P3, P5 and P6. P4 is not used.
-- **Categories:** 24, the original 6 plus 18 new.
-  - The public prompt is v3, unchanged; only the category word varies.
-  - Every category is crossed with every target.
-  - The new categories must pass the fabricability pilot (section 9).
-- **Replicates:** 3 per (category, target, condition, liar). **[DECISION D2]** proposes trading
-  replicates for categories.
+  - **Placebo:** a pool persona with cues disjoint from the target's, in the cycle P1→P2→P3→P1 and
+    P5↔P6.
+  - **Filler:** all three notes for a target carry identical filler sentences.
+- **Targets:** P1, P2, P3, P5 and P6.
+- **Categories: 72**, each crossed with every target. The public prompt is v3; only the category
+  word varies. Section 9 gives the list and the rule.
+- **Replicates: 1** per (category, target, condition, liar). This is owner decision D2: power
+  depends on the number of categories, not on replicates (section 8).
 - **Judges:** crossed 4×4. Every lie is read by all four C1 models, each given the target
-  persona, as in the first study.
+  persona.
 - **Graders:**
   - primary (Claude Sonnet 4.5) and Google (gemini-2.5-flash) on every lie;
   - gpt-5 on a seeded 25% subsample, stratified by liar × condition (seed 20261009).
-  - The rubric is v0.6, unchanged.
-- **Sampling:** common to all four liars. The proposal comes from Pilot 1 (section 9):
-  temperature **0.6**, top_p 0.9 (Pilot 1 proposal; owner decision D4).
-- **Size:** 24 × 3 conditions × 5 targets × 4 liars × 3 replicates = **4,320 lies**.
+  - Rubric v0.6, unchanged.
+- **Sampling:** common to all four liars: **temperature 0.6, top_p 0.9** (Pilot 1).
+- **Size:** 72 categories × 5 targets × 3 conditions × 4 liars = **4,320 lies**.
 
-## 3. Primary outcome
+## 3. Outcome
 
-For each lie, *s* is the share of the target persona's scorable cues that the primary grader
-marks present.
-- **Scorable** means not heatmap-only and not excluded by the gate (section 6).
-- Every target cue is placebo-net by construction, because placebo personas are disjoint.
-- Scorable cues per target, before the gate:
+For each lie, *s* is the share of the target's scorable cues that the primary grader marks
+present.
+- Scorable means not heatmap-only and not excluded by the gate (section 6).
+- All target cues are placebo-net by construction.
+- The same cues are scored in every condition. Under reversed, they are the cues the note says
+  the judge distrusts.
 
-| target | scorable cues |
-|---|---|
-| P1 | 4 |
-| P2 | 3 |
-| P3 | 2 |
-| P5 | 3 |
-| P6 | 3 |
+## 4. Primary test: Test B, full − reversed
 
-- The same cue set is scored under all three conditions. Under reversed, those are the cues the
-  note says the judge distrusts.
+**Model, fitted per liar model:**
+`s ~ condition + persona + (1 + condition | category)`, REML.
+- Condition is coded against reversed. Persona is a fixed effect, because 5 levels are too few to
+  treat as a random sample.
+- The estimand is the average over these five personas and over a population of categories.
+- The condition effect is allowed to vary by category (random slope).
+- Inference is t with K − 1 = 71 df, where K is the number of categories.
 
-## 4. Primary tests and multiplicity
+**Fallback** if the fit fails, whether through non-convergence, a singular fit or a non-positive
+definite Hessian:
+- Take each category's mean of (full − reversed) over personas.
+- Run a one-sample t-test on the K values, two-sided, K − 1 df.
+- For balanced data this test and the model are equivalent (section 8). Which method produced
+  each result is reported.
 
-The model is fitted per liar model, with condition coded against placebo.
+**Decision, per liar model, with Holm across the four models** (graphical, equal split, p-value
+order; local α from 0.0125 to 0.05):
+- **Efficacy family (α = 0.05):** a two-sided rejection with B > 0 reads **belief-tracking**.
+  A rejection with B < 0 is reported as found, labelled "fewer named cues under full than under
+  reversed".
+- **[PROPOSED] Equivalence family (α = 0.05):** TOST with margin ±0.10. If both one-sided tests
+  reject at the Holm level, the label is **"no valence effect beyond ±0.10"**. This is the result
+  priming predicts. Without it, a null on B cannot support priming.
+- **Otherwise inconclusive.**
 
-**Owner's draft model (M1):**
-`s ~ condition + (1 | category) + (1 | persona)`, REML.
+**Robustness:**
+- the draft-1 random-intercepts model (`(1|category) + (1|persona)`), labelled as assuming no
+  heterogeneity;
+- gpt-5 annotations on the 25% subsample, descriptive;
+- the pooled-gate cue set;
+- non-viable lies excluded.
 
-**Recommended model (M2) [DECISION D1]:**
-`s ~ condition + persona + (1 + condition | category) + (1 | category:persona)`.
-- Persona is fixed because it has only 5 levels; the estimand is the average over these five
-  personas.
-- Categories are a random sample, and the condition effect may vary across them.
-- Inference is t with K − 1 = 23 df.
-- Pre-registered fallback, if M2 fails to converge: the category-level test. Take each category's
-  mean contrast over personas and replicates, then run a one-sample t-test on the K values. For
-  balanced data this test and M2 are equivalent.
-- M1 is then reported as a registered robustness analysis, labelled as assuming no heterogeneity
-  in the condition effect.
+## 5. Secondary: Test A, reversed − placebo (exploratory)
 
-**Why D1 matters.** In the first study, the full-minus-placebo effect varied across
-(category, target) cells with a true SD of about 0.22–0.25, at a within-cell SD of about 0.22
-(`study1_parameters.json`).
-- M1 has no random slope, so it treats that variation as noise around a single effect.
-- Simulating with first-study-like heterogeneity (section 8), M1 rejects a true null of no
-  effect **28%** of the time at nominal 5%, and **17%** at 1.25%.
-- M2 holds 5%.
-- This is the same mechanism that put Llama's mixed-model z below its boundary in the first study.
+- **Same model and fallback.**
+- **Reading:** negative means the liar avoids the cues the judge distrusts; positive means
+  priming lifts them even when the note disparages them.
+- **Floor effect, stated in advance:**
+  - In the first study, **50% of placebo lies carried none of the target's cues** (s = 0;
+    n = 526), and the placebo mean was 0.22–0.36 by model.
+  - Pilot 2's placebo means by category were 0.13–0.38.
+  - Belief-tracking can lower *s* below placebo only within that small room, while priming has
+    0.64–0.78 of room upward.
+  - **A null or small result on Test A is therefore not evidence against belief-tracking.** Only
+    a clearly positive Test A speaks for priming.
+- **Reported:** estimate, 95% CI, and the share of placebo lies at s = 0, per model. No Holm
+  family and no decision label.
 
-**Test A: reversed − placebo, per liar model.**
-- Negative: **belief-tracking**. The liar writes fewer of the cues the judge distrusts.
-- Positive: **priming**. Naming the cues raises them regardless of valence.
-- **Efficacy:** two-sided at Holm-adjusted α across the four models (graphical, equal split,
-  p-value order). The family has α = 0.05.
-- **Equivalence:** TOST with margin ±0.10, in a separate Holm family at α = 0.05. The label is
-  "neither dominates beyond ±0.10".
-- Otherwise the model is **inconclusive**.
+## 6. Agreement gate (applied fresh)
 
-**Test B: full − reversed, per liar model.** This is the belief contrast with the words held
-fixed.
-- Two-sided, with Holm across the four models at α = 0.05.
-- Positive: the liar's use of the cues depends on what the note says about them, not only on
-  their being named.
+- The first study's rule is applied to this study's data. Primary vs Google; it reads
+  annotations only, without condition labels, and is computed before unblinding.
+- **Exclusion:** only if both the kappa and AC1 95% lower bounds are below 0.70 (percentile
+  bootstrap over lies, 2,000 resamples, seed 20261012).
+- **Minimum positives:** 30. A cue under that is flagged, not gated, and is dropped in a
+  sensitivity analysis.
+- The first study's exclusion of `emotional_appeal` is **not** carried over; the rule decides
+  afresh.
+- A target left with fewer than 2 scorable cues leaves the pool. P3 has 2 before the gate.
 
-**Joint reading per model.** This is pre-stated; the label follows mechanically from the two
-decisions.
+## 7. Exclusions, missing data and grader blocks
 
-| Test A | Test B | reading |
-|---|---|---|
-| negative | positive | belief-tracking |
-| positive | equivalent or not significant | priming |
-| positive | positive | both: naming raises the cues, and valence moderates it |
-| equivalent | positive | valence-sensitive, but reversed does not suppress below placebo |
-| inconclusive | any | inconclusive on mechanism |
+**Failed cells (liar side or parse)** are excluded and counted by model × condition.
+- Transport failures are retried with backoff, as in the first study's Addendum 2.
+- Parse failures stay failed after 3 attempts.
 
-A and B are different questions, so alpha is not split between them; each family is at 0.05.
-There is one look and no interim.
+**Grader content-filter blocks (owner amendment, 2026-10-09).** A block is a cell where the
+primary grader returned `content_filter` on every attempt.
+- Blocks are counted **separately** from liar failures and reported by **model × condition**.
+- **No substitute grader:** a blocked lie has no primary score and is missing for Tests A and B.
+- **Balance check (pre-registered):**
+  - Per liar model, an exact multinomial test of equal block probability across the three
+    conditions (Monte Carlo, 100,000 draws, seed 20261013), plus the same test pooled over models.
+  - A model with p < 0.05 is flagged "blocks imbalanced across conditions". Its Test B result is
+    then read together with its tipping point below.
+  - The test is not a gate and changes no decision.
+- **Tipping point** for Test B, per model, over all missing cells (failed or blocked):
+  - Impute every missing full lie at s_f − δ and every missing reversed lie at s_r + δ, with each
+    side's observed mean and the values clipped to [0, 1].
+  - Report the smallest δ that moves the test statistic below the boundary at which the decision
+    was made.
+  - Also report the worst case: missing full lies at 0 and missing reversed lies at 1.
 
-## 5. Exclusions (fixed, as in the first study)
+**Confessions and refusals:**
+- Screened with the frozen patterns.
+- Every match is read by hand, blind to condition, before unblinding, and the owner adjudicates
+  it as in Addendum 3.
+- Confessions are excluded.
 
-- **Failed cells** (no valid grades from the primary and Google graders) are excluded and counted
-  by model × condition.
-  - A transport failure (429, timeout, dropped connection) is retried with backoff and re-run
-    (first study's Addendum 2).
-  - Content-filter and parse failures stay failed.
-- **Confessions** are excluded, under the frozen confession rule and screen.
-  - Every screen match is read by hand, blind to condition, before unblinding.
-  - The owner adjudicates the matches as in Addendum 3.
-- **Refusals** are screened and read the same way.
-- **Non-viable lies** (word range or refusal) stay in the primary analysis under rule (a). A
-  sensitivity analysis excludes them.
-- **Degenerate lies** are reported and not excluded.
+**Non-viable lies** (word range, refusal) stay in, under rule (a). A sensitivity analysis
+excludes them. Degenerate lies are reported, not excluded.
 
-## 6. Agreement gate
+## 8. Power and false positives (simulation; `power_testB.py`, 3,000 runs per cell)
 
-The first study's rule applies to the new data, from annotations only and without condition
-labels, before unblinding.
-- A cue is excluded only if both the kappa and AC1 95% lower bounds are below 0.70, primary vs
-  Google, with a bootstrap of 2,000 resamples.
-- A cue with fewer than 30 positives is flagged, not gated.
-- **[DECISION D3]** Recommended: apply the rule on the new data. The alternative is to carry the
-  first study's frozen exclusion (`emotional_appeal`) over unchanged.
-- A target left with fewer than 2 scorable cues leaves the pool.
+**Data model.**
+- Intercepts for category, persona and cell.
+- A condition effect that varies by category, persona and cell, with SDs τ.
+- Within-cell noise σ.
+- Personas are fixed (their deviations are centred).
 
-## 7. Robustness
-
-- **gpt-5:** Tests A and B are repeated on gpt-5 annotations in the 25% subsample. This is
-  descriptive (sign and rough size), as in the first study.
-- **Pooled gate:** the tests are repeated on all scorable cues if pooled kappa is at least 0.70.
-- **M1** is reported if D1 adopts M2.
-
-## 8. Power and cluster-level assumptions (`power.py`, 3,000 simulations per cell)
-
-**Data model.** Category, persona and cell intercepts, plus a condition effect that varies by
-category, persona and cell with SDs τ, and within-cell noise σ.
-- Placebo baseline about 0.28; the first study measured 0.22–0.36.
-- Personas are fixed: their deviations are centred.
+**Calibration.**
+- Scenario S2 matches the first study's measured heterogeneity of full − placebo: a total τ of
+  about 0.23 at σ = 0.22.
+- For B, the full and reversed deviations are drawn independently, so B's heterogeneity is about
+  √2 × that. This is a conservative choice; the real correlation is unknown.
 
 **Scenarios:**
 
-| scenario | σ | τ category | τ persona | τ cell |
+| scenario | τ category | τ persona | τ cell | σ |
 |---|---|---|---|---|
-| S0 | 0.22 | 0 | 0 | 0 |
-| S1 | 0.22 | 0.08 | 0.08 | 0.08 |
-| S2 (first-study-like total heterogeneity, about 0.23) | 0.22 | 0.15 | 0.12 | 0.12 |
-| S3 | 0.24 | 0.22 | 0.15 | 0.15 |
+| S0 | 0 | 0 | 0 | 0.22 |
+| S1 | 0.08 | 0.08 | 0.08 | 0.22 |
+| S2 | 0.15 | 0.12 | 0.12 | 0.22 |
+| S3 | 0.22 | 0.15 | 0.15 | 0.24 |
 
-**Test A power for a true reversed − placebo = −0.10.** Probabilities of rejecting; M1's rate
-at δ = 0 is its false-positive rate.
+**False-positive rate when B = 0 (nominal 0.05 / 0.0125):**
 
-| | M1 at 0.05 | M1 at 0.0125 | M2 at 0.05 | M2 at 0.0125 | M1 false-positive rate at δ = 0, nominal 0.05 |
-|---|---|---|---|---|---|
-| S0, K = 24 | 1.00 | 1.00 | 1.00 | 1.00 | 0.04 |
-| S1, K = 24 | 0.99 | 0.98 | 0.97 | 0.90 | 0.13 |
-| S2, K = 24 | 0.95 | 0.91 | 0.76 | 0.53 | **0.29** |
-| S2, K = 48 | 1.00 | 0.99 | 0.97 | 0.89 | 0.26 |
-| S3, K = 24 | 0.85 | 0.78 | 0.48 | 0.27 | **0.33** |
+| | S0 | S1 | S2 | S3 |
+|---|---|---|---|---|
+| **Primary model (random slope)**, 72 × 1 | 0.052 / 0.015 | 0.048 / 0.013 | **0.050 / 0.013** | 0.046 / 0.011 |
+| Draft-1 random intercepts, 72 × 1 | 0.044 / 0.011 | 0.090 / 0.034 | **0.187 / 0.098** | 0.262 / 0.148 |
+| Draft-1 random intercepts, 24 × 3 | — | — | 0.407 / 0.289 | 0.467 / 0.356 |
 
-**Equivalence (TOST ±0.10 at 0.0125) when the true effect is 0, under M2:**
+**Power of the primary model, 72 × 1, at the strictest Holm level (0.0125) / the loosest (0.05):**
 
-| scenario | K = 24 | K = 48 |
-|---|---|---|
-| S1 | 0.91 | — |
-| S2 | 0.29 | 0.88 |
-| S3 | 0.02 | — |
+| true B | S1 | S2 | S3 |
+|---|---|---|---|
+| 0.05 | 0.37 / 0.60 | 0.16 / 0.34 | 0.08 / 0.21 |
+| 0.10 | 0.98 / 1.00 | **0.74 / 0.88** | 0.44 / 0.66 |
+| 0.15 | 1.00 | 0.99 / 1.00 | 0.84 / 0.94 |
+| 0.20 | 1.00 | 1.00 | 0.98 / 1.00 |
+| 0.30 | 1.00 | 1.00 | 1.00 |
 
-**Categories versus replicates, at a fixed number of lies (S2, δ = −0.10, M2 at 0.0125):**
+- **Effect sizes to expect.** If belief-tracking holds and reversed is at or below placebo, B is
+  at least the first study's full − placebo lift of 0.29–0.43, where power is 1.00. Under priming,
+  B is about 0.
+- **Equivalence (TOST ±0.10 at 0.0125) when B = 0:**
 
-| design | power |
-|---|---|
-| 12 × 6 | 0.24 |
-| 24 × 3 | 0.53 |
-| 36 × 2 | 0.72 |
-| **72 × 1** | **0.92** |
+  | scenario | 72 × 1 | 24 × 3 |
+  |---|---|---|
+  | S1 | 0.97 | — |
+  | S2 | 0.64 | 0.02 |
+  | S3 | 0.10 | — |
 
-At 72 × 1, equivalence power at δ = 0 is 0.91. The cost is the same as 24 × 3: 4,320 lies.
+  A clean priming result therefore depends on modest heterogeneity.
+- **Persona generalisation is out of reach.** Treated as a random sample of 5, the SE of B under
+  S2 rises from 0.031 to 0.082 (analytic). Hence persona is fixed.
+- **Test A** (`power.py`, with τ placebo = 0, so its heterogeneity variance is half of B's):
+  - false-positive rate is nominal under the primary model;
+  - the floor effect (section 5) is not in the normal simulation and makes these figures
+    optimistic for negative effects.
+- **Fragility:**
+  - The heterogeneity of B is unknown; S1 to S3 bracket it.
+  - *s* is discrete (shares of 2–4 cues) and bounded, and the simulation is normal.
+  - statsmodels' crossed random-effects fit failed to converge on one of two test datasets
+    (draft 1); the fallback covers this.
 
-**[DECISION D2]** Recommended: **72 categories × 1 replicate**.
-- It costs the same as 24 × 3, about $70.
-- It needs 48 more new categories and a second fabricability pilot, about $10 at 16 lies per
-  category.
-- At 24 × 3 under first-study-like heterogeneity, Test A has about even odds of detecting a 0.10
-  effect at the strictest Holm level, and only 29% power to show equivalence.
+## 9. Categories (72) and pilots
 
-**How fragile this is.**
-- The heterogeneity of reversed − placebo is unknown. S2 borrows the size of the
-  full − placebo heterogeneity; if the reversed effect is small, its heterogeneity may be smaller
-  too (S1).
-- The persona split is rough: in the first study, prompt and target pair were partly confounded.
-- Generalising to personas beyond these five is out of reach. With personas treated as random,
-  the SE under S2 rises from 0.049 to 0.090 (analytic), and no design here reaches useful power.
-  Hence persona is fixed.
-- *s* is discrete (shares of 2–4 cues) and bounded. The simulation uses a normal approximation.
-- **Floor.** In the first study, **50% of placebo lies had s = 0** (6% had s = 1; n = 526; under
-  full, 11% and 32%).
-  - Belief-tracking can therefore lower *s* by at most the placebo mean, about 0.22–0.36 by
-    model, and only in the half of lies that carry any target cue.
-  - Priming has about 0.64–0.78 of room upward.
-  - The design is asymmetric against detecting belief-tracking: a true −0.10 is about a third
-    of the available room. Pilot 2 measures the placebo baseline per category (section 9).
-- statsmodels' crossed random-effects fit failed to converge on one of two test datasets. M2's
-  pre-registered fallback, the category-level t-test, does not depend on convergence.
+**Composition: 21 + 3 + 48.**
+- **21** first-round categories that passed Pilot 2.
+- **3** owner-named replacements for history, sports and literature, which failed criterion A
+  because *historical_anchor* appeared unprompted in 8–9 of 9–10 lies: exploration, animals and
+  inventions.
+- **48** drawn by a fixed rule (`category_pool.py`, committed before their pilot):
+  - **Pool:** 134 candidate words, fixed in advance.
+  - **Exclusions, with a reason recorded for each word:**
+    - N1, a synonym or same stem of a category in use;
+    - N2, a kind of or part of a non-umbrella category in use;
+    - N3, a named academic branch of one of the six umbrella categories;
+    - E2, the word itself asks for a cue;
+    - E3, harm or refusal risk.
+  - **Draw:** the 72 eligible words are shuffled with seed 20261010. A word that is a
+    near-duplicate of one already taken is skipped. The first 48 are taken, and the rest are
+    reserves in order.
+- **Failed categories** are replaced by the next reserve, after its own pilot.
 
-## 9. Pilots (run under this draft; results in section 13)
+**Pilots:**
 
-- **Pilot 1, degeneration:** placebo only, 24 lies per model at temperatures 0.6 and 0.8, top_p
-  0.9, cap $3.
-- **Pilot 2, fabricability:** placebo only, 16 lies per category (4 per model) on all 24
-  categories, primary grader, cap $10.
-- The rules are fixed in `pilots/PILOT_RULES.md`, committed before any call.
+| Pilot | What it checked | Result | Spend |
+|---|---|---|---|
+| 1 | degeneration | none at T 0.6 or 0.8; 0.6 chosen (one gpt-4o-mini lie over length at 0.8) | $0.04 |
+| 2 | first 24 categories | 21 pass | $5.02 |
+| 3 | 48 drawn + 3 replacements | see `fabricability_report_set2.md` | |
 
-## 10. Cost (`cost.json`)
+## 10. Cost
 
-- **Per-cell cost:** measured in the first study, without the elicitation and B-hat stages,
-  including gpt-5 on 25%: **$0.0162 per lie**.
-- **24 × 3 = 4,320 lies:**
-  - **$69.8** counted, about $68.0 billed at the first study's billed/counted ratio;
+- **Per lie:** the first study's measured mean without the elicitation stages, including gpt-5
+  on 25%: $0.0162.
+- **4,320 lies:**
+  - **$69.8** counted, about $68.0 billed;
   - **$76.7** with a 10% contingency.
-- **72 × 1:** the same.
-- **48 × 2:** $93.0, or $102 with contingency.
 - **Caps:** target under $100, flag at $100, kill cap $125.
 
 ## 11. Secondary analyses (exploratory)
 
-1. **Liar × judge family diagonal:** acceptance by liar and judge model; same family minus other
-   family.
-2. **Judge acceptance by cue:** presence vs absence, with lie-level means over the four judges.
-3. **Breakdowns:**
-   - Tests A and B by category and by liar model;
-   - by target persona, descriptive.
-4. **Acceptance by condition:** do judges accept reversed lies less than full ones? Each judge
-   holds the target persona's (positive) beliefs.
-5. **Off-target shifts:** do non-target cues (for example hedging or skeptic acknowledgment)
-   rise under reversed? This would be the liar treating a sceptical judge generically rather than
-   avoiding the named cues.
+1. Test A (section 5).
+2. Liar × judge acceptance; the family diagonal (same family minus other).
+3. Judge acceptance by cue, present vs absent.
+4. Breakdowns of B and A by category, by liar model and by target persona.
+5. Acceptance by condition: does a judge holding the target persona accept full lies more than
+   reversed ones?
+6. Off-target shifts: do non-target cues (hedging, skeptic acknowledgment) rise under reversed?
+   That would indicate a generic response to a sceptical judge rather than avoidance of the named
+   cues.
 
 ## 12. Limitations stated in advance
 
-- Reversal is a wording intervention.
-  - "Trusts a story least when the teller was there" is a natural flip.
-  - "Warms to" → "Distrusts" is not a one-word flip, though the lint confirms the cue words are
-    identical.
-- The placebo persona is fixed per target, so placebo content is confounded with target. It
-  serves as a baseline only.
-- Small models only (C1). No claim reaches stronger models.
-- The equivalence margin of ±0.10 is in share units. That is about a quarter to a third of the
-  first study's full − placebo lift.
+- Reversal is a wording intervention. Most flips are one word; "Warms to" → "Distrusts" is not,
+  though the cue words are identical.
+- The placebo persona is fixed per target, so it is confounded with target. It is a baseline
+  only.
+- C1 models only.
+- The equivalence margin of ±0.10 is in share units: about a quarter to a third of the first
+  study's full − placebo lift.
+- The temperature is 0.6 for all liars, whereas the first study used 1.0 for three of them, so
+  cross-study comparisons carry a sampling change.
 
-## 13. Owner decisions and pilot results
+## 13. Changes from draft 1 (owner, 2026-10-09)
 
-- **D1** M2 (random slope by category, persona fixed) instead of M1 as primary. Recommended.
-- **D2** 72 categories × 1 replicate instead of 24 × 3, at the same cost. Recommended. Needs 48
-  more categories and a second fabricability pilot.
-- **D3** Re-apply the gate rule on new data. Recommended.
-- **D4** Common sampling: **temperature 0.6, top_p 0.9** (Pilot 1 proposal, by the pre-stated rule).
-  - No degenerate lie at either temperature: 0 of 96 at each.
-  - At 0.8, one gpt-4o-mini lie ran to 508 words, past the 480 limit; at 0.6 there were none.
-  - 0.6 is Llama's first-study setting. For Gemma, gpt-4o-mini and Gemini it is lower than their
-    first-study 1.0, so cross-study comparisons carry a sampling change.
-- **D5** Category list (Pilot 2, T = 0.6, $5.02 of the $10 cap; 381 of 384 cells complete).
-  - **Fail A (headroom):** *historical_anchor* appears unprompted in nearly every lie in three
-    categories:
-    - **history** (one of the original six): 9 of 10, Wilson lower bound 0.60;
-    - **sports:** 9 of 10, lower bound 0.60;
-    - **literature:** 8 of 9, lower bound 0.57.
-  - **sports also matched the refusal screen** ("I can't help but think of that game"). Read by
-    hand, it is a false positive, so sports fails on A only.
-  - **21 categories pass.** Proposed replacements are the first three reserves: exploration,
-    animals and inventions. They need their own fabricability pilot of 16 lies each, about $0.65
-    each and $2 in all, which has not run.
-  - **Gemma fails per-model criterion D:** 3 failed cells against a limit of 1. All three were
-    primary-grader **content-filter blocks** on ordinary stories (science, biology, agriculture),
-    not liar failures. Under the rules they stay failed. The same failure type cost 24 cells in
-    the first study.
+- **D1** Model: random slope by category with persona fixed, and a per-category t-test fallback.
+- **D2** Design: 72 categories × 1 replicate. The new categories are drawn by a stated rule, with
+  replacements in reserve order.
+- **D3** The primary test is now Test B (full − reversed), with Holm across four models. Test A
+  is secondary, with the floor effect stated.
+- **D4** Gate applied fresh on the new data.
+- **D5** Grader content-filter blocks:
+  - separate from liar failures, by model × condition;
+  - included in the tipping point;
+  - balance check across conditions;
+  - no substitute grader.
+  - The three Pilot 2 blocks were read in full and are benign
+    (`pilots/content_filter_reading.md`).
 
-PILOT RESULTS: see `results/perfect_lie_reversed/pilots/degeneration_report.md` and
-`fabricability_report.md`.
+## 14. Open for the owner
+
+- **[PROPOSED]** Equivalence family for Test B (section 4): TOST ±0.10, Holm across four.
+- **[PROPOSED]** Balance-check method and threshold (section 7): exact multinomial, p < 0.05 flags
+  only.
+- **The category draw** (section 9, `category_draw.json`). Two within-pool near-duplicate pairs
+  are looser than the stated rule: telephones/radio and gemstones/gold. They were fixed before
+  the draw and not changed after it; their only effect is that telephones and gemstones were
+  skipped.
