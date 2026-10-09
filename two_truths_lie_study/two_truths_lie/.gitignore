@@ -51,6 +51,7 @@ Thumbs.db
 # Output directories
 results/*
 !results/perfect_lie/
+!results/perfect_lie_reversed/
 outputs/
 data/
 

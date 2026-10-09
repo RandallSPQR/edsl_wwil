@@ -1,0 +1,39 @@
+{
+ "per_cell_usd": {
+  "liar": 0.00020046129383886237,
+  "judges_4": 0.0003352500758293824,
+  "grade_primary": 0.012740024644549758,
+  "grade_google": 0.001516515118483408,
+  "grade_secondary": 0.001214615521327015,
+  "other_retries_and_failed_call_bounds": 0.0001441155687203478
+ },
+ "per_cell_total_usd": 0.016150982222748776,
+ "dropped_per_cell_usd": {
+  "elicitation": 0.00010392624170616118,
+  "bhat_primary": 0.010772988625592436,
+  "bhat_google": 0.001360163033175354,
+  "bhat_secondary": 0.0010808459715639807
+ },
+ "billed_over_counted_first_study": 0.9743105718960169,
+ "designs": {
+  "owner draft: 24 categories x 3 replicates": {
+   "cells": 4320,
+   "counted_usd": 69.77224320227471,
+   "billed_usd_expected": 67.97983417687625,
+   "with_10pct_contingency_usd": 76.74946752250219
+  },
+  "alternative: 72 categories x 1 replicate": {
+   "cells": 4320,
+   "counted_usd": 69.77224320227471,
+   "billed_usd_expected": 67.97983417687625,
+   "with_10pct_contingency_usd": 76.74946752250219
+  },
+  "alternative: 48 categories x 2 replicates": {
+   "cells": 5760,
+   "counted_usd": 93.02965760303294,
+   "billed_usd_expected": 90.63977890250166,
+   "with_10pct_contingency_usd": 102.33262336333625
+  }
+ },
+ "note": "Per-cell cost is the first study's measured mean, including gpt-5 on its 25% subsample, failed-call bounds and parse retries. The follow-up's notes are the same length class, so liar input barely changes; grading dominates (primary grader ~79% of the cost)."
+}
