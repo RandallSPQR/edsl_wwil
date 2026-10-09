@@ -980,6 +980,13 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
         all in the efficacy family at the interim;
       - units 131 / 130 / 128 / 122 (Llama, Gemma, gpt-4o-mini, Gemini);
       - the Holm order reveals only the models' rank by |Z|.
+35. **Final analysis run on the interim data (2026-10-09), after the owner confirmed OSF Addendum 3
+    was posted.** Code at `64005dc`, unchanged; records sha256 `2749b909...` (the frozen interim).
+    - Output: `results/perfect_lie/final_analysis/final_report.json` and `final_report.md`.
+    - All four models: belief-tracking, positive direction ("more named cues under full").
+    - Not pre-registered, written after unblinding: `final_analysis/gpt5_same_units.py` scores the
+      gpt-5 subsample units with the primary grader too, to separate grader disagreement from
+      subsample noise. Descriptive only.
 
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.
