@@ -7,5 +7,9 @@
   "trace_probe": {
     "locked": true,
     "reason": "Owner: the trace probe is a final set waiting on another run. Do not run it in any mode."
+  },
+  "reversed_followup_full_run": {
+    "locked": true,
+    "reason": "Owner, 2026-10-09: only the two follow-up pilots (degeneration, cap $3; fabricability, cap $10) may run until the owner approves the follow-up pre-registration."
   }
 }
