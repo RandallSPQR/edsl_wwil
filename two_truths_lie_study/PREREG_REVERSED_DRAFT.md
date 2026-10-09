@@ -298,7 +298,21 @@ At 72 × 1, equivalence power at δ = 0 is 0.91. The cost is the same as 24 × 3
   - At 0.8, one gpt-4o-mini lie ran to 508 words, past the 480 limit; at 0.6 there were none.
   - 0.6 is Llama's first-study setting. For Gemma, gpt-4o-mini and Gemini it is lower than their
     first-study 1.0, so cross-study comparisons carry a sampling change.
-- **D5** Category list: Pilot 2 results; any failures are replaced from the reserves.
+- **D5** Category list (Pilot 2, T = 0.6, $5.02 of the $10 cap; 381 of 384 cells complete).
+  - **Fail A (headroom):** *historical_anchor* appears unprompted in nearly every lie in three
+    categories:
+    - **history** (one of the original six): 9 of 10, Wilson lower bound 0.60;
+    - **sports:** 9 of 10, lower bound 0.60;
+    - **literature:** 8 of 9, lower bound 0.57.
+  - **sports also matched the refusal screen** ("I can't help but think of that game"). Read by
+    hand, it is a false positive, so sports fails on A only.
+  - **21 categories pass.** Proposed replacements are the first three reserves: exploration,
+    animals and inventions. They need their own fabricability pilot of 16 lies each, about $0.65
+    each and $2 in all, which has not run.
+  - **Gemma fails per-model criterion D:** 3 failed cells against a limit of 1. All three were
+    primary-grader **content-filter blocks** on ordinary stories (science, biology, agriculture),
+    not liar failures. Under the rules they stay failed. The same failure type cost 24 cells in
+    the first study.
 
 PILOT RESULTS: see `results/perfect_lie_reversed/pilots/degeneration_report.md` and
 `fabricability_report.md`.
