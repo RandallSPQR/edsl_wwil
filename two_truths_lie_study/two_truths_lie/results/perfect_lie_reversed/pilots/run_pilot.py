@@ -36,10 +36,15 @@ def main():
     ap.add_argument("--temperature", type=float)
     ap.add_argument("--cap", type=float, required=True)
     ap.add_argument("--concurrency", type=int, default=8)
+    ap.add_argument("--set", choices=("first", "second"), default="first",
+                    help="first: the 24 first-round categories (Pilot 2); second: drawn 48 + 3 replacements (Pilot 3)")
     a = ap.parse_args()
     inst = load_instrument(); models = select_class(load_models(), "C1")
     design, cats = rv.load_design(), rv.load_categories()
-    cats = cats["original"] + cats["new"]
+    if a.set == "first":
+        cats = cats["original"] + cats["new"]
+    else:
+        cats = cats["drawn_48"] + cats["replacements_for_failed"]
     if a.kind == "degeneration":
         if a.cap > 3:
             raise SystemExit("degeneration pilot cap is $3")
@@ -49,9 +54,10 @@ def main():
         stages = ("liar",)
         models = dict(models, graders=[])
     else:
-        if a.cap > 10 or a.temperature is None:
-            raise SystemExit("fabricability pilot needs --temperature and a cap of at most $10")
-        plans = [(f"fabricability_t{a.temperature}",
+        limit = 10 if a.set == "first" else 12
+        if a.cap > limit or a.temperature is None:
+            raise SystemExit(f"fabricability pilot needs --temperature and a cap of at most ${limit}")
+        plans = [(f"fabricability_t{a.temperature}" + ("" if a.set == "first" else "_set2"),
                   cells_for("fabricability", a.temperature, models["liar_models"], design, cats))]
         stages = ("liar", "graders")
         models = dict(models, graders=[g for g in models["graders"] if g["role"] == "primary"])
