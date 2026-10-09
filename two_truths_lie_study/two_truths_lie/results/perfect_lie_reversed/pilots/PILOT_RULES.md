@@ -38,3 +38,28 @@ Llama), temperature as below. Replicate 1 only.
   below the placebo for belief-tracking to show), and the word-count distribution.
 - **A failed category** is replaced by the next reserve (`categories.json`), which then needs its
   own pilot (not run without approval).
+
+## Amendment (owner, 2026-10-09): grader content-filter blocks
+
+A cell that fails because the **primary grader** returned `finish_reason: content_filter` on every
+attempt is a **grader block**, not a liar failure.
+- Grader blocks are counted separately, by model x condition.
+- They do not count toward criterion D, either per category or per model. D counts liar-side and
+  other failures only.
+- A blocked lie is never re-graded by a substitute grader.
+- This applies to Pilot 2's report as well. Under the amendment Gemma passes D, with 0 liar
+  failures and 3 grader blocks.
+
+## Pilot 3: fabricability of the 48 drawn categories and the 3 named reserves (cap $12)
+
+- **Categories:** the 48 drawn by `data/perfect_lie_reversed/category_pool.py` (seed 20261010,
+  committed before this pilot), plus exploration, animals and inventions, which replace history,
+  sports and literature. That is 51 categories.
+- **Cells:** as in Pilot 2. Per category, 4 placebo lies per liar model (16 per category), one per
+  target persona, leaving out target `targets[(i + m) mod 5]` within this pilot's category list.
+  T = 0.6, top_p 0.9, primary grader only.
+- **Criteria:** Pilot 2's V, A and D per category, and B and D per model, with D as amended above.
+- **Replacement:** a failed drawn category is replaced by the next unused reserve in
+  `reserves_in_order`. A failed replacement for history, sports or literature is also replaced
+  from that list. Replacements need their own pilot, which does not run without approval.
+- **Estimated spend:** 816 cells at Pilot 2's $0.0131 each, about $10.7.
