@@ -1,8 +1,8 @@
-# The Perfect Lie, follow-up: reversed note (priming vs belief-tracking). Pre-registration DRAFT 2
+# The Perfect Lie, follow-up: reversed note (priming vs belief-tracking). Pre-registration DRAFT 3
 
 Status: draft for owner review, not frozen. Only pilots have run, and the follow-up's full run is
-locked (`run_locks.json`). Draft 2 applies the owner's decisions of 2026-10-09 (D1-D5, section
-14). Items marked **[PROPOSED]** are additions of mine that need the owner's yes or no.
+locked (`run_locks.json`). Draft 3 applies the owner's decisions of 2026-10-09 (D1-D5, section 13)
+and 2026-10-10 (D6-D10, section 13a).
 
 - **First study:** tag `perfect-lie-prereg-v1` (c2ca8b8), final analysis at `f60ea64`.
 - **Draft files** (in `two_truths_lie/`):
@@ -89,10 +89,21 @@ order; local α from 0.0125 to 0.05):
 - **Efficacy family (α = 0.05):** a two-sided rejection with B > 0 reads **belief-tracking**.
   A rejection with B < 0 is reported as found, labelled "fewer named cues under full than under
   reversed".
-- **[PROPOSED] Equivalence family (α = 0.05):** TOST with margin ±0.10. If both one-sided tests
-  reject at the Holm level, the label is **"no valence effect beyond ±0.10"**. This is the result
-  priming predicts. Without it, a null on B cannot support priming.
-- **Otherwise inconclusive.**
+- **Equivalence family (α = 0.05; owner, 2026-10-10):** TOST with margin ±0.10, Holm across the
+  four models. If both one-sided tests reject at the Holm level, the label is **"no valence effect
+  beyond ±0.10"**, which is the result priming predicts.
+- **If both families reject** (a small but significant B inside ±0.10), the label is "valence
+  effect present, within ±0.10".
+- **Inconclusive is a pre-registered outcome:** a model where neither family rejects is labelled
+  **inconclusive**, reported as such, and not re-analysed to reach a decision.
+
+**Reading a null or equivalent B.** No valence effect is consistent with two accounts:
+- **priming:** the named cues are used whatever the note says about them;
+- **the liar not registering the flipped valence.**
+
+Either way the liar is responding to the words, not to the judge's beliefs. The comprehension
+check (section 11a) is there to tell these two apart. It is secondary and cannot change the
+decision label.
 
 **Robustness:**
 - the draft-1 random-intercepts model (`(1|category) + (1|persona)`), labelled as assuming no
@@ -100,6 +111,28 @@ order; local α from 0.0125 to 0.05):
 - gpt-5 annotations on the 25% subsample, descriptive;
 - the pooled-gate cue set;
 - non-viable lies excluded.
+
+## 4a. Analysis discipline (carried over from the first study)
+
+- **Final-analysis code before data.** The code is written from this document and validated on
+  simulated data:
+  - median-unbiasedness and coverage where they apply;
+  - the false-positive rate under the null;
+  - power at the planned effects.
+
+  It is sign-tested in both directions: synthetic data where full lies carry clearly more named
+  cues than reversed ones must give a positive B labelled in that direction, and the reverse must
+  give a negative B. It is **committed, with its hash reported to the owner, before any real data
+  is analysed**.
+- **Blinded permutation check before unblinding.** Full and reversed labels are swapped at random
+  within each (liar, category, target) cell, 10,000 times. Each permuted dataset runs through the
+  real decision code, and the share of efficacy and equivalence decisions per model is compared
+  with the design rate. Only those shares are output; no unpermuted statistic is computed or shown.
+- **Gate blind to condition.** The agreement gate reads annotations only, never condition labels
+  (section 6).
+- **Only decisions are reported until the final analysis.** Before the final analysis, only
+  decisions, gate exclusions, cell counts, failures, grader blocks and spend are reported. No lift,
+  interval or test statistic.
 
 ## 5. Secondary: Test A, reversed − placebo (exploratory)
 
@@ -144,8 +177,12 @@ primary grader returned `content_filter` on every attempt.
     conditions (Monte Carlo, 100,000 draws, seed 20261013), plus the same test pooled over models.
   - A model with p < 0.05 is flagged "blocks imbalanced across conditions". Its Test B result is
     then read together with its tipping point below.
-  - The test is not a gate and changes no decision.
-- **Tipping point** for Test B, per model, over all missing cells (failed or blocked):
+  - The test is not a gate and changes no decision; it only flags (owner, 2026-10-10).
+- **Transport retry, a pre-data change (owner, 2026-10-10; commit 779b21c).** The retry pattern now
+also matches EDSL's `LanguageModelNoResponseError: Language model timed out` wording, with a test.
+No other no-response error is retried.
+
+**Tipping point** for Test B, per model, over all missing cells (failed or blocked):
   - Impute every missing full lie at s_f − δ and every missing reversed lie at s_r + δ, with each
     side's observed mean and the values clipped to [0, 1].
   - Report the smallest δ that moves the test statistic below the boundary at which the decision
@@ -271,6 +308,58 @@ excludes them. Degenerate lies are reported, not excluded.
   - **$76.7** with a 10% contingency.
 - **Caps:** target under $100, flag at $100, kill cap $125.
 
+## 11a. Comprehension check (secondary measure; owner, 2026-10-10)
+
+**Purpose:** to tell "the liar read the valence and ignored it" (priming) apart from "the liar did
+not register the valence".
+
+**Calls.** These are separate calls, never part of story generation and never seen by any judge.
+- **Input:** exactly the story-generation input. That is the frozen scaffold with the private
+  note (system text; for Gemma, folded into the user turn as in story generation) and the public
+  prompt v3 for a seeded category. The one difference is that the final instruction, "Now tell
+  your story:", is replaced by:
+
+  > Before writing anything: for each quality your private note describes,
+  > say whether this judge finds it convincing or suspicious. Answer only with
+  > JSON: [{"quality": "<the note's wording>", "judge_finds": "convincing" |
+  > "suspicious"}].
+
+- **Lint:** the question shares no content word with any cue id or cue definition
+  (`comprehension.lint_question`, tested).
+
+**Cells.**
+- 4 models × 5 targets × {full, reversed} × 10 samples = **400 calls**.
+- Plus 5 placebo samples per model × target (100 calls), as a format check only.
+- Each sample's category is seeded from the 72 (seed 20261014).
+- Sampling is as in the run (T 0.6, top_p 0.9), in its own namespace.
+
+**Scoring** (deterministic, no grader; `comprehension.py`):
+- A strict JSON parse.
+- Answered qualities are matched one-to-one to the note's 4 belief lines by similarity: the larger
+  of the difflib ratio and the overlap of content-word stems, ignoring frame and valence words.
+  The threshold is 0.5.
+- A line is correct when its matched answer has the note's valence (full: convincing; reversed:
+  suspicious). An unmatched line is incorrect.
+- **A sample is correct when all 4 lines are correct.** Per-line accuracy is also reported.
+
+**Reported, per model × condition:**
+- the comprehension rate (share of correct samples), with 95% Wilson intervals;
+- per-line accuracy and parse rate;
+- full − reversed comprehension, with a 95% Newcombe (hybrid score) interval.
+
+**Interpretation rules for Test B, fixed now, per model.** "Reversed comprehension" is that
+model's point estimate.
+
+| Test B | reversed comprehension | reading |
+|---|---|---|
+| positive | any | belief use confirmed behaviourally; comprehension reported as context |
+| null or equivalent | ≥ 0.90 | priming despite comprehension |
+| null | < 0.90 | comprehension failure; B is not evidence for priming for that model |
+
+- Additionally, if reversed comprehension is lower than full (the difference CI excludes 0), the
+  report states that B partly reflects comprehension, not only use.
+- **Secondary:** the comprehension check cannot overturn the primary decision label.
+
 ## 11. Secondary analyses (exploratory)
 
 1. Test A (section 5).
@@ -292,8 +381,24 @@ excludes them. Degenerate lies are reported, not excluded.
 - C1 models only.
 - The equivalence margin of ±0.10 is in share units: about a quarter to a third of the first
   study's full − placebo lift.
-- The temperature is 0.6 for all liars, whereas the first study used 1.0 for three of them, so
-  cross-study comparisons carry a sampling change.
+- **Lift sizes are not comparable to the first study; only directions are.** This study uses
+  temperature 0.6 for all four liars, while the first used 1.0 for Gemma, gpt-4o-mini and Gemini.
+  Cross-study statements are limited to the sign of effects.
+- A null or equivalent B means the liar is reading words, not beliefs. It is consistent with
+  priming and with a failure to register the flipped valence (section 4), which the comprehension
+  check helps separate.
+
+## 12a. Data release
+
+- **Notice.** Any published lie corpus carries a prominent notice: *"Every story in this corpus is
+  fabricated by a language model on instruction. None is a factual account. Do not cite or reuse
+  as fact."*
+- The notice is repeated in a field on every record.
+- **Real organisations** named in fabricated stories (universities, agencies, companies, people)
+  will be considered for redaction before release, for example replaced with a typed placeholder
+  such as `[UNIVERSITY]`.
+- **Not decided now:** whether to redact, and how. It is decided before release and recorded.
+  Redaction never touches the analysis data, which keeps the verbatim text.
 
 ## 13. Changes from draft 1 (owner, 2026-10-09)
 
@@ -311,19 +416,25 @@ excludes them. Degenerate lies are reported, not excluded.
   - The three Pilot 2 blocks were read in full and are benign
     (`pilots/content_filter_reading.md`).
 
-## 14. Open for the owner
+## 13a. Decisions of 2026-10-10 (owner)
 
-- **Pilot for the last three categories:** astrology, volcanoes and parks, 16 lies each, about
-  $0.65 each and $2 in all. It has not run. A failure moves on to the next reserve (fossils,
-  comics, crafts, ...).
-- **Code fix before the full run (no instrument change).** The transport-retry pattern misses
-  EDSL's `LanguageModelNoResponseError: ... timed out`; Pilot 3 lost one Llama cell that way.
-  Proposed: add "timed out" and "LanguageModelNoResponseError" to the pattern, recorded as a
-  change made before data.
+- **D6** Pilot astrology, volcanoes and parks, cap $3, with replacements in reserve order (Pilot
+  4a).
+- **D7** TOST ±0.10 on Test B, Holm across four, with "inconclusive" pre-registered as an outcome
+  (section 4).
+- **D8** The balance check is an exact multinomial test across conditions and only flags
+  (section 7).
+- **D9** The transport-retry pattern is widened, with a test, recorded as a pre-data change
+  (commit 779b21c).
+- **D10** Additions:
+  - analysis discipline (section 4a);
+  - lift sizes not comparable to the first study (section 12);
+  - the reading of a null B (sections 4 and 12);
+  - data release (section 12a);
+  - the comprehension check (section 11a), piloted in Pilot 4b.
 
-- **[PROPOSED]** Equivalence family for Test B (section 4): TOST ±0.10, Holm across four.
-- **[PROPOSED]** Balance-check method and threshold (section 7): exact multinomial, p < 0.05 flags
-  only.
+## 14. Record
+
 - **The category draw** (section 9, `category_draw.json`). Two within-pool near-duplicate pairs
   are looser than the stated rule: telephones/radio and gemstones/gold. They were fixed before
   the draw and not changed after it; their only effect is that telephones and gemstones were
