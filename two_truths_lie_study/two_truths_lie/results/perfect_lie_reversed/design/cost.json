@@ -35,5 +35,18 @@
    "with_10pct_contingency_usd": 102.33262336333625
   }
  },
- "note": "Per-cell cost is the first study's measured mean, including gpt-5 on its 25% subsample, failed-call bounds and parse retries. The follow-up's notes are the same length class, so liar input barely changes; grading dominates (primary grader ~79% of the cost)."
+ "note": "Per-cell cost is the first study's measured mean, including gpt-5 on its 25% subsample, failed-call bounds and parse retries. The follow-up's notes are the same length class, so liar input barely changes; grading dominates (primary grader ~79% of the cost).",
+ "comprehension_check": {
+  "calls": 500,
+  "usd_per_call_pilot": 0.000175,
+  "usd": 0.087,
+  "source": "comprehension pilot, 120 calls, $0.021"
+ },
+ "pilots_spent_usd": {
+  "pilot1": 0.04,
+  "pilot2": 5.02,
+  "pilot3": 10.66,
+  "pilot4": 0.85,
+  "total": 16.57
+ }
 }

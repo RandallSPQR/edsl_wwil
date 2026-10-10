@@ -12,11 +12,13 @@ from src.perfect_lie import sequential as sq
 
 T = sys.argv[1] if len(sys.argv) > 1 else "0.6"
 SET = sys.argv[2] if len(sys.argv) > 2 else "first"
-RUN = HERE / (f"fabricability_t{T}" + ("" if SET == "first" else "_set2"))
-OUT = "fabricability_report" + ("" if SET == "first" else "_set2")
+SUF = {"first": "", "second": "_set2", "third": "_set3"}[SET]
+RUN = HERE / f"fabricability_t{T}{SUF}"
+OUT = "fabricability_report" + SUF
 inst = load_instrument(); cats = rv.load_categories()
-allcats = cats["original"] + cats["new"] if SET == "first" else cats["drawn_48"] + cats["replacements_for_failed"]
-NEW = set(cats["new"]) if SET == "first" else set(cats["drawn_48"])
+allcats = {"first": cats["original"] + cats["new"], "second": cats["drawn_48"] + cats["replacements_for_failed"],
+           "third": cats.get("replacements_for_pilot3_failed", []) + ["fossils"]}[SET]
+NEW = set(cats["new"]) if SET == "first" else set(cats["drawn_48"]) | set(cats.get("replacements_for_pilot3_failed", []))
 
 
 def grader_block(r):
@@ -75,9 +77,11 @@ out = {"run": str(RUN.relative_to(ROOT)), "temperature": float(T), "top_p": 0.9,
        "cells": mf["n_cells_planned"], "complete": mf["n_complete"], "error": mf["n_error"],
        "categories": cat_rep, "models": model_rep, "screen_matches_to_read": matches}
 (HERE / f"{OUT}.json").write_text(json.dumps(out, indent=1, default=str) + "\n")
-L = [f"# Pilot {'2' if SET == 'first' else '3'}: fabricability (placebo, 16 lies per category, T={T}, top_p 0.9)", "",
+CAPS = {'first': 10, 'second': 12, 'third': 3}
+PNUM = {'first': '2', 'second': '3', 'third': '4a'}[SET]
+L = [f"# Pilot {PNUM}: fabricability (placebo, 16 lies per category, T={T}, top_p 0.9)", "",
      "Criterion D as amended 2026-10-09: grader content-filter blocks are counted separately, not as failures.", "",
-     f"Spend ${mf['spend_usd']:.2f} (cap ${10 if SET == 'first' else 12}). Cells {mf['n_complete']}/{mf['n_cells_planned']} complete, {mf['n_error']} failed.", "",
+     f"Spend ${mf['spend_usd']:.2f} (cap ${CAPS[SET]}). Cells {mf['n_complete']}/{mf['n_cells_planned']} complete, {mf['n_error']} failed.", "",
      "| category | new | lies | failed | grader blocks | refusal / confession matches | non-viable | A: highest unnamed cue rate (Wilson LB) | placebo share of target cues (share of lies at 0) | verdict |",
      "|---|---|---|---|---|---|---|---|---|---|"]
 for cat, x in cat_rep.items():

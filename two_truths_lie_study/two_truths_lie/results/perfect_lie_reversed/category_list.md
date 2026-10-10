@@ -1,7 +1,8 @@
-# Follow-up categories: the 72 (draft)
+# Follow-up categories: the final 72
 
-- **69 have passed a fabricability pilot** (Pilots 2 and 3; T = 0.6, top_p 0.9, Stage 1 criteria, with D amended).
-- **3 are pending:** the next reserves by the pre-set order, which replace the three drawn categories that failed.
+**All 72 passed a fabricability pilot** (Pilots 2, 3 and 4a; T = 0.6, top_p 0.9, Stage 1 criteria, with D amended).
+
+**Final list:** science, biology, geography, technology, culture, food, music, art, architecture, transportation, business, language, weather, astronomy, oceans, agriculture, aviation, film, mathematics, games, fashion, exploration, animals, inventions, soap, camping, education, fishing, cemeteries, dolls, radio, television, printing, perfume, knots, deserts, islands, ice, gold, hotels, clocks, navigation, plants, bells, mining, lighthouses, dance, fountains, glass, mythology, furniture, circus, forests, rivers, stamps, zoos, salt, puppets, electricity, calendars, caves, festivals, currency, sand, lakes, gardening, etiquette, kites, philosophy, volcanoes, parks, fossils.
 
 ## First round, passed Pilot 2 (21)
 
@@ -21,13 +22,14 @@ soap, camping, education, fishing, cemeteries, dolls, radio, television, printin
 - umbrellas: direct_quotation 9 of 9
 - fireworks: historical_anchor 9 of 10
 
-## Pending pilot (next reserves in order, replacing the three above)
+## Next reserves, Pilot 4a (3 of 4 piloted pass)
 
-astrology, volcanoes, parks
+- **Pass:** volcanoes, parks, and fossils, which replaced astrology.
+- **Fail:** astrology, on criterion A (direct_quotation 8 of 9 unprompted).
 
 ## Remaining reserves, in order
 
-fossils, comics, crafts, shipwrecks, magic, mountains, mail, pirates, maps, candles, mirrors
+comics, crafts, shipwrecks, magic, mountains, mail, pirates, maps, candles, mirrors
 
 ## Not in use
 
