@@ -13,7 +13,10 @@ import re
 from typing import Optional
 
 TRANSPORT_PATTERN = re.compile(
-    r"RateLimitError|Error code: 429|APITimeoutError|Request timed out|APIConnectionError|Connection error",
+    r"RateLimitError|Error code: 429|APITimeoutError|Request timed out|APIConnectionError|Connection error"
+    # Pre-data change for the reversed-note follow-up (owner, 2026-10-10): EDSL's own timeout wording.
+    # Only the timeout form of LanguageModelNoResponseError, not every no-response error.
+    r"|LanguageModelNoResponseError: Language model timed out",
     re.IGNORECASE)
 BACKOFF_SECONDS = (5, 15, 45, 90, 180)
 

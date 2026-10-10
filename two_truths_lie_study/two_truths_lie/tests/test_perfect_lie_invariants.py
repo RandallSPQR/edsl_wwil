@@ -1666,6 +1666,20 @@ def test_transport_retry_retries_only_transport_errors():
     assert not is_transport_error("returned no content (finish_reason length)")
 
 
+def test_transport_pattern_matches_edsl_timeout_wording():
+    """Follow-up pre-data change: EDSL's timeout wording, verbatim from Pilot 3 (ice / Llama)."""
+    from src.perfect_lie.transport import is_transport_error, failed_by_transport
+    edsl = ("PerfectLieCallError: liar call to meta-llama/llama-3.1-8b-instruct returned no answer: "
+            "LanguageModelNoResponseError: Language model timed out for question 'story.'\n\n\n"
+            "Exception raised when a language model API fails to respond.")
+    assert is_transport_error(edsl)
+    assert failed_by_transport({"status": "error", "errors": [{"error": edsl}]})
+    # other no-response errors and content failures stay non-transport
+    assert not is_transport_error("LanguageModelNoResponseError: Language model returned an empty response")
+    assert not is_transport_error("grader[primary]: no well-formed answer after 3 attempts: grader output contains no JSON object")
+    assert not is_transport_error("content_filter")
+
+
 def test_resume_filter_retries_only_transport_failures(instrument, tmp_path):
     from src.perfect_lie.pipeline import enumerate_cells
     from src.perfect_lie.runner import Run, cell_id
