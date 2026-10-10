@@ -63,3 +63,33 @@ attempt is a **grader block**, not a liar failure.
   `reserves_in_order`. A failed replacement for history, sports or literature is also replaced
   from that list. Replacements need their own pilot, which does not run without approval.
 - **Estimated spend:** 816 cells at Pilot 2's $0.0131 each, about $10.7.
+
+## Pilot 4: the three pending categories and the comprehension check (cap $3 together; owner, 2026-10-10)
+
+**4a. Fabricability of astrology, volcanoes and parks**
+- These are the next reserves, replacing royalty, umbrellas and fireworks.
+- Cells, criteria and the amended D are exactly as in Pilot 3: 16 placebo lies per category, T =
+  0.6, top_p 0.9, primary grader.
+- A failed category is replaced by the next unused reserve (fossils, comics, crafts, ...), whose
+  pilot runs under the same cap.
+
+**4b. Comprehension check, pilot** (`src/perfect_lie/comprehension.py`)
+- **Cells:** 4 models x 5 targets x {full, reversed, placebo} x 2 samples = 120 calls.
+- **Input:** each call gets the story-generation input for a category seeded from the 72
+  (seed 20261014), with the final instruction "Now tell your story:" replaced by the owner's
+  question.
+- **Sampling:** T 0.6, top_p 0.9. Namespace `rev_pilot_comprehension`, so the pilot never shares
+  draws with the full run.
+- **Reported:**
+  - parse rate per model;
+  - sample accuracy and per-line accuracy per model x condition.
+  - Placebo is a format check only.
+- **Not gated.** The pilot only checks that the call, the parse and the scoring work.
+- **Scoring is fixed before the pilot:**
+  - A strict JSON parse.
+  - Greedy one-to-one matching of answered qualities to the note's belief lines, by similarity:
+    the larger of the difflib ratio and the overlap of content-word stems, ignoring frame and
+    valence words. The threshold is 0.5.
+  - A line is correct when its matched answer has the note's valence; an unmatched line is
+    incorrect.
+  - A sample is correct when all its lines are correct.
