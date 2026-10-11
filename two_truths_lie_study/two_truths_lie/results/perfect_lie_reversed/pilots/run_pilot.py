@@ -32,7 +32,7 @@ def cells_for(kind, temperature, liars, design, cats):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("kind", choices=("degeneration", "fabricability", "pilot4"))
+    ap.add_argument("kind", choices=("degeneration", "fabricability", "pilot4", "comprehension_v2"))
     ap.add_argument("--temperature", type=float)
     ap.add_argument("--cap", type=float, required=True)
     ap.add_argument("--concurrency", type=int, default=8)
@@ -48,6 +48,28 @@ def main():
         cats = cats["drawn_48"] + cats["replacements_for_failed"]
     else:
         cats = list(a.categories or cats["replacements_for_pilot3_failed"])
+    if a.kind == "comprehension_v2":
+        if a.cap > 2.15:
+            raise SystemExit("pilot 4c runs within Pilot 4's remaining $2.15")
+        from src.perfect_lie import comprehension as C
+        from src.edsl_adapter import PerfectLieAdapter
+        from src.perfect_lie.transport import TransportRetryAdapter
+        from run_perfect_lie import openrouter_billed_usd
+        cats72 = rv.load_categories()["final_72"]
+        comp = [rv.make_cell(category=C.seeded_category(cats72, m["id"], t, cond, 100 + k), target_id=t, condition=cond,
+                             model=m, replicate=k, temperature=0.6, top_p=TOP_P, placebo_id=design["placebo_for_target"][t])
+                for m in models["liar_models"] for t in design["targets"] for cond in ("full", "reversed", "placebo")
+                for k in (1, 2)]
+        run = C.make_run_class()(namespace="rev_pilot_comprehension_v2", run_dir=HERE / "comprehension_pilot_v2",
+                                 cells=comp, instrument=inst, models=dict(models, graders=[]),
+                                 adapter=TransportRetryAdapter(PerfectLieAdapter(service_name=models.get("service", "open_router"))),
+                                 spend_cap_usd=a.cap, concurrency=a.concurrency, models_path=DATA_DIR / "models.json",
+                                 stages=("liar",), trace_probe_locked=True, billing_probe=openrouter_billed_usd,
+                                 elicitation=False, retry_failed="transport")
+        mf = asyncio.run(run.run())
+        print(f"comprehension_v2: {mf['n_complete']}/{mf['n_cells_planned']} complete, {mf['n_error']} error, "
+              f"spend ${mf['spend_usd']:.3f}", flush=True)
+        return
     if a.kind == "pilot4":
         if a.cap > 3:
             raise SystemExit("pilot 4 cap is $3")

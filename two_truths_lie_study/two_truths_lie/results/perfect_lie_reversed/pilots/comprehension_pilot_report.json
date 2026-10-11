@@ -7,185 +7,185 @@
  "by_model_condition": {
   "google/gemini-2.5-flash-lite|full": {
    "n": 10,
-   "parsed": 10,
-   "parse_rate": 1.0,
-   "sample_correct": 10,
-   "sample_accuracy": 1.0,
-   "sample_accuracy_wilson95": [
+   "parsed_strict": 10,
+   "parsed_tolerant": 0,
+   "unparsed": 0,
+   "correct": 10,
+   "comprehension_rate": 1.0,
+   "comprehension_wilson95": [
     0.7224671969739421,
     0.9999999999999999
    ],
-   "line_accuracy": 1.0,
+   "line_accuracy_parsed": 1.0,
    "lines_unmatched": 0,
    "parse_errors": []
   },
   "google/gemini-2.5-flash-lite|placebo": {
    "n": 10,
-   "parsed": 10,
-   "parse_rate": 1.0,
-   "sample_correct": 10,
-   "sample_accuracy": 1.0,
-   "sample_accuracy_wilson95": [
+   "parsed_strict": 10,
+   "parsed_tolerant": 0,
+   "unparsed": 0,
+   "correct": 10,
+   "comprehension_rate": 1.0,
+   "comprehension_wilson95": [
     0.7224671969739421,
     0.9999999999999999
    ],
-   "line_accuracy": 1.0,
+   "line_accuracy_parsed": 1.0,
    "lines_unmatched": 0,
    "parse_errors": []
   },
   "google/gemini-2.5-flash-lite|reversed": {
    "n": 10,
-   "parsed": 10,
-   "parse_rate": 1.0,
-   "sample_correct": 10,
-   "sample_accuracy": 1.0,
-   "sample_accuracy_wilson95": [
+   "parsed_strict": 10,
+   "parsed_tolerant": 0,
+   "unparsed": 0,
+   "correct": 10,
+   "comprehension_rate": 1.0,
+   "comprehension_wilson95": [
     0.7224671969739421,
     0.9999999999999999
    ],
-   "line_accuracy": 1.0,
+   "line_accuracy_parsed": 1.0,
    "lines_unmatched": 0,
    "parse_errors": []
   },
   "google/gemma-3-27b-it|full": {
    "n": 10,
-   "parsed": 10,
-   "parse_rate": 1.0,
-   "sample_correct": 10,
-   "sample_accuracy": 1.0,
-   "sample_accuracy_wilson95": [
+   "parsed_strict": 10,
+   "parsed_tolerant": 0,
+   "unparsed": 0,
+   "correct": 10,
+   "comprehension_rate": 1.0,
+   "comprehension_wilson95": [
     0.7224671969739421,
     0.9999999999999999
    ],
-   "line_accuracy": 1.0,
+   "line_accuracy_parsed": 1.0,
    "lines_unmatched": 0,
    "parse_errors": []
   },
   "google/gemma-3-27b-it|placebo": {
    "n": 10,
-   "parsed": 10,
-   "parse_rate": 1.0,
-   "sample_correct": 10,
-   "sample_accuracy": 1.0,
-   "sample_accuracy_wilson95": [
+   "parsed_strict": 10,
+   "parsed_tolerant": 0,
+   "unparsed": 0,
+   "correct": 10,
+   "comprehension_rate": 1.0,
+   "comprehension_wilson95": [
     0.7224671969739421,
     0.9999999999999999
    ],
-   "line_accuracy": 1.0,
+   "line_accuracy_parsed": 1.0,
    "lines_unmatched": 0,
    "parse_errors": []
   },
   "google/gemma-3-27b-it|reversed": {
    "n": 10,
-   "parsed": 10,
-   "parse_rate": 1.0,
-   "sample_correct": 4,
-   "sample_accuracy": 0.4,
-   "sample_accuracy_wilson95": [
+   "parsed_strict": 10,
+   "parsed_tolerant": 0,
+   "unparsed": 0,
+   "correct": 4,
+   "comprehension_rate": 0.4,
+   "comprehension_wilson95": [
     0.1681803285264069,
     0.6873262320788047
    ],
-   "line_accuracy": 0.85,
+   "line_accuracy_parsed": 0.85,
    "lines_unmatched": 0,
    "parse_errors": []
   },
   "meta-llama/llama-3.1-8b-instruct|full": {
    "n": 10,
-   "parsed": 4,
-   "parse_rate": 0.4,
-   "sample_correct": 0,
-   "sample_accuracy": 0.0,
-   "sample_accuracy_wilson95": [
+   "parsed_strict": 4,
+   "parsed_tolerant": 5,
+   "unparsed": 1,
+   "correct": 0,
+   "comprehension_rate": 0.0,
+   "comprehension_wilson95": [
     0.0,
-    0.4898908403969213
+    0.2775328030260577
    ],
-   "line_accuracy": 0.625,
-   "lines_unmatched": 0,
+   "line_accuracy_parsed": 0.4722222222222222,
+   "lines_unmatched": 5,
    "parse_errors": [
-    "no JSON list",
-    "Extra data: line 2 column 1 (char 131)",
-    "Expecting ':' delimiter: line 3 column 152 (char 428)",
-    "Expecting ':' delimiter: line 2 column 112 (char 238)",
-    "Extra data: line 2 column 1 (char 108)"
+    "no JSON list or object"
    ]
   },
   "meta-llama/llama-3.1-8b-instruct|placebo": {
    "n": 10,
-   "parsed": 6,
-   "parse_rate": 0.6,
-   "sample_correct": 0,
-   "sample_accuracy": 0.0,
-   "sample_accuracy_wilson95": [
+   "parsed_strict": 6,
+   "parsed_tolerant": 4,
+   "unparsed": 0,
+   "correct": 0,
+   "comprehension_rate": 0.0,
+   "comprehension_wilson95": [
     0.0,
-    0.39033429165637346
+    0.2775328030260577
    ],
-   "line_accuracy": 0.5833333333333334,
-   "lines_unmatched": 0,
-   "parse_errors": [
-    "Extra data: line 2 column 1 (char 125)",
-    "no JSON list",
-    "Expecting ':' delimiter: line 4 column 154 (char 435)",
-    "no JSON list"
-   ]
+   "line_accuracy_parsed": 0.575,
+   "lines_unmatched": 2,
+   "parse_errors": []
   },
   "meta-llama/llama-3.1-8b-instruct|reversed": {
    "n": 10,
-   "parsed": 6,
-   "parse_rate": 0.6,
-   "sample_correct": 0,
-   "sample_accuracy": 0.0,
-   "sample_accuracy_wilson95": [
+   "parsed_strict": 6,
+   "parsed_tolerant": 3,
+   "unparsed": 1,
+   "correct": 0,
+   "comprehension_rate": 0.0,
+   "comprehension_wilson95": [
     0.0,
-    0.39033429165637346
+    0.2775328030260577
    ],
-   "line_accuracy": 0.16666666666666666,
+   "line_accuracy_parsed": 0.19444444444444445,
    "lines_unmatched": 0,
    "parse_errors": [
-    "Extra data: line 2 column 1 (char 131)",
-    "Extra data: line 2 column 1 (char 128)",
-    "Extra data: line 2 column 1 (char 110)",
-    "no JSON list"
+    "no JSON list or object"
    ]
   },
   "openai/gpt-4o-mini|full": {
    "n": 10,
-   "parsed": 10,
-   "parse_rate": 1.0,
-   "sample_correct": 3,
-   "sample_accuracy": 0.3,
-   "sample_accuracy_wilson95": [
+   "parsed_strict": 10,
+   "parsed_tolerant": 0,
+   "unparsed": 0,
+   "correct": 3,
+   "comprehension_rate": 0.3,
+   "comprehension_wilson95": [
     0.10779126655639398,
     0.6032218546540291
    ],
-   "line_accuracy": 0.625,
+   "line_accuracy_parsed": 0.625,
    "lines_unmatched": 0,
    "parse_errors": []
   },
   "openai/gpt-4o-mini|placebo": {
    "n": 10,
-   "parsed": 10,
-   "parse_rate": 1.0,
-   "sample_correct": 4,
-   "sample_accuracy": 0.4,
-   "sample_accuracy_wilson95": [
+   "parsed_strict": 10,
+   "parsed_tolerant": 0,
+   "unparsed": 0,
+   "correct": 4,
+   "comprehension_rate": 0.4,
+   "comprehension_wilson95": [
     0.1681803285264069,
     0.6873262320788047
    ],
-   "line_accuracy": 0.75,
+   "line_accuracy_parsed": 0.75,
    "lines_unmatched": 0,
    "parse_errors": []
   },
   "openai/gpt-4o-mini|reversed": {
    "n": 10,
-   "parsed": 10,
-   "parse_rate": 1.0,
-   "sample_correct": 10,
-   "sample_accuracy": 1.0,
-   "sample_accuracy_wilson95": [
+   "parsed_strict": 10,
+   "parsed_tolerant": 0,
+   "unparsed": 0,
+   "correct": 10,
+   "comprehension_rate": 1.0,
+   "comprehension_wilson95": [
     0.7224671969739421,
     0.9999999999999999
    ],
-   "line_accuracy": 1.0,
+   "line_accuracy_parsed": 1.0,
    "lines_unmatched": 0,
    "parse_errors": []
   }

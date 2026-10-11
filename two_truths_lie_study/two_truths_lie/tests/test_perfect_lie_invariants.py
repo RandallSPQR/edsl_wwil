@@ -1787,8 +1787,58 @@ def test_comprehension_scoring_is_deterministic_and_valence_sensitive(instrument
     assert not any(x["matched"] for x in C.score(other, C.note_lines(P["P1"], P["P2"], "full"), "full")["lines"])
     for bad in ("no json", "[]", '[{"quality": "x", "judge_finds": "maybe"}]', '{"quality": "x"}'):
         try:
-            C.parse(bad)
+            C.parse_strict(bad)
             raise AssertionError(bad)
         except ValueError:
             pass
     assert C.parse('```json\n[{"quality": "x", "judge_finds": "Suspicious"}]\n```') == [{"quality": "x", "judge_finds": "suspicious"}]
+
+
+def test_comprehension_tolerant_parse_recovers_split_lists_only_when_strict_fails():
+    from src.perfect_lie import comprehension as C
+    split = ('[{"quality": "a", "judge_finds": "suspicious"}]\n[{"quality": "b", "judge_finds": "suspicious"}]')
+    items, mode = C.parse_with_mode(split)
+    assert mode == "tolerant" and [i["quality"] for i in items] == ["a", "b"]
+    items, mode = C.parse_with_mode('Here: [{"quality": "a", "judge_finds": "convincing"}] then a story.')
+    assert mode == "strict"
+    for bad in ("no json at all", '[{"quality": "x", "judge_finds": "maybe"}]', "* Trusts a story: suspicious"):
+        try:
+            C.parse(bad)
+            raise AssertionError(bad)
+        except ValueError:
+            pass
+
+
+def test_comprehension_randomisation_is_seeded_and_changes_only_order(instrument):
+    from src.perfect_lie import comprehension as C
+    from src.perfect_lie import reversed as rv
+    P = instrument.personas
+    vs = [C.variant("m", "P1", "full", k) for k in range(1, 41)]
+    assert vs == [C.variant("m", "P1", "full", k) for k in range(1, 41)]          # seeded
+    assert {v["option_order"] for v in vs} == {0, 1}                                # both orders occur
+    assert len({tuple(v["line_order"]) for v in vs}) > 5                            # line orders vary
+    for v in vs[:5]:
+        pr = C.prompts(P["P1"], P["P2"], "reversed", "kites", v)
+        base = rv.private_notes(P["P1"], P["P2"])["reversed"]
+        note = pr["system_prompt"][len(pr["system_prompt"]) - len(base):]
+        assert sorted(note.split("\n")) == sorted(base.split("\n"))                 # same lines, reordered
+        assert note.split("\n")[-1] == base.split("\n")[-1]                         # filler stays last
+    a, b = C.question(C.OPTION_ORDERS[0]), C.question(C.OPTION_ORDERS[1])
+    assert a != b and a.replace("convincing", "@").replace("suspicious", "convincing").replace("@", "suspicious") == b
+
+
+def test_comprehension_discrimination_separates_bias_from_understanding():
+    from src.perfect_lie import comprehension as C
+    def recs(full_ans, rev_ans, n=30):
+        mk = lambda c, a: {"model_id": "m", "condition": c,
+                           "score": {"lines": [{"matched": True, "answer": a}] * 4}}
+        return [mk("full", full_ans) for _ in range(n)] + [mk("reversed", rev_ans) for _ in range(n)]
+    perfect = C.discrimination(recs("convincing", "suspicious"), n_boot=200)["m"]
+    assert perfect["balanced_accuracy"] == 1 and perfect["youden_j"] == 1 and perfect["comprehension_holds"]
+    lean = C.discrimination(recs("suspicious", "suspicious"), n_boot=200)["m"]
+    assert lean["acc_reversed"] == 1 and lean["balanced_accuracy"] == 0.5 and lean["youden_j"] == 0
+    assert lean["criterion_c"] < 0 and not lean["comprehension_holds"]               # leans "suspicious"
+    flipped = C.discrimination(recs("suspicious", "convincing"), n_boot=200)["m"]
+    assert flipped["balanced_accuracy"] == 0 and flipped["youden_j"] == -1
+    unparsed = [{"model_id": "m", "condition": c, "score": None} for c in ("full", "reversed") for _ in range(10)]
+    assert C.discrimination(unparsed, n_boot=50)["m"]["balanced_accuracy"] == 0    # unparsed = incorrect
