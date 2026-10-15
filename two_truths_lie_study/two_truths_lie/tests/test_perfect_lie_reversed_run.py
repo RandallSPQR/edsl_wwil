@@ -65,8 +65,10 @@ def test_preflight_frozen_hashes_and_lock(tmp_path):
     assert any("reversed_notes.json" in p for p in R.check_frozen(root=fake_root))
 
 
-def test_real_lock_is_set():
-    assert any("LOCKED" in p for p in R.preflight())
+def test_lock_file_has_the_followup_entry():
+    """The real lock may be set or (after the owner's unlock) not; it must exist and be a bool."""
+    locks = json.loads(R.LOCKS_PATH.read_text())
+    assert isinstance(locks[R.LOCK_KEY]["locked"], bool) and locks["trace_probe"]["locked"] is True
 
 
 def test_end_to_end_with_fake_adapter(instrument, tmp_path, cfg, monkeypatch):
@@ -93,8 +95,13 @@ def test_end_to_end_with_fake_adapter(instrument, tmp_path, cfg, monkeypatch):
     assert not any("Now tell your story:" in c["user_prompt"] for c in fake.calls[-500:])
 
 
-def test_dry_run_cli_makes_no_calls(capsys):
+def test_dry_run_cli_makes_no_calls(capsys, tmp_path, monkeypatch):
+    """Uses its own LOCKED lock file, so --go can never start a live run from a test."""
     import run_perfect_lie_reversed as cli
+    locked = tmp_path / "locks.json"
+    locked.write_text(json.dumps({R.LOCK_KEY: {"locked": True}, "trace_probe": {"locked": True}}))
+    real = R.preflight
+    monkeypatch.setattr(R, "preflight", lambda **kw: real(locks_path=locked))
     assert cli.main(["--dry-run"]) == 0
     out = capsys.readouterr().out
     assert "4320 lies" in out and "500 calls" in out and "REFUSES" in out and "LOCKED" in out
