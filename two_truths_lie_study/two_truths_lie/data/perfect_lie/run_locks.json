@@ -9,7 +9,7 @@
     "reason": "Owner: the trace probe is a final set waiting on another run. Do not run it in any mode."
   },
   "reversed_followup_full_run": {
-    "locked": true,
-    "reason": "Owner, 2026-10-11: pre-registration frozen (tag perfect-lie-reversed-prereg-v1). The full run stays locked until the owner confirms the registration is posted on OSF. Pilots 1-4c are complete."
+    "locked": false,
+    "reason": "Owner unlocked 2026-10-15 after posting the registration on OSF (tag perfect-lie-reversed-prereg-v1 at 5261806): 'unlock, cap $125 flag at $50 - 70 - 90'. Kill cap $125 for main run + comprehension check together; owner flagged at $50, $70 and $90."
   }
 }
