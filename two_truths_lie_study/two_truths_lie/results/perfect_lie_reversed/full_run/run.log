@@ -84,3 +84,7 @@ KeyboardInterrupt
 main run: 4320 lies; comprehension: 500 calls
 estimate: main $69.77 + comprehension $0.09 = $69.86 (registered: flag at $100, kill cap $125)
 preflight: ok
+=== resume 2026-10-15T23:48:50Z ===
+main run: 4320 lies; comprehension: 500 calls
+estimate: main $69.77 + comprehension $0.09 = $69.86 (registered: flag at $100, kill cap $125)
+preflight: ok
