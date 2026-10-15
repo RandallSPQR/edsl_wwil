@@ -994,3 +994,17 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
 Not conflicts, but recorded: EDSL sends `logprobs`, `top_logprobs`, and penalty parameters
 to every OpenRouter model. `top_logprobs` without `logprobs` is now dropped for the
 `open_router` service; penalties are left to the smoke test.
+
+36. **Reversed-note follow-up: registered, and full-run code written (2026-10-15).**
+    - **Registration:** the owner posted it on OSF. Tag `perfect-lie-reversed-prereg-v1` points to
+      `5261806`, verified; the tagged `PREREG_REVERSED.md` sha256 is `3214a9b3…`.
+    - **Run code, written after the freeze:** `src/perfect_lie/reversed_run.py` and
+      `run_perfect_lie_reversed.py`. It imports the frozen modules and changes none of them.
+    - **Preflight** refuses to start if any of the 16 frozen files or the rubric differs from its
+      registered hash, or while the owner's lock is set.
+    - **The gpt-5 subsample seed is the registration's 20261009,** applied in the run code.
+      `models.json` keeps the first study's 20261006.
+    - **Tests:** 7 offline tests with the fake adapter, no calls. 114 tests pass in total.
+    - **Dry run:** 4,320 lies plus 500 comprehension calls, estimated $69.86. The flag is at $100
+      and the kill cap at $125. Refused: locked.
+    - The full run stays **locked**, pending the owner's unlock.
