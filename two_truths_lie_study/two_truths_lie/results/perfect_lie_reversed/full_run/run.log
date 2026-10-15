@@ -1,3 +1,86 @@
 main run: 4320 lies; comprehension: 500 calls
 estimate: main $69.77 + comprehension $0.09 = $69.86 (registered: flag at $100, kill cap $125)
 preflight: ok
+Traceback (most recent call last):
+  File "/home/user/edsl_wwil/two_truths_lie_study/two_truths_lie/run_perfect_lie_reversed.py", line 59, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/user/edsl_wwil/two_truths_lie_study/two_truths_lie/run_perfect_lie_reversed.py", line 47, in main
+    mf = asyncio.run(main_run.run())
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/nest_asyncio.py", line 30, in run
+    return loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/nest_asyncio.py", line 92, in run_until_complete
+    self._run_once()
+  File "/usr/local/lib/python3.11/dist-packages/nest_asyncio.py", line 133, in _run_once
+    handle._run()
+  File "/usr/lib/python3.11/asyncio/events.py", line 84, in _run
+    self._context.run(self._callback, *self._args)
+  File "/usr/lib/python3.11/asyncio/tasks.py", line 360, in __wakeup
+    self.__step()
+  File "/usr/lib/python3.11/asyncio/tasks.py", line 277, in __step
+    result = coro.send(None)
+             ^^^^^^^^^^^^^^^
+  File "/home/user/edsl_wwil/two_truths_lie_study/two_truths_lie/src/perfect_lie/runner.py", line 238, in guarded
+    await self.run_cell(cell)
+  File "/home/user/edsl_wwil/two_truths_lie_study/two_truths_lie/src/perfect_lie/runner.py", line 309, in run_cell
+    await handlers[stage]()
+  File "/home/user/edsl_wwil/two_truths_lie_study/two_truths_lie/src/perfect_lie/runner.py", line 433, in _graders
+    parsed, out, attempt = await self._call_parsed(
+                           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/edsl_wwil/two_truths_lie_study/two_truths_lie/src/perfect_lie/runner.py", line 364, in _call_parsed
+    rec["cost_usd"] = rec.get("cost_usd", 0.0) + await self._charge(entry, out["usage"])
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/edsl_wwil/two_truths_lie_study/two_truths_lie/src/perfect_lie/runner.py", line 282, in _charge
+    self._refresh_billed()
+  File "/home/user/edsl_wwil/two_truths_lie_study/two_truths_lie/src/perfect_lie/runner.py", line 249, in _refresh_billed
+    self.billed_delta = max(self.billed_delta, self.billing_probe() - self.billed_at_start)
+                                               ^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/edsl_wwil/two_truths_lie_study/two_truths_lie/run_perfect_lie.py", line 176, in openrouter_billed_usd
+    with urllib.request.urlopen(req, timeout=20) as r:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/urllib/request.py", line 216, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/urllib/request.py", line 519, in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/urllib/request.py", line 536, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/urllib/request.py", line 496, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.11/urllib/request.py", line 1404, in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/urllib/request.py", line 1361, in do_open
+    h.request(req.get_method(), req.selector, req.data, headers,
+  File "/usr/lib/python3.11/http/client.py", line 1351, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/usr/lib/python3.11/http/client.py", line 1397, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/usr/lib/python3.11/http/client.py", line 1346, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/lib/python3.11/http/client.py", line 1106, in _send_output
+    self.send(msg)
+  File "/usr/lib/python3.11/http/client.py", line 1044, in send
+    self.connect()
+  File "/usr/lib/python3.11/http/client.py", line 1516, in connect
+    super().connect()
+  File "/usr/lib/python3.11/http/client.py", line 1020, in connect
+    self._tunnel()
+  File "/usr/lib/python3.11/http/client.py", line 987, in _tunnel
+    (version, code, message) = response._read_status()
+                               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/http/client.py", line 298, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/socket.py", line 718, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt
+main run: 4320 lies; comprehension: 500 calls
+estimate: main $69.77 + comprehension $0.09 = $69.86 (registered: flag at $100, kill cap $125)
+preflight: ok
