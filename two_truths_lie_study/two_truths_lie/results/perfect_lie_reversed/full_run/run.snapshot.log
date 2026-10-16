@@ -96,3 +96,11 @@ Exception report saved to /home/user/edsl_wwil/two_truths_lie_study/two_truths_l
 main run: 4320 lies; comprehension: 500 calls
 estimate: main $69.77 + comprehension $0.09 = $69.86 (registered: flag at $100, kill cap $125)
 preflight: ok
+Failed to send error report: 403 Forbidden
+Exceptions were raised.
+
+Exception report saved to /home/user/edsl_wwil/two_truths_lie_study/two_truths_lie/tmpfdffxwx0.html
+Failed to send error report: 403 Forbidden
+Exceptions were raised.
+
+Exception report saved to /home/user/edsl_wwil/two_truths_lie_study/two_truths_lie/tmp45ukqlb2.html
