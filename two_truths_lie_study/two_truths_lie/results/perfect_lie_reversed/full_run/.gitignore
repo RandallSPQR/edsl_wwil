@@ -1,2 +1,4 @@
 records.jsonl
+run.log
+snapshot.log
 !records.jsonl.gz

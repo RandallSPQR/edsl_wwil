@@ -7,8 +7,9 @@ REPO=$(git rev-parse --show-toplevel)
 while true; do
   for s in main comprehension; do
     if [ -f $s/records.jsonl ]; then cp $s/records.jsonl $s/.snap && gzip -c $s/.snap > $s/records.jsonl.gz && rm $s/.snap; fi
+    [ -f $s/manifest.json ] && cp $s/manifest.json $s/manifest.snapshot.json
   done
-  git -C "$REPO" add -f $(ls -d */records.jsonl.gz */manifest.json run.log 2>/dev/null | sed "s|^|$PWD/|") >/dev/null 2>&1
+  git -C "$REPO" add -f $(cp run.log run.snapshot.log 2>/dev/null; ls -d */records.jsonl.gz */manifest.snapshot.json run.snapshot.log 2>/dev/null | sed "s|^|$PWD/|") >/dev/null 2>&1
   git -C "$REPO" commit -q -m "Reversed follow-up: full-run snapshot $(date -u +%FT%TZ)
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
