@@ -1,0 +1,12 @@
+{
+ "truth": {
+  "m1": 0.3,
+  "m2": 0.3,
+  "m3": 0.0,
+  "m4": 0.0
+ },
+ "n_studies": 450,
+ "null_models_efficacy_any": 0.06222222222222222,
+ "null_models_efficacy_per_model": 0.03111111111111111,
+ "effect_models_power": 1.0
+}
