@@ -300,3 +300,8 @@ Failed to send error report: 403 Forbidden
 Exceptions were raised.
 
 Exception report saved to /home/user/edsl_wwil/two_truths_lie_study/two_truths_lie/tmp69ooapah.html
+/home/user/edsl_wwil/edsl/coop/ep_key_handling.py:153: UserWarning: WARNING: The Expected Parrot API key from the environment variable differs from the one stored in the config directory. Using the one from the environment variable.
+  warnings.warn(
+Exceptions were raised.
+
+Exception report saved to /home/user/edsl_wwil/two_truths_lie_study/two_truths_lie/tmp_5vcsgzm.html
