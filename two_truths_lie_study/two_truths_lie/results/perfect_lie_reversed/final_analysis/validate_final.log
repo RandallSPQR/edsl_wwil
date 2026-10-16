@@ -1,0 +1,91 @@
+{
+ "scenario": "S2 first-study-like (power.py)",
+ "design": "72 categories x 5 personas x 3 conditions x 1 replicate, 4 models",
+ "null_B0": {
+  "B_true": 0.0,
+  "n_studies": 300,
+  "n_model_fits": 1200,
+  "efficacy_any_model": 0.04,
+  "efficacy_per_model": 0.01,
+  "equivalence_per_model": 0.7941666666666667,
+  "ci_coverage": 0.9416666666666667,
+  "median_error": -0.000260740686733356,
+  "share_below_truth": 0.5025,
+  "fallback_share": 0.1075,
+  "labels": {
+   "no valence effect beyond \u00b10.10": 953,
+   "inconclusive": 235,
+   "belief-tracking": 6,
+   "fewer named cues under full than under reversed": 6
+  }
+ },
+ "B010": {
+  "B_true": 0.1,
+  "n_studies": 150,
+  "n_model_fits": 600,
+  "efficacy_any_model": 0.9933333333333333,
+  "efficacy_per_model": 0.88,
+  "equivalence_per_model": 0.006666666666666667,
+  "ci_coverage": 0.965,
+  "median_error": -2.154601918989002e-05,
+  "share_below_truth": 0.5,
+  "fallback_share": 0.10333333333333333,
+  "labels": {
+   "belief-tracking": 528,
+   "inconclusive": 68,
+   "no valence effect beyond \u00b10.10": 4
+  }
+ },
+ "B030": {
+  "B_true": 0.3,
+  "n_studies": 150,
+  "n_model_fits": 600,
+  "efficacy_any_model": 1.0,
+  "efficacy_per_model": 1.0,
+  "equivalence_per_model": 0.0,
+  "ci_coverage": 0.955,
+  "median_error": 0.0005758811707093081,
+  "share_below_truth": 0.49166666666666664,
+  "fallback_share": 0.08833333333333333,
+  "labels": {
+   "belief-tracking": 600
+  }
+ },
+ "B_minus010_equivalence_boundary": {
+  "B_true": -0.1,
+  "n_studies": 150,
+  "n_model_fits": 600,
+  "efficacy_any_model": 0.9933333333333333,
+  "efficacy_per_model": 0.8266666666666667,
+  "equivalence_per_model": 0.013333333333333334,
+  "ci_coverage": 0.9466666666666667,
+  "median_error": 0.0012279761109119242,
+  "share_below_truth": 0.4716666666666667,
+  "fallback_share": 0.1,
+  "labels": {
+   "fewer named cues under full than under reversed": 496,
+   "inconclusive": 96,
+   "no valence effect beyond \u00b10.10": 8
+  }
+ },
+ "mixed_two_effects_two_nulls": {
+  "truth": {
+   "m1": 0.3,
+   "m2": 0.3,
+   "m3": 0.0,
+   "m4": 0.0
+  },
+  "n_studies": 150,
+  "null_models_efficacy_any": 0.10666666666666667,
+  "null_models_efficacy_per_model": 0.056666666666666664,
+  "effect_models_power": 1.0
+ },
+ "pipeline_discrete_asymmetric_missingness": {
+  "design": "synth.make_main, B = 0, discrete cues, 30% of full lies for P1 and P5 failed",
+  "n_studies": 100,
+  "efficacy_any_model": 0.04,
+  "efficacy_per_model": 0.01,
+  "median_B": -0.0018389837325672714,
+  "fallback_share": 0.19
+ }
+}
