@@ -24,17 +24,18 @@ def render(res, cfg) -> str:
          f"Gate (fresh, primary vs Google): excluded {res['gate']['excluded']}; flagged {res['gate']['flagged']}. "
          f"Pool: {res['pool']}. Lies analysed: {res['n_lies_analysed']}. Confessions excluded: {res['confessions_excluded']}.", "",
          "## Primary: Test B = full - reversed (registered, section 4)", "",
-         "| liar | label | B | SE | t (df) | method | efficacy alpha at decision | equivalence alpha at decision |",
-         "|---|---|---|---|---|---|---|---|"]
+         "| liar | label | direction | B | SE | t (df) | method | efficacy alpha at decision | equivalence alpha at decision |",
+         "|---|---|---|---|---|---|---|---|---|"]
     for m in M:
         d = res["primary"][m]
-        L.append(f"| {NAME.get(m, m)} | **{d['label']}** | {f(d['B'])} | {f(d['B_se'], 4)} | {f(d['t'], 2)} ({d['df']}) | "
+        L.append(f"| {NAME.get(m, m)} | **{d['label']}** | {d['direction']} | {f(d['B'])} | {f(d['B_se'], 4)} | {f(d['t'], 2)} ({d['df']}) | "
                  f"{d['method']}{' — ' + d['fallback_reason'] if d.get('fallback_reason') else ''} | "
                  f"{d['efficacy_alpha_at_decision'] or 'not rejected'} | {d['equivalence_alpha_at_decision'] or 'not rejected'} |")
     L += ["", "## Missing data (registered, section 7)", "", "Cells by model x condition (complete / failed / grader block):", ""]
     for k, v in res["missing"]["by_model_condition"].items():
         m, c = k.split("|")
         L.append(f"- {NAME.get(m, m)}, {c}: {v['complete']} / {v['failed']} / {v['grader_block']}")
+    L += ["", "Degenerate lies (reported, never excluded): " + ", ".join(f"{k}: {v}" for k, v in res["missing"]["degenerate_lies_by_model_condition"].items() if v) or "none", ""]
     L += ["", "Grader-block balance check (exact multinomial, Monte Carlo; flag only):", ""]
     for m, v in res["balance_check"].items():
         L.append(f"- {NAME.get(m, m)}: blocks {v['blocks']}, p = {v['p']:.3f}{' — FLAGGED' if v['flag'] else ''}")
@@ -43,7 +44,7 @@ def render(res, cfg) -> str:
         for m, v in res["tipping_point"].items():
             L.append(f"- {NAME.get(m, m)}: " + (v.get("note") if not v.get("applies") else
                      f"missing {v.get('missing')}, delta {f(v.get('delta'))}{' (' + v['note'] + ')' if v.get('note') else ''}, "
-                     f"t at worst case {f(v.get('t_worst_case'), 2)}"))
+                     f"worst case holds: {v.get('worst_case_holds')}; {v.get('direction')}; grid {v.get('grid_step')}"))
     L += ["", "## Comprehension check (secondary, section 11a; cannot change the label)", "",
           "| liar | balanced accuracy [95%] | J | criterion c | holds | reading |", "|---|---|---|---|---|---|"]
     for m in M:
@@ -55,13 +56,15 @@ def render(res, cfg) -> str:
           "| liar | A [95% CI] | placebo lies at s = 0 |", "|---|---|---|"]
     for m in M:
         a = res["test_A"][m]
-        L.append(f"| {NAME.get(m, m)} | {f(a['A'])} [{f(a['ci95'][0])}, {f(a['ci95'][1])}] | {a['placebo_share_at_zero']:.0%} |")
+        ci = a["ci95"]
+        L.append(f"| {NAME.get(m, m)} | {f(a['A'])} [{f(ci[0]) if ci else 'n/a'}, {f(ci[1]) if ci else 'n/a'}] (df {a['df']}) | {a['placebo_share_at_zero']:.0%} |")
     L += ["", "## Robustness (section 4)", ""]
     rob = res["robustness"]
+    pres = lambda v: ", ".join(f"{k} {x}" for k, x in v["preserved"].items() if k != "note")
     for key in ("m1_random_intercepts_assumes_no_heterogeneity", "nonviable_excluded"):
-        L.append(f"- {key}: " + "; ".join(f"{NAME.get(m, m)} B {f(v['B'])}, holds {v['decision_holds']}" for m, v in rob[key].items()))
+        L.append(f"- {key}: " + "; ".join(f"{NAME.get(m, m)} B {f(v['B'])} ({pres(v)})" for m, v in rob[key].items()))
     pg = rob["pooled_gate"]
-    L.append(f"- pooled gate (kappa {pg['kappa']:.3f}): " + ("; ".join(f"{NAME.get(m, m)} B {f(v['B'])}, holds {v['decision_holds']}"
+    L.append(f"- pooled gate (kappa {pg['kappa']:.3f}): " + ("; ".join(f"{NAME.get(m, m)} B {f(v['B'])} ({pres(v)})"
                                                                     for m, v in pg["models"].items()) if "models" in pg else pg.get("note", "")))
     L.append("- gpt-5 subsample (descriptive): " + "; ".join(f"{NAME.get(m, m)} B {f(v['est']) if v else 'n/a'} (K {v['K'] if v else 0})"
                                                          for m, v in rob["gpt5_subsample_descriptive"].items()))

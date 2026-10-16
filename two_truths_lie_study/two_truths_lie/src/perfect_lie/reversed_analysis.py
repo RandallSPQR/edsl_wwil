@@ -123,78 +123,107 @@ def lie_table(records: Sequence[Dict], cues_by_target: Dict[str, List[str]], gra
 
 # ------------------------------------------------------------------ the contrast (sections 4, 5)
 
-# Section 4: the fit fails on non-convergence, a singular fit, or a non-positive-definite Hessian. Only
-# warnings about the FINAL estimate count: statsmodels also warns when an early optimiser fails and it
-# retries with another, which is not a failure of the fit.
-_FAIL_MSG = re.compile(r"boundary of the parameter space|singular|Hessian matrix .* not positive definite", re.I)
+# Section 4: the fit fails on non-convergence, a singular fit, or a non-positive-definite Hessian.
+# Review fix 1 (2026-10-16): all three are judged on the FINAL estimate, never from warnings
+# (statsmodels warns on early-optimiser retries, on any random-effect variance below an absolute 0.01,
+# and checks only the Hessian diagonal). Explicit definitions and tolerances:
+SINGULAR_TOL = 1e-4      # lme4's isSingular rule: a diagonal entry of the relative covariance factor
+                         # chol(cov_re / scale) below 1e-4 (or a failed Cholesky) is a singular fit
+HESSIAN_RTOL = 1e-8      # PD if every eigenvalue of -H exceeds 1e-8 x the largest |eigenvalue|
+
+
+def fit_diagnostics(m) -> Optional[str]:
+    """None if the final fit is usable; otherwise the registered failure it shows."""
+    if not m.converged:
+        return "did not converge"
+    try:
+        L = np.linalg.cholesky(np.asarray(m.cov_re, float) / float(m.scale))
+        if np.min(np.abs(np.diag(L))) < SINGULAR_TOL:
+            return f"singular fit (relative covariance factor diagonal below {SINGULAR_TOL})"
+    except np.linalg.LinAlgError:
+        return "singular fit (relative covariance not positive definite)"
+    hess, _ = m.model.hessian(m.params_object)
+    ev = np.linalg.eigvalsh(-np.asarray(hess, float))
+    if not np.all(np.isfinite(ev)) or ev.min() <= HESSIAN_RTOL * np.max(np.abs(ev)):
+        return "final Hessian not positive definite"
+    return None
 
 
 def category_t(df: pd.DataFrame, a: str, b: str) -> Dict:
-    """Fallback: per-category mean of (a - b) over personas, one-sample t on the K values."""
-    m = df.pivot_table(index="category", columns="condition", values="s", aggfunc="mean")
-    d = (m[a] - m[b]).dropna().to_numpy()
+    """Fallback (review fix 2): per category, the mean over personas of the PAIRED difference (a - b)
+    within each (category, persona); personas missing either condition are left out of that category;
+    a category with no pair is left out. One-sample t on the K values, K - 1 df (each contrast has its
+    own K)."""
+    piv = df[df.condition.isin([a, b])].pivot_table(index=["category", "persona"], columns="condition",
+                                                    values="s", aggfunc="mean")
+    if a not in piv or b not in piv:
+        return {"est": float("nan"), "se": float("nan"), "df": 0, "K": 0}
+    d = (piv[a] - piv[b]).dropna().groupby(level="category").mean().to_numpy()
     k = len(d)
     se = d.std(ddof=1) / math.sqrt(k) if k > 1 else float("nan")
-    return {"est": float(d.mean()), "se": float(se), "df": k - 1, "K": k}
+    return {"est": float(d.mean()) if k else float("nan"), "se": float(se), "df": k - 1, "K": k}
 
 
 def fit_model(df: pd.DataFrame) -> Dict:
     """Primary fit for one liar model. Returns B = full - reversed and A = reversed - placebo, each with
-    SE and K - 1 df, from the mixed model, or from the per-category fallback when the fit fails."""
+    SE and df, from the mixed model (df = K - 1), or from the per-category fallback when the fit fails
+    (each contrast with its own K - 1)."""
     import statsmodels.formula.api as smf
     K = df["category"].nunique()
     out = {"K": K, "n": len(df)}
     if len(df) == 0 or not {"full", "reversed", "placebo"} <= set(df["condition"]) or K < 3:
         nan = float("nan")
         return {**out, "method": "no data", "B": nan, "B_se": nan, "A": nan, "A_se": nan, "df": max(K - 1, 1),
-                "note": "too few lies or conditions to fit"}
+                "A_df": max(K - 1, 1), "note": "too few lies or conditions to fit"}
     reason = None
     try:
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             m = smf.mixedlm("s ~ C(condition, Treatment('reversed')) + C(persona)", df, groups="category",
                             re_formula="~C(condition, Treatment('reversed'))").fit(reml=True)
-        msgs = [str(x.message) for x in w]
         kf = "C(condition, Treatment('reversed'))[T.full]"
         kp = "C(condition, Treatment('reversed'))[T.placebo]"
-        bad = [x for x in msgs if _FAIL_MSG.search(x)]
-        eig = np.linalg.eigvalsh(np.asarray(m.cov_re, float))
-        if not m.converged:
-            reason = "did not converge"
-        elif bad:
-            reason = "fit warning: " + bad[0][:120]
-        elif not np.all(np.isfinite([m.bse[kf], m.bse[kp]])):
+        reason = fit_diagnostics(m)
+        if reason is None and not np.all(np.isfinite([m.bse[kf], m.bse[kp]])):
             reason = "non-finite standard error"
-        elif eig.min() <= 1e-10:
-            reason = "singular random-effects covariance"
         if reason is None:
             out.update(method="mixed model", B=float(m.params[kf]), B_se=float(m.bse[kf]),
-                       A=float(-m.params[kp]), A_se=float(m.bse[kp]), df=K - 1)
+                       A=float(-m.params[kp]), A_se=float(m.bse[kp]), df=K - 1, A_df=K - 1,
+                       fit_warnings=sorted({str(x.message)[:90] for x in w}))
             return out
     except Exception as e:  # noqa: BLE001 — any fit failure takes the registered fallback
         reason = f"{type(e).__name__}: {str(e)[:120]}"
     b, a = category_t(df, "full", "reversed"), category_t(df, "reversed", "placebo")
     out.update(method="per-category t-test (fallback)", fallback_reason=reason, B=b["est"], B_se=b["se"],
-               A=a["est"], A_se=a["se"], df=b["df"])
+               A=a["est"], A_se=a["se"], df=b["df"], A_df=a["df"], K_B=b["K"], K_A=a["K"])
     return out
 
 
+def _testable(est: float, se: float, df) -> bool:
+    return bool(np.isfinite(est) and np.isfinite(se) and se > 0 and df is not None and df >= 1)
+
+
 def _p_two(est: float, se: float, df: int) -> float:
-    return float(2 * stats.t.sf(abs(est / se), df))
+    """Review fix 3: an untestable contrast (SE zero or non-finite) has p = NaN, never an exception."""
+    return float(2 * stats.t.sf(abs(est / se), df)) if _testable(est, se, df) else float("nan")
 
 
 def _p_tost(est: float, se: float, df: int, margin: float = MARGIN) -> float:
+    if not _testable(est, se, df):
+        return float("nan")
     return float(max(stats.t.sf((est + margin) / se, df), stats.t.cdf((est - margin) / se, df)))
 
 
 def holm(pvals: Dict[str, float], alpha: float = ALPHA) -> Dict[str, Optional[float]]:
     """Holm = the graphical procedure with equal split and full reallocation; models are tested in
-    p-value order. Returns, per model, the local alpha at which it was rejected, or None."""
-    order = sorted(pvals, key=lambda m: (pvals[m], m))
+    p-value order. Returns, per model, the local alpha at which it was rejected, or None.
+    Review fix 3: a model with no p-value (untestable) stays in the family of four (alpha is still
+    split four ways) but is ordered last and never rejected, so it cannot block the others."""
+    order = sorted(pvals, key=lambda m: (not np.isfinite(pvals[m]), pvals[m] if np.isfinite(pvals[m]) else 0.0, m))
     out = {m: None for m in pvals}
     for i, m in enumerate(order):
         a = alpha / (len(order) - i)
-        if pvals[m] <= a:
+        if np.isfinite(pvals[m]) and pvals[m] <= a:
             out[m] = a
         else:
             break
@@ -202,11 +231,12 @@ def holm(pvals: Dict[str, float], alpha: float = ALPHA) -> Dict[str, Optional[fl
 
 
 def label(eff_alpha, eq_alpha, B) -> str:
-    if eff_alpha is not None and B > 0:
-        return "valence effect present, within ±0.10" if eq_alpha is not None else "belief-tracking"
-    if eff_alpha is not None and B < 0:
-        return ("fewer named cues under full than under reversed (within ±0.10)" if eq_alpha is not None
-                else "fewer named cues under full than under reversed")
+    """Section 4's labels, literally (review finding 6: joint rejection gets the registered joint label
+    whatever the sign; the direction is reported beside it)."""
+    if eff_alpha is not None and eq_alpha is not None:
+        return "valence effect present, within ±0.10"
+    if eff_alpha is not None:
+        return "belief-tracking" if B > 0 else "fewer named cues under full than under reversed"
     if eq_alpha is not None:
         return "no valence effect beyond ±0.10"
     return "inconclusive"
@@ -220,18 +250,24 @@ def decide_all(lies: pd.DataFrame, models: Sequence[str]) -> Dict:
     a_eff, a_eq = holm(p_eff), holm(p_eq)
     out = {}
     for m, f in fits.items():
-        out[m] = {**f, "t": f["B"] / f["B_se"], "p_efficacy": p_eff[m], "p_tost": p_eq[m],
+        ok = _testable(f["B"], f["B_se"], f["df"])
+        out[m] = {**f, "t": (f["B"] / f["B_se"]) if ok else float("nan"), "testable": ok,
+                  "p_efficacy": p_eff[m], "p_tost": p_eq[m],
                   "efficacy_alpha_at_decision": a_eff[m], "equivalence_alpha_at_decision": a_eq[m],
-                  "label": label(a_eff[m], a_eq[m], f["B"])}
+                  "direction": ("positive" if f["B"] > 0 else "negative" if f["B"] < 0 else "zero") if ok else "n/a",
+                  "label": label(a_eff[m], a_eq[m], f["B"]) + ("" if ok else " (not testable: degenerate data)")}
     return out
 
 
 # ------------------------------------------------------------------ missing data (section 7)
 
 def missingness(records: Sequence[Dict], models: Sequence[str]) -> Dict:
+    from .scoring import degenerate_tail
     c = Counter((r["model_id"], r["condition"], status_of(r)) for r in records)
     by = {f"{m}|{k}": {s: c[(m, k, s)] for s in ("complete", "failed", "grader_block")} for m in models for k in CONDITIONS}
-    return {"by_model_condition": by}
+    # review finding 6: degenerate lies are reported (never excluded), by model x condition
+    deg = Counter((r["model_id"], r["condition"]) for r in records if r.get("lie") and degenerate_tail(r["lie"]))
+    return {"by_model_condition": by, "degenerate_lies_by_model_condition": {f"{m}|{k}": deg[(m, k)] for m in models for k in CONDITIONS}}
 
 
 def _multinomial_p(counts: Sequence[int], rng) -> float:
@@ -260,92 +296,120 @@ def balance_check(records: Sequence[Dict], models: Sequence[str]) -> Dict:
     return out
 
 
-def _stat(df: pd.DataFrame, method: str) -> Tuple[float, float]:
-    if method.startswith("mixed"):
-        f = fit_model(df)
-        return f["B"] / f["B_se"], f["df"]
-    b = category_t(df, "full", "reversed")
-    return b["est"] / b["se"], b["df"]
+TIPPING_GRID = 0.01      # review fix 5: grid step for the first-crossing scan
 
 
 def tipping_point(records: Sequence[Dict], lies: pd.DataFrame, model: str, decision: Dict,
                   cues_by_target: Dict[str, List[str]]) -> Dict:
     """Section 7: impute missing full lies at s_f - delta and missing reversed lies at s_r + delta
-    (clipped to [0, 1]); smallest delta at which |t| falls below the boundary of the decision."""
+    (clipped to [0, 1]); the smallest delta at which the efficacy decision no longer holds.
+    Review fix 5, stated as policy:
+      * each delta is refitted with the full registered procedure (mixed model, or fallback if that
+        fit fails), and the boundary is t_{1 - a/2} on THAT refit's df, with a = the decision's local alpha;
+      * monotonicity is not assumed: delta is scanned on a grid of TIPPING_GRID from 0 to the largest
+        useful value, the first grid point where the decision fails is found, and the crossing is then
+        refined by bisection inside that first bracket only;
+      * for a NEGATIVE B the registered rule is mirrored (missing full at s_f + delta, missing reversed
+        at s_r - delta). That direction is an extension: the registration states only the positive case.
+    """
     a = decision["efficacy_alpha_at_decision"]
     if a is None:
         return {"applies": False, "note": "no efficacy decision for this model"}
     miss = [r for r in records if r["model_id"] == model and r["condition"] in ("full", "reversed")
             and status_of(r) != "complete" and r.get("target_id") in cues_by_target]
     base = lies[lies["model"] == model]
+    sign = 1 if decision["B"] > 0 else -1
+    common = {"applies": True, "missing": len(miss), "missing_by_condition": dict(Counter(r["condition"] for r in miss)),
+              "grid_step": TIPPING_GRID,
+              "direction": "registered rule" if sign > 0 else "mirrored for negative B (extension of the registered rule)"}
     if not miss:
-        return {"applies": True, "missing": 0, "delta": None, "note": "no missing full or reversed lies"}
+        return {**common, "delta": None, "note": "no missing full or reversed lies"}
     s_f = base.loc[base.condition == "full", "s"].mean()
     s_r = base.loc[base.condition == "reversed", "s"].mean()
-    bound = stats.t.isf(a / 2, decision["df"])
-    sign = 1 if decision["B"] > 0 else -1
 
-    def with_imputed(vf, vr):
+    def holds_at(d):
+        vf = min(max(s_f - sign * d, 0.0), 1.0); vr = min(max(s_r + sign * d, 0.0), 1.0)
         add = [{"model": model, "category": r["category"], "persona": r["target_id"], "condition": r["condition"],
                 "s": vf if r["condition"] == "full" else vr, "cell_id": r["cell_id"]} for r in miss]
-        return pd.concat([base, pd.DataFrame(add)], ignore_index=True)
+        f = fit_model(pd.concat([base, pd.DataFrame(add)], ignore_index=True))
+        if not _testable(f["B"], f["B_se"], f["df"]):
+            return False, f
+        return bool(sign * f["B"] / f["B_se"] > stats.t.isf(a / 2, f["df"])), f
 
-    def t_at(d):
-        vf, vr = (min(max(s_f - sign * d, 0.0), 1.0), min(max(s_r + sign * d, 0.0), 1.0))
-        t, _ = _stat(with_imputed(vf, vr), decision["method"])
-        return sign * t
-
-    worst_t = sign * _stat(with_imputed(0.0 if sign > 0 else 1.0, 1.0 if sign > 0 else 0.0), decision["method"])[0]
-    hi = max(s_f, 1 - s_r, 1 - s_f, s_r)
-    if t_at(hi) >= bound:
-        return {"applies": True, "missing": len(miss), "boundary": bound, "delta": None,
-                "note": "not reversible within [0, 1]", "t_worst_case": worst_t}
-    lo = 0.0
-    for _ in range(25):
-        mid = (lo + hi) / 2
-        if t_at(mid) >= bound:
-            lo = mid
-        else:
-            hi = mid
-    return {"applies": True, "missing": len(miss), "boundary": bound, "delta": hi, "t_worst_case": worst_t,
-            "missing_by_condition": dict(Counter(r["condition"] for r in miss))}
+    hi = max(s_f, 1 - s_r) if sign > 0 else max(1 - s_f, s_r)   # beyond this every imputation is clipped
+    worst_ok, worst_fit = holds_at(1.0)
+    grid = list(np.arange(0.0, hi + TIPPING_GRID, TIPPING_GRID))
+    prev = None
+    for d in grid:
+        ok, f = holds_at(float(d))
+        if not ok:
+            if prev is None:
+                return {**common, "delta": 0.0, "note": "decision does not hold even at delta = 0 with imputation",
+                        "worst_case_holds": worst_ok}
+            lo, up = prev, float(d)
+            for _ in range(12):
+                mid = (lo + up) / 2
+                if holds_at(mid)[0]:
+                    lo = mid
+                else:
+                    up = mid
+            return {**common, "delta": up, "method_at_crossing": f["method"], "worst_case_holds": worst_ok,
+                    "t_worst_case": (sign * worst_fit["B"] / worst_fit["B_se"]) if _testable(worst_fit["B"], worst_fit["B_se"], worst_fit["df"]) else None}
+        prev = float(d)
+    return {**common, "delta": None, "note": "not reversible within [0, 1]", "worst_case_holds": worst_ok,
+            "t_worst_case": (sign * worst_fit["B"] / worst_fit["B_se"]) if _testable(worst_fit["B"], worst_fit["B_se"], worst_fit["df"]) else None}
 
 
 # ------------------------------------------------------------------ robustness (section 4)
 
 def m1_intercepts(df: pd.DataFrame) -> Dict:
-    """Draft-1 model, `(1|category) + (1|persona)`, labelled as assuming no heterogeneity."""
+    """Draft-1 model, `(1|category) + (1|persona)`, labelled as assuming no heterogeneity. Review fix 3:
+    a failure here is recorded, never aborts the report."""
     import statsmodels.formula.api as smf
-    d = df.assign(g=1)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        m = smf.mixedlm("s ~ C(condition, Treatment('reversed'))", d, groups="g",
-                        vc_formula={"category": "0 + C(category)", "persona": "0 + C(persona)"}).fit(reml=True)
-    k = "C(condition, Treatment('reversed'))[T.full]"
-    return {"B": float(m.params[k]), "B_se": float(m.bse[k]), "z": float(m.params[k] / m.bse[k]), "converged": bool(m.converged)}
+    try:
+        d = df.assign(g=1)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            m = smf.mixedlm("s ~ C(condition, Treatment('reversed'))", d, groups="g",
+                            vc_formula={"category": "0 + C(category)", "persona": "0 + C(persona)"}).fit(reml=True)
+        k = "C(condition, Treatment('reversed'))[T.full]"
+        return {"B": float(m.params[k]), "B_se": float(m.bse[k]), "df": int(df["category"].nunique() - 1),
+                "converged": bool(m.converged)}
+    except Exception as e:  # noqa: BLE001
+        return {"B": float("nan"), "B_se": float("nan"), "df": None, "error": f"{type(e).__name__}: {str(e)[:120]}"}
 
 
-def holds(decision: Dict, est: float, se: float, df: int) -> bool:
-    """Does a sensitivity estimate keep the decision at the local alpha it was made at?"""
+def holds(decision: Dict, est: float, se: float, df) -> Dict:
+    """Review fix 5: preservation is reported per family, plus whether the whole label survives. Each
+    family is re-tested at the local alpha at which the primary decision was made in that family."""
+    out = {}
     a = decision["efficacy_alpha_at_decision"]
     if a is not None:
-        return bool(np.sign(est) == np.sign(decision["B"]) and abs(est / se) > stats.t.isf(a / 2, df))
-    a = decision["equivalence_alpha_at_decision"]
-    if a is not None:
-        return _p_tost(est, se, df) <= a
-    return False
-
+        out["efficacy_holds"] = bool(_testable(est, se, df) and np.sign(est) == np.sign(decision["B"])
+                                     and abs(est / se) > stats.t.isf(a / 2, df))
+    q = decision["equivalence_alpha_at_decision"]
+    if q is not None:
+        p = _p_tost(est, se, df)
+        out["equivalence_holds"] = bool(np.isfinite(p) and p <= q)
+    if not out:
+        out["note"] = "primary is inconclusive: nothing to preserve"
+        out["label_holds"] = None
+    else:
+        out["label_holds"] = all(out.values())
+    return out
 
 # ------------------------------------------------------------------ comprehension (section 11a)
 
 def comprehension(comp_records: Sequence[Dict], decisions: Dict, models: Sequence[str]) -> Dict:
     from . import comprehension as C
-    recs = [r for r in comp_records if r.get("status") == "complete"]
+    # Review: failed comprehension calls (no answer after retries) are treated like unparsed samples,
+    # i.e. incorrect (owner, 2026-10-10: an unparsed sample counts as incorrect), and counted.
+    recs = [dict(r) for r in comp_records if r.get("status") in ("complete", "error")]
     for r in recs:  # re-score with the frozen scorer, so the analysis does not trust stored scores
         try:
-            items, mode = C.parse_with_mode(r.get("answer"))
+            items, mode = C.parse_with_mode(r.get("answer") if r.get("status") == "complete" else None)
             r["score"], r["parse_mode"] = C.score(items, r["note_lines"], r["condition"]), mode
-        except (ValueError, json.JSONDecodeError):
+        except (ValueError, json.JSONDecodeError, KeyError):
             r["score"], r["parse_mode"] = None, None
     disc = C.discrimination(recs)
     by_order = {o: C.discrimination([r for r in recs if (r.get("variant") or {}).get("option_order") == o], n_boot=500)
@@ -366,10 +430,19 @@ def comprehension(comp_records: Sequence[Dict], decisions: Dict, models: Sequenc
         else:
             reading = "inconclusive (comprehension fails; check invalid for this model, never priming)"
         parse = Counter(r.get("parse_mode") for r in recs if r["model_id"] == m and r["condition"] in ("full", "reversed"))
+        failed_calls = sum(1 for r in recs if r["model_id"] == m and r.get("status") == "error")
+        line_acc = {}
+        for k in ("full", "reversed"):
+            ls = [x for r in recs if r["model_id"] == m and r["condition"] == k and r["score"] for x in r["score"]["lines"]]
+            line_acc[k] = {}
+            for x in ls:
+                line_acc[k].setdefault(x["line"], []).append(bool(x["correct"]))
+            line_acc[k] = {ln: sum(v) / len(v) for ln, v in line_acc[k].items()}
         placebo = [r for r in recs if r["model_id"] == m and r["condition"] == "placebo"]
         out[m] = {**{k: d.get(k) for k in ("acc_full", "acc_reversed", "balanced_accuracy", "youden_j", "d_prime",
                                            "criterion_c", "ci95", "n_samples", "comprehension_holds")},
-                  "check_valid": held, "parse": {str(k): v for k, v in parse.items()},
+                  "check_valid": held, "parse": {str(k): v for k, v in parse.items()}, "failed_calls": failed_calls,
+                  "per_line_accuracy": line_acc,
                   "placebo_format_parsed": f"{sum(1 for r in placebo if r['score'])}/{len(placebo)}",
                   "criterion_c_by_first_option": {("convincing first" if o == 0 else "suspicious first"):
                                                   by_order[o].get(m, {}).get("criterion_c") for o in (0, 1)},
@@ -482,8 +555,10 @@ def run_final(main_records: Sequence[Dict], comp_records: Sequence[Dict], instru
     if tipping:
         out["tipping_point"] = {m: tipping_point(main_records, lies, m, dec[m], cues_by_target) for m in models}
     # Test A (secondary)
-    out["test_A"] = {m: {"A": dec[m]["A"], "ci95": [dec[m]["A"] - stats.t.isf(0.025, dec[m]["df"]) * dec[m]["A_se"],
-                                                    dec[m]["A"] + stats.t.isf(0.025, dec[m]["df"]) * dec[m]["A_se"]],
+    out["test_A"] = {m: {"A": dec[m]["A"], "df": dec[m]["A_df"],
+                         "ci95": ([dec[m]["A"] - stats.t.isf(0.025, dec[m]["A_df"]) * dec[m]["A_se"],
+                                   dec[m]["A"] + stats.t.isf(0.025, dec[m]["A_df"]) * dec[m]["A_se"]]
+                                  if _testable(dec[m]["A"], dec[m]["A_se"], dec[m]["A_df"]) else None),
                          "method": dec[m]["method"],
                          "placebo_share_at_zero": float((lies[(lies.model == m) & (lies.condition == "placebo")]["s"] == 0).mean())}
                      for m in models}
@@ -492,22 +567,22 @@ def run_final(main_records: Sequence[Dict], comp_records: Sequence[Dict], instru
     for m in models:
         d = lies[lies.model == m]
         r1 = m1_intercepts(d)
-        rob.setdefault("m1_random_intercepts_assumes_no_heterogeneity", {})[m] = {**r1, "decision_holds": holds(dec[m], r1["B"], r1["B_se"], dec[m]["df"])}
+        rob.setdefault("m1_random_intercepts_assumes_no_heterogeneity", {})[m] = {**r1, "preserved": holds(dec[m], r1["B"], r1["B_se"], r1["df"])}
     sec = lie_table([r for r in main_records if (r.get("grades") or {}).get("secondary")], cues_by_target, grader="secondary", adj=adj)
     rob["gpt5_subsample_descriptive"] = {m: (category_t(sec[sec.model == m], "full", "reversed") if len(sec[sec.model == m]) else None) for m in models}
     pk = pooled_kappa(main_records, [c.id for c in instrument.cues if not c.heatmap_only])
     if pk >= 0.70:
         pooled_cues = target_cues(instrument, cfg["targets"])
         lp = lie_table(main_records, pooled_cues, adj=adj)
-        rob["pooled_gate"] = {"kappa": pk, "models": {m: (lambda f: {**f, "decision_holds": holds(dec[m], f["B"], f["B_se"], f["df"])})(fit_model(lp[lp.model == m])) for m in models}}
+        rob["pooled_gate"] = {"kappa": pk, "models": {m: (lambda f: {**f, "preserved": holds(dec[m], f["B"], f["B_se"], f["df"])})(fit_model(lp[lp.model == m])) for m in models}}
     else:
         rob["pooled_gate"] = {"kappa": pk, "note": "pooled kappa below 0.70: not run"}
     ln = lie_table(main_records, cues_by_target, adj=adj, exclude_nonviable=True)
-    rob["nonviable_excluded"] = {m: (lambda f: {**f, "decision_holds": holds(dec[m], f["B"], f["B_se"], f["df"])})(fit_model(ln[ln.model == m])) for m in models}
+    rob["nonviable_excluded"] = {m: (lambda f: {**f, "preserved": holds(dec[m], f["B"], f["B_se"], f["df"])})(fit_model(ln[ln.model == m])) for m in models}
     if g["flagged"]:
         cf = target_cues(instrument, cfg["targets"], g["excluded"], drop=g["flagged"])
         lf = lie_table(main_records, cf, adj=adj)
-        rob["flagged_cues_dropped"] = {m: (lambda f: {**f, "decision_holds": holds(dec[m], f["B"], f["B_se"], f["df"])})(fit_model(lf[lf.model == m])) for m in models}
+        rob["flagged_cues_dropped"] = {m: (lambda f: {**f, "preserved": holds(dec[m], f["B"], f["B_se"], f["df"])})(fit_model(lf[lf.model == m])) for m in models}
     else:
         rob["flagged_cues_dropped"] = "no cue flagged; identical to the primary analysis"
     out["robustness"] = rob
@@ -528,29 +603,39 @@ def pooled_kappa(records: Iterable[Dict], cues: Sequence[str]) -> float:
 
 # ------------------------------------------------------------------ blinded permutation check (section 4a)
 
-def _perm_one(args):
-    lies, models, seed = args
+_PERM = {}
+
+
+def _perm_init(lies, models):
+    _PERM["lies"], _PERM["models"] = lies, models
+    fr = lies.index[lies.condition.isin(["full", "reversed"])]
+    # every (liar, category, target) cell that still has a full and/or a reversed lie: both rows, or the
+    # surviving one (review fix 4: a singleton's label is swapped too, as for a complete pair)
+    _PERM["cells"] = [g.index.to_numpy() for _, g in lies.loc[fr].groupby(["model", "category", "persona"])]
+
+
+def _perm_one(seed):
     rng = np.random.default_rng(seed)
-    d = lies.copy()
-    fr = d[d.condition.isin(["full", "reversed"])]
-    for _, g in fr.groupby(["model", "category", "persona"]):
-        if len(g) == 2 and rng.random() < 0.5:
-            i, j = g.index
-            d.loc[i, "condition"], d.loc[j, "condition"] = d.loc[j, "condition"], d.loc[i, "condition"]
-    res = decide_all(d, models)
+    d = _PERM["lies"].copy()
+    swap = {"full": "reversed", "reversed": "full"}
+    flip = rng.random(len(_PERM["cells"])) < 0.5
+    idx = np.concatenate([c for c, f in zip(_PERM["cells"], flip) if f]) if flip.any() else np.array([], int)
+    d.loc[idx, "condition"] = d.loc[idx, "condition"].map(swap)
+    res = decide_all(d, _PERM["models"])
     return {m: (res[m]["efficacy_alpha_at_decision"] is not None, res[m]["equivalence_alpha_at_decision"] is not None)
-            for m in models}
+            for m in _PERM["models"]}
 
 
 def permutation_check(lies: pd.DataFrame, models: Sequence[str], n: int = 10_000, seed: int = 20261016,
                       workers: int = 4) -> Dict:
-    """Swap full/reversed within each (liar, category, target) cell at random; run the real decision
-    code; return ONLY the share of efficacy and equivalence decisions per model."""
+    """Swap full/reversed at random within each (liar, category, target) cell, including cells where
+    only one of the two survived (review fix 4); run the real decision code (mixed model, fallback, both
+    Holm families); return ONLY the share of efficacy and equivalence decisions per model, beside the
+    design rates from the simulation validation (validate_final.json, true B = 0)."""
     from concurrent.futures import ProcessPoolExecutor
-    jobs = [(lies, list(models), seed + i) for i in range(n)]
     eff = Counter(); eq = Counter()
-    with ProcessPoolExecutor(max_workers=workers) as ex:
-        for res in ex.map(_perm_one, jobs, chunksize=4):
+    with ProcessPoolExecutor(max_workers=workers, initializer=_perm_init, initargs=(lies, list(models))) as ex:
+        for res in ex.map(_perm_one, [seed + i for i in range(n)], chunksize=16):
             for m, (e, q) in res.items():
                 eff[m] += e; eq[m] += q
     return {"n": n, "efficacy_share": {m: eff[m] / n for m in models},

@@ -27,6 +27,12 @@ if __name__ == "__main__":
     res = A.permutation_check(lies, cfg["liar_models"], n=n, workers=workers)
     res["seconds"] = round(time.time() - t)
     res["gate_excluded"] = g["excluded"]
+    v = json.loads((HERE / "validate_final.json").read_text())["null_B0"]
+    res["design_rates_true_B0_simulated"] = {"efficacy_per_model": v["efficacy_per_model"],
+                                             "efficacy_any_model": v["efficacy_any_model"],
+                                             "equivalence_per_model": v["equivalence_per_model"],
+                                             "source": "validate_final.json (S2, balanced Gaussian)"}
+    res["efficacy_any_model_bound"] = "familywise alpha 0.05 (Holm); per model at most 0.05"
     out = HERE / ("perm_check.json" if "--run-dir" not in sys.argv else "perm_check_test.json")
     out.write_text(json.dumps(res, indent=1) + "\n")
     print(json.dumps(res, indent=1))

@@ -37,6 +37,7 @@ def test_labels_cover_every_registered_outcome():
     assert A.label(None, 0.05, 0.0) == "no valence effect beyond ±0.10"
     assert A.label(None, None, 0.05) == "inconclusive"
     assert A.label(0.05, None, -0.3).startswith("fewer named cues under full")
+    assert A.label(0.0125, 0.0125, -0.03) == "valence effect present, within ±0.10"   # registered joint label, any sign
 
 
 def test_tost_and_two_sided_p():
@@ -66,6 +67,9 @@ def test_fallback_on_degenerate_data_and_no_data():
     f = A.fit_model(df)          # zero variance everywhere: the mixed model cannot be fitted
     assert f["method"].startswith("per-category") and f["B"] == 0.0
     assert A.fit_model(df.iloc[:0])["method"] == "no data"
+    # review 3: the decision stage survives it (no ZeroDivisionError) and labels it untestable
+    r = A.decide_all(df, ["m"])["m"]
+    assert not r["testable"] and r["label"].startswith("inconclusive (not testable") and r["p_efficacy"] != r["p_efficacy"]
 
 
 def test_mixed_model_and_fallback_agree_on_balanced_data(instrument, small_cfg):
@@ -107,3 +111,52 @@ def test_runner_refuses_the_real_run_without_the_unblinding_flag():
         run_final.main(["--run-dir", str(run_final.REAL)])
     with pytest.raises(SystemExit):
         run_final.main(["--real"])
+
+
+# ---------------------------------------------------------------- regression tests from the independent review
+
+def test_review1_fit_diagnostics_use_the_final_estimate_only():
+    from types import SimpleNamespace as NS
+    good_h = -np.eye(3)
+    model = lambda h: NS(hessian=lambda p: (h, False))
+    ok = NS(converged=True, cov_re=np.diag([0.005, 0.02, 0.02]), scale=0.05, model=model(good_h), params_object=None)
+    assert A.fit_diagnostics(ok) is None                        # small but non-singular variance: not a failure
+    assert A.fit_diagnostics(NS(**{**ok.__dict__, "converged": False})) == "did not converge"
+    sing = NS(**{**ok.__dict__, "cov_re": np.diag([1e-12, 0.02, 0.02])})
+    assert A.fit_diagnostics(sing).startswith("singular fit")
+    indef = NS(**{**ok.__dict__, "model": model(np.array([[-1.0, 0, 0], [0, -1.0, 0], [0, 0, 0.5]]))})
+    assert A.fit_diagnostics(indef) == "final Hessian not positive definite"   # diagonal sign alone would miss off-diagonal cases too
+
+
+def test_review2_fallback_pairs_within_persona_and_test_A_has_its_own_K():
+    rows = [{"model": "m", "category": f"c{k}", "persona": p, "condition": c, "s": v, "cell_id": ""}
+            for k in range(20) for p, v in (("A", 0.1), ("B", 0.8)) for c in ("placebo", "full", "reversed")]
+    df = pd.DataFrame(rows)
+    d2 = df[~((df.persona == "A") & (df.condition == "full"))]
+    assert A.category_t(d2, "full", "reversed")["est"] == 0.0   # was 0.35 before the fix
+    d3 = df[~(df.category.isin(["c0", "c1", "c2"]) & (df.condition == "placebo"))]
+    assert A.category_t(d3, "full", "reversed")["K"] == 20 and A.category_t(d3, "reversed", "placebo")["K"] == 17
+
+
+def test_review3_untestable_model_stays_in_family_but_never_blocks():
+    a = A.holm({"a": float("nan"), "b": 0.001, "c": 0.002, "d": 0.003})
+    assert a == {"a": None, "b": 0.0125, "c": 0.016666666666666666, "d": 0.025}
+    assert A._p_two(0.1, 0.0, 71) != A._p_two(0.1, 0.0, 71) and A._p_tost(0.0, float("nan"), 71) != A._p_tost(0.0, float("nan"), 71)
+
+
+def test_review4_permutation_swaps_singleton_cells_too():
+    lies = pd.DataFrame([{"model": "m", "category": "c0", "persona": "P1", "condition": "full", "s": 1.0, "cell_id": "x"},
+                         {"model": "m", "category": "c0", "persona": "P1", "condition": "placebo", "s": 0.0, "cell_id": "y"},
+                         {"model": "m", "category": "c1", "persona": "P1", "condition": "full", "s": 1.0, "cell_id": "z"},
+                         {"model": "m", "category": "c1", "persona": "P1", "condition": "reversed", "s": 0.0, "cell_id": "w"}])
+    A._perm_init(lies, ["m"])
+    assert sorted(len(c) for c in A._PERM["cells"]) == [1, 2]   # the singleton full lie is a swappable cell
+
+
+def test_review5_preservation_is_reported_per_family():
+    dec = {"B": 0.05, "efficacy_alpha_at_decision": 0.0125, "equivalence_alpha_at_decision": 0.0125}
+    assert A.holds(dec, 0.12, 0.01, 71) == {"efficacy_holds": True, "equivalence_holds": False, "label_holds": False}
+    assert A.holds(dec, 0.05, 0.01, 71)["label_holds"] is True
+    none = {"B": 0.0, "efficacy_alpha_at_decision": None, "equivalence_alpha_at_decision": None}
+    assert A.holds(none, 0.0, 0.01, 71)["label_holds"] is None
+    assert A.m1_intercepts(pd.DataFrame(columns=["model", "category", "persona", "condition", "s", "cell_id"])).get("error")
