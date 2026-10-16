@@ -92,3 +92,7 @@ Failed to send error report: 403 Forbidden
 Exceptions were raised.
 
 Exception report saved to /home/user/edsl_wwil/two_truths_lie_study/two_truths_lie/tmpafnydhn6.html
+=== resume 2026-10-16T02:25:04Z ===
+main run: 4320 lies; comprehension: 500 calls
+estimate: main $69.77 + comprehension $0.09 = $69.86 (registered: flag at $100, kill cap $125)
+preflight: ok
