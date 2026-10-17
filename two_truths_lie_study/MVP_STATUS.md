@@ -169,7 +169,7 @@ All Python packages have been installed:
 
 Your API key is configured in `.env`:
 ```
-EXPECTED_PARROT_API_KEY = '7WyAQqSIP9MUlyq62FHs7Gefzh_NuWzWukGmT7xgMXU'
+EXPECTED_PARROT_API_KEY = 'your_expected_parrot_api_key_here'
 ```
 
 **Security Note**: The `preToolUse` hook was configured but doesn't effectively block `.env` file access. Consider using file permissions (`chmod 600 .env`) or environment variables instead.
