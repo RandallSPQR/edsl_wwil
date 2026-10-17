@@ -1,0 +1,18 @@
+# Environment for reviewing and running the reversed follow-up final analysis (second review, finding 6).
+# Python 3.11.17
+numpy==2.4.6
+pandas==2.3.3
+patsy==1.0.3
+pytest==9.1.1
+scipy==1.17.1
+statsmodels==0.15.0
+# EDSL 1.0.5.dev1, installed editable from this repository (RandallSPQR/edsl_wwil). The EDSL source
+# (edsl/ and pyproject.toml) was last changed at commit 147ef01a20326caf29f448f284279995ada6e8e8
+# (2026-10-05); any later commit of this branch carries the same EDSL. From the repository root:
+#   python -m pip install --ignore-installed PyYAML -e .
+#   python -m pip install -r two_truths_lie_study/two_truths_lie/results/perfect_lie_reversed/final_analysis/requirements_review.txt
+# Tests: from two_truths_lie_study/two_truths_lie/
+#   python -m pytest tests/test_perfect_lie_invariants.py tests/test_perfect_lie_reversed_analysis.py tests/test_perfect_lie_reversed_run.py
+# (tests/conftest.py removes model keys and points EDSL's config and cache directories at a temporary
+#  directory, so tests spend nothing and write no credentials. tests/test_metrics.py, test_runner.py and
+#  test_storage.py belong to the older two-truths game and have 25 failures that predate this work.)
