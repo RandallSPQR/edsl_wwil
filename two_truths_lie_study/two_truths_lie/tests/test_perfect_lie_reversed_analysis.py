@@ -155,8 +155,46 @@ def test_review4_permutation_swaps_singleton_cells_too():
 
 def test_review5_preservation_is_reported_per_family():
     dec = {"B": 0.05, "efficacy_alpha_at_decision": 0.0125, "equivalence_alpha_at_decision": 0.0125}
-    assert A.holds(dec, 0.12, 0.01, 71) == {"efficacy_holds": True, "equivalence_holds": False, "label_holds": False}
-    assert A.holds(dec, 0.05, 0.01, 71)["label_holds"] is True
+    assert A.holds(dec, 0.12, 0.01, 71) == {"efficacy_holds": True, "equivalence_holds": False,
+                                            "all_primary_rejections_preserved": False}
+    assert A.holds(dec, 0.05, 0.01, 71)["all_primary_rejections_preserved"] is True
     none = {"B": 0.0, "efficacy_alpha_at_decision": None, "equivalence_alpha_at_decision": None}
-    assert A.holds(none, 0.0, 0.01, 71)["label_holds"] is None
+    assert A.holds(none, 0.0, 0.01, 71)["all_primary_rejections_preserved"] is None
     assert A.m1_intercepts(pd.DataFrame(columns=["model", "category", "persona", "condition", "s", "cell_id"])).get("error")
+
+
+# ------------------------------------------------------------------ second review
+
+def test_review2_5_nonconverged_robustness_fit_makes_no_preservation_claim():
+    dec = {"B": 0.05, "efficacy_alpha_at_decision": 0.0125, "equivalence_alpha_at_decision": None}
+    h = A.holds(dec, 0.05, 0.01, 71, converged=False)
+    assert h["all_primary_rejections_preserved"] is None and "efficacy_holds" not in h
+
+
+def test_review2_4_exploratory_breakdowns_survive_a_missing_condition(instrument, small_cfg):
+    lies = pd.DataFrame([{"model": "m", "category": "c0", "persona": "P1", "condition": "full", "s": 1.0, "cell_id": "x"},
+                         {"model": "m", "category": "c1", "persona": "P1", "condition": "full", "s": 0.5, "cell_id": "y"}])
+    out = A.exploratory([], lies, {"P1": []}, instrument, ["m"], {})
+    assert out["breakdowns"]["m"]["by_category"]["c0"]["B"]["n"] == 0
+
+
+def test_review2_3_per_line_accuracy_counts_unparsed_and_failed_samples(instrument):
+    from src.perfect_lie import comprehension as C
+    lines = C.note_lines(instrument.personas["P1"], instrument.personas["P2"], "full")
+    good = json.dumps([{"quality": l, "judge_finds": "convincing"} for l in lines])
+    recs = [{"model_id": "m", "target_id": "P1", "placebo_id": "P2", "condition": "full", "status": "complete",
+             "answer": good, "note_lines": lines},
+            {"model_id": "m", "target_id": "P1", "placebo_id": "P2", "condition": "full", "status": "complete",
+             "answer": "no json here", "note_lines": lines},
+            {"model_id": "m", "target_id": "P1", "condition": "full", "status": "error"}]   # failed: lines rebuilt
+    dec = {"m": {"B": 0.0, "efficacy_alpha_at_decision": None}}
+    out = A.comprehension(recs, dec, ["m"], instrument, {"P1": "P2"})["m"]
+    for ln in lines:
+        assert out["per_line_accuracy"]["full"][ln] == {"accuracy": 1 / 3, "n": 3}
+        assert out["per_line_accuracy_given_parse"]["full"][ln] == {"accuracy": 1.0, "n": 1}
+    assert out["per_line_samples_without_lines"] == 0 and out["failed_calls"] == 1
+
+
+def test_review2_2_tipping_point_reports_a_detected_crossing_not_a_guarantee():
+    src = Path(A.__file__).read_text()
+    assert "not reversible within" not in src and "first crossing detected by the" in src

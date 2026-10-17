@@ -40,10 +40,12 @@ def render(res, cfg) -> str:
     for m, v in res["balance_check"].items():
         L.append(f"- {NAME.get(m, m)}: blocks {v['blocks']}, p = {v['p']:.3f}{' — FLAGGED' if v['flag'] else ''}")
     if res.get("tipping_point"):
-        L += ["", "Tipping point (smallest delta reversing the efficacy decision):", ""]
+        L += ["", "Tipping point (first delta reversing the efficacy decision detected by the grid scan; a "
+              "crossing between grid points can be missed, and 'no crossing detected' is not a proof of non-reversibility):", ""]
         for m, v in res["tipping_point"].items():
             L.append(f"- {NAME.get(m, m)}: " + (v.get("note") if not v.get("applies") else
-                     f"missing {v.get('missing')}, delta {f(v.get('delta'))}{' (' + v['note'] + ')' if v.get('note') else ''}, "
+                     f"missing {v.get('missing')}, delta {f(v.get('delta'))}{' — ' + v['result'] if v.get('result') else ''}"
+                     f"{' (' + v['note'] + ')' if v.get('note') else ''}, "
                      f"worst case holds: {v.get('worst_case_holds')}; {v.get('direction')}; grid {v.get('grid_step')}"))
     L += ["", "## Comprehension check (secondary, section 11a; cannot change the label)", "",
           "| liar | balanced accuracy [95%] | J | criterion c | holds | reading |", "|---|---|---|---|---|---|"]

@@ -308,7 +308,10 @@ def tipping_point(records: Sequence[Dict], lies: pd.DataFrame, model: str, decis
         fit fails), and the boundary is t_{1 - a/2} on THAT refit's df, with a = the decision's local alpha;
       * monotonicity is not assumed: delta is scanned on a grid of TIPPING_GRID from 0 to the largest
         useful value, the first grid point where the decision fails is found, and the crossing is then
-        refined by bisection inside that first bracket only;
+        refined by bisection inside that first bracket only. Review 2, finding 2: this is the first
+        crossing DETECTED BY THE SCAN. A crossing narrower than one grid step, or a reversal and
+        recovery inside a bracket, can be missed, and the bisection assumes one sign change in its
+        bracket; "no crossing detected" is not a proof that the decision cannot be reversed;
       * for a NEGATIVE B the registered rule is mirrored (missing full at s_f + delta, missing reversed
         at s_r - delta). That direction is an extension: the registration states only the positive case.
     """
@@ -353,10 +356,13 @@ def tipping_point(records: Sequence[Dict], lies: pd.DataFrame, model: str, decis
                     lo = mid
                 else:
                     up = mid
-            return {**common, "delta": up, "method_at_crossing": f["method"], "worst_case_holds": worst_ok,
+            return {**common, "delta": up, "result": f"first crossing detected by the {TIPPING_GRID} scan",
+                    "method_at_crossing": f["method"], "worst_case_holds": worst_ok,
                     "t_worst_case": (sign * worst_fit["B"] / worst_fit["B_se"]) if _testable(worst_fit["B"], worst_fit["B_se"], worst_fit["df"]) else None}
         prev = float(d)
-    return {**common, "delta": None, "note": "not reversible within [0, 1]", "worst_case_holds": worst_ok,
+    return {**common, "delta": None, "result": f"no crossing detected by the {TIPPING_GRID} scan",
+            "note": "no grid point in [0, 1] reverses the decision; this is not a proof of non-reversibility",
+            "worst_case_holds": worst_ok,
             "t_worst_case": (sign * worst_fit["B"] / worst_fit["B_se"]) if _testable(worst_fit["B"], worst_fit["B_se"], worst_fit["df"]) else None}
 
 
@@ -379,9 +385,14 @@ def m1_intercepts(df: pd.DataFrame) -> Dict:
         return {"B": float("nan"), "B_se": float("nan"), "df": None, "error": f"{type(e).__name__}: {str(e)[:120]}"}
 
 
-def holds(decision: Dict, est: float, se: float, df) -> Dict:
-    """Review fix 5: preservation is reported per family, plus whether the whole label survives. Each
-    family is re-tested at the local alpha at which the primary decision was made in that family."""
+def holds(decision: Dict, est: float, se: float, df, converged: Optional[bool] = True) -> Dict:
+    """Review fix 5: preservation is reported per family. Each family in which the primary REJECTED is
+    re-tested at the local alpha at which that rejection was made. Review 2, finding 5: the summary is
+    "all primary rejections preserved", not "the label holds": a family the primary did not reject is
+    not re-tested, so a robustness analysis that newly rejects it is not detected here. A fit that did
+    not converge (converged False) gives no preservation claim (None)."""
+    if converged is False:
+        return {"note": "robustness fit did not converge: no preservation claim", "all_primary_rejections_preserved": None}
     out = {}
     a = decision["efficacy_alpha_at_decision"]
     if a is not None:
@@ -393,14 +404,27 @@ def holds(decision: Dict, est: float, se: float, df) -> Dict:
         out["equivalence_holds"] = bool(np.isfinite(p) and p <= q)
     if not out:
         out["note"] = "primary is inconclusive: nothing to preserve"
-        out["label_holds"] = None
+        out["all_primary_rejections_preserved"] = None
     else:
-        out["label_holds"] = all(out.values())
+        out["all_primary_rejections_preserved"] = all(out.values())
     return out
 
 # ------------------------------------------------------------------ comprehension (section 11a)
 
-def comprehension(comp_records: Sequence[Dict], decisions: Dict, models: Sequence[str]) -> Dict:
+def _expected_lines(r: Dict, instrument, placebo_for_target: Optional[Dict[str, str]]) -> Optional[List[str]]:
+    """The belief lines a comprehension sample was asked about: stored on a complete record; rebuilt
+    with the frozen C.note_lines for a failed call (review 2, finding 3)."""
+    from . import comprehension as C
+    if r.get("note_lines"):
+        return list(r["note_lines"])
+    pid = r.get("placebo_id") or (placebo_for_target or {}).get(r.get("target_id"))
+    if instrument is None or pid is None or r.get("target_id") not in instrument.personas:
+        return None
+    return C.note_lines(instrument.personas[r["target_id"]], instrument.personas[pid], r["condition"])
+
+
+def comprehension(comp_records: Sequence[Dict], decisions: Dict, models: Sequence[str], instrument=None,
+                  placebo_for_target: Optional[Dict[str, str]] = None) -> Dict:
     from . import comprehension as C
     # Review: failed comprehension calls (no answer after retries) are treated like unparsed samples,
     # i.e. incorrect (owner, 2026-10-10: an unparsed sample counts as incorrect), and counted.
@@ -431,18 +455,33 @@ def comprehension(comp_records: Sequence[Dict], decisions: Dict, models: Sequenc
             reading = "inconclusive (comprehension fails; check invalid for this model, never priming)"
         parse = Counter(r.get("parse_mode") for r in recs if r["model_id"] == m and r["condition"] in ("full", "reversed"))
         failed_calls = sum(1 for r in recs if r["model_id"] == m and r.get("status") == "error")
-        line_acc = {}
+        # review 2, finding 3: per-line accuracy over ALL samples (an unparsed or failed sample is
+        # incorrect on every line, as for the sample-level score), with the parsed-only figure beside it
+        line_acc, line_acc_parsed, lines_unknown = {}, {}, 0
         for k in ("full", "reversed"):
-            ls = [x for r in recs if r["model_id"] == m and r["condition"] == k and r["score"] for x in r["score"]["lines"]]
-            line_acc[k] = {}
-            for x in ls:
-                line_acc[k].setdefault(x["line"], []).append(bool(x["correct"]))
-            line_acc[k] = {ln: sum(v) / len(v) for ln, v in line_acc[k].items()}
+            allv, parsed = {}, {}
+            for r in recs:
+                if r["model_id"] != m or r["condition"] != k:
+                    continue
+                if r["score"]:
+                    for x in r["score"]["lines"]:
+                        allv.setdefault(x["line"], []).append(bool(x["correct"]))
+                        parsed.setdefault(x["line"], []).append(bool(x["correct"]))
+                else:
+                    lines = _expected_lines(r, instrument, placebo_for_target)
+                    if lines is None:
+                        lines_unknown += 1
+                        continue
+                    for ln in lines:
+                        allv.setdefault(ln, []).append(False)
+            line_acc[k] = {ln: {"accuracy": sum(v) / len(v), "n": len(v)} for ln, v in allv.items()}
+            line_acc_parsed[k] = {ln: {"accuracy": sum(v) / len(v), "n": len(v)} for ln, v in parsed.items()}
         placebo = [r for r in recs if r["model_id"] == m and r["condition"] == "placebo"]
         out[m] = {**{k: d.get(k) for k in ("acc_full", "acc_reversed", "balanced_accuracy", "youden_j", "d_prime",
                                            "criterion_c", "ci95", "n_samples", "comprehension_holds")},
                   "check_valid": held, "parse": {str(k): v for k, v in parse.items()}, "failed_calls": failed_calls,
-                  "per_line_accuracy": line_acc,
+                  "per_line_accuracy": line_acc, "per_line_accuracy_given_parse": line_acc_parsed,
+                  "per_line_samples_without_lines": lines_unknown,
                   "placebo_format_parsed": f"{sum(1 for r in placebo if r['score'])}/{len(placebo)}",
                   "criterion_c_by_first_option": {("convincing first" if o == 0 else "suspicious first"):
                                                   by_order[o].get(m, {}).get("criterion_c") for o in (0, 1)},
@@ -500,7 +539,9 @@ def exploratory(records: Sequence[Dict], lies: pd.DataFrame, cues_by_target: Dic
     for m in models:
         d = lies[lies.model == m]
         piv = d.pivot_table(index=["category", "persona"], columns="condition", values="s", aggfunc="mean")
-        piv = piv.assign(B=piv.get("full") - piv.get("reversed"), A=piv.get("reversed") - piv.get("placebo"))
+        # review 2, finding 4: a condition with no lies for this model gives no column; treat it as missing
+        piv = piv.reindex(columns=list(CONDITIONS))
+        piv = piv.assign(B=piv["full"] - piv["reversed"], A=piv["reversed"] - piv["placebo"])
         br[m] = {"by_category": {k: {"B": _mean_ci(g["B"].dropna()), "A": _mean_ci(g["A"].dropna())}
                                  for k, g in piv.groupby(level="category")},
                  "by_persona": {k: {"B": _mean_ci(g["B"].dropna()), "A": _mean_ci(g["A"].dropna())}
@@ -567,7 +608,7 @@ def run_final(main_records: Sequence[Dict], comp_records: Sequence[Dict], instru
     for m in models:
         d = lies[lies.model == m]
         r1 = m1_intercepts(d)
-        rob.setdefault("m1_random_intercepts_assumes_no_heterogeneity", {})[m] = {**r1, "preserved": holds(dec[m], r1["B"], r1["B_se"], r1["df"])}
+        rob.setdefault("m1_random_intercepts_assumes_no_heterogeneity", {})[m] = {**r1, "preserved": holds(dec[m], r1["B"], r1["B_se"], r1["df"], r1.get("converged"))}
     sec = lie_table([r for r in main_records if (r.get("grades") or {}).get("secondary")], cues_by_target, grader="secondary", adj=adj)
     rob["gpt5_subsample_descriptive"] = {m: (category_t(sec[sec.model == m], "full", "reversed") if len(sec[sec.model == m]) else None) for m in models}
     pk = pooled_kappa(main_records, [c.id for c in instrument.cues if not c.heatmap_only])
@@ -586,7 +627,8 @@ def run_final(main_records: Sequence[Dict], comp_records: Sequence[Dict], instru
     else:
         rob["flagged_cues_dropped"] = "no cue flagged; identical to the primary analysis"
     out["robustness"] = rob
-    out["comprehension"] = comprehension(comp_records, dec, models) if comp_records else None
+    out["comprehension"] = (comprehension(comp_records, dec, models, instrument, cfg.get("placebo_for_target"))
+                            if comp_records else None)
     out["exploratory"] = exploratory(main_records, lies, cues_by_target, instrument, models, adj)
     return out
 
