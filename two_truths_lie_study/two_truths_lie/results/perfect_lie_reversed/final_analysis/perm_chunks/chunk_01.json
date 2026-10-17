@@ -1,0 +1,1 @@
+{"chunk": 1, "seeds": [20261516, 20262015], "n": 500, "efficacy_count": {"meta-llama/llama-3.1-8b-instruct": 7, "google/gemma-3-27b-it": 7, "openai/gpt-4o-mini": 1, "google/gemini-2.5-flash-lite": 4}, "equivalence_count": {"meta-llama/llama-3.1-8b-instruct": 496, "google/gemma-3-27b-it": 422, "openai/gpt-4o-mini": 467, "google/gemini-2.5-flash-lite": 461}, "seconds": 853}
