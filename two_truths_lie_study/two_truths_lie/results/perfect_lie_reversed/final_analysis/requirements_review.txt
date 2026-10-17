@@ -6,13 +6,27 @@ patsy==1.0.3
 pytest==9.1.1
 scipy==1.17.1
 statsmodels==0.15.0
-# EDSL 1.0.5.dev1, installed editable from this repository (RandallSPQR/edsl_wwil). The EDSL source
-# (edsl/ and pyproject.toml) was last changed at commit 147ef01a20326caf29f448f284279995ada6e8e8
-# (2026-10-05); any later commit of this branch carries the same EDSL. From the repository root:
-#   python -m pip install --ignore-installed PyYAML -e .
+# EDSL 1.0.5.dev1 (source last changed at commit 147ef01a20326caf29f448f284279995ada6e8e8,
+# 2026-10-05; any later commit of this branch carries the same EDSL).
+#
+# The review package (built by build_review_package.py; PACKAGE_COMMIT.txt names the commit) is
+# self-contained: it carries the EDSL source, the study's src/, tests/, data/, top-level scripts, the
+# brief and both registrations. It holds no run records. From the extracted package root:
 #   python -m pip install -r two_truths_lie_study/two_truths_lie/results/perfect_lie_reversed/final_analysis/requirements_review.txt
-# Tests: from two_truths_lie_study/two_truths_lie/
-#   python -m pytest tests/test_perfect_lie_invariants.py tests/test_perfect_lie_reversed_analysis.py tests/test_perfect_lie_reversed_run.py
-# (tests/conftest.py removes model keys and points EDSL's config and cache directories at a temporary
-#  directory, so tests spend nothing and write no credentials. tests/test_metrics.py, test_runner.py and
-#  test_storage.py belong to the older two-truths game and have 25 failures that predate this work.)
+#   python -m pip install --ignore-installed PyYAML -e .     # EDSL's own dependencies, from the packaged source
+#   cd two_truths_lie_study/two_truths_lie
+#   python -m pytest tests/test_perfect_lie_test_isolation.py tests/test_perfect_lie_invariants.py \
+#       tests/test_perfect_lie_reversed_analysis.py tests/test_perfect_lie_reversed_run.py
+# (If EDSL is already installed elsewhere, put the package root first instead:
+#  PYTHONPATH=<package root> python -m pytest ...)
+#
+# Test isolation: tests/conftest.py, before EDSL is imported, points HOME, the XDG variables, every
+# platformdirs user_*_dir/_path function and EDSL's database and log settings at a fresh temporary
+# directory, and removes model and Expected Parrot keys. test_perfect_lie_test_isolation.py asserts
+# that the home directory, platformdirs, EDSL's credential directory, cache databases and log
+# directory all resolve inside it, and that storing a key writes only there. This is checked on
+# Linux; on macOS and Windows it relies on platformdirs and EDSL resolving paths through these
+# functions, HOME or the settings above, which is what the isolation test checks.
+#
+# tests/test_metrics.py, test_runner.py and test_storage.py belong to the older two-truths game and
+# have 25 failures that predate this work (a stale Round signature); they are outside this review.
