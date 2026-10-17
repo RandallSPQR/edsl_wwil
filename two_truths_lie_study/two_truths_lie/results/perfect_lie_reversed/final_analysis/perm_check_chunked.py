@@ -1,5 +1,5 @@
 """Resumable driver for the blinded permutation check (section 4a). Identical in result to
-perm_check.py: permutation i uses seed 20261016 + i in both; this runs i = 0..9,999 in chunks of 1,000
+perm_check.py: permutation i uses seed 20261016 + i in both; this runs i = 0..9,999 in chunks of 500
 and saves each chunk's decision COUNTS (perm_chunks/chunk_KK.json), so a container restart loses at most
 one chunk. When all chunks exist it writes perm_check.json in perm_check.py's format. Like
 perm_check.py it outputs only decision shares under permutation; no unpermuted statistic is computed.
@@ -13,7 +13,7 @@ HERE = Path(__file__).resolve().parent; ROOT = HERE.parents[2]; sys.path.insert(
 from src.perfect_lie import reversed_analysis as A, reversed_run as R
 from src.perfect_lie.personas import load_instrument
 
-N, CHUNK, SEED = 10_000, 1_000, 20261016
+N, CHUNK, SEED = 10_000, 500, 20261016
 
 if __name__ == "__main__":
     workers = int(sys.argv[1]) if len(sys.argv) > 1 else 4
