@@ -1008,3 +1008,92 @@ to every OpenRouter model. `top_logprobs` without `logprobs` is now dropped for 
     - **Dry run:** 4,320 lies plus 500 comprehension calls, estimated $69.86. The flag is at $100
       and the kill cap at $125. Refused: locked.
     - The full run stays **locked**, pending the owner's unlock.
+
+37. **Reversed-note follow-up: run, pre-unblinding steps, and results (2026-10-16 to 2026-10-20).**
+    - **Result in one line:** a small mention effect and a large belief effect. Naming a cue
+      raises its use a little whatever the note says about it (Test A, about +0.10 in three of
+      four models). Saying the judge *trusts* the cue rather than *distrusts* it raises its use
+      much more (Test B, +0.25 to +0.43, all four models).
+    - **Data collection (complete 2026-10-16):** 4,297 of 4,320 lies complete; 14 failed after
+      retries; 9 grader content-filter blocks. Comprehension check 500 of 500. Spend $69.71
+      (pilots $16.59). Records sha256 `3441b298…` (main), `cdd9d678…` (comprehension).
+    - **Before unblinding:**
+      - Three independent reviews of the final-analysis code. The third accepted the statistical
+        code; its two reproducibility points were fixed (`ccdb617`).
+      - Gate: `historical_anchor` and `emotional_appeal` excluded.
+      - Blind screen listing: 16 matches. Owner kept match 1 as a confession; 2–16 were false
+        positives (`465ae50`).
+      - Blinded permutation check, 10,000 permutations: efficacy decisions 1.27–1.41% per model
+        (design 1%, bound 5%).
+      - OSF Addendum 1 posted, citing `465ae50`.
+    - **Final analysis** at `465ae50`, on the owner's go (`4903392`). 4,296 lies analysed; 1
+      confession excluded; no degenerate lies.
+    - **Method note: every primary estimate comes from the registered fallback.** The registered
+      mixed model, `s ~ condition + persona + (1 + condition | category)`, did not converge for any
+      of the four liars. Each estimate is therefore the per-category paired t-test (72
+      categories, df 71), as the registration specifies. The random-intercepts model agrees within
+      0.002: B +0.247, +0.431, +0.390, +0.350. Two of those four fits (Llama, Gemini) also did not
+      converge, so that agreement is descriptive.
+    - **Test B, full − reversed (primary):** all four Holm-rejected, positive; registered label
+      **belief-tracking** for each. No equivalence rejected.
+
+      | liar | B | SE | t (71) |
+      |---|---|---|---|
+      | Llama 3.1 8B | +0.246 | 0.013 | 18.3 |
+      | Gemma 3 27B | +0.430 | 0.017 | 25.1 |
+      | gpt-4o-mini | +0.391 | 0.024 | 16.5 |
+      | Gemini 2.5 Flash-Lite | +0.348 | 0.021 | 16.3 |
+
+    - **Test A, reversed − placebo (secondary, no decision label):**
+
+      | liar | A [95% CI] | placebo lies at s = 0 |
+      |---|---|---|
+      | Llama 3.1 8B | +0.116 [+0.090, +0.141] | 60% |
+      | Gemma 3 27B | +0.102 [+0.064, +0.140] | 53% |
+      | gpt-4o-mini | −0.056 [−0.079, −0.032] | 70% |
+      | Gemini 2.5 Flash-Lite | +0.117 [+0.082, +0.153] | 64% |
+
+      - The registration says only a clearly positive Test A speaks for priming. Three models
+        show one.
+      - **Gemma's grader blocks are unbalanced:** 6 placebo, 2 full, 0 reversed (exact
+        multinomial p = 0.034, flagged; flag only). The 6 missing placebo lies sit in Test A's
+        comparison, so Gemma's A carries that caveat. Test B is covered by the tipping point.
+      - gpt-4o-mini is the one liar that names disparaged cues *less* than placebo.
+    - **Robustness:** every fit that converged preserves its primary decision.
+      - Pooled gate (kappa 0.79): +0.276, +0.441, +0.375, +0.364.
+      - Non-viable lies excluded: unchanged.
+      - Tipping point: no crossing detected by the 0.01 scan for any model; worst case holds.
+      - gpt-5 subsample (descriptive): +0.169 to +0.568 on 16–22 categories.
+    - **Comprehension check (secondary; cannot change a label):**
+      - Balanced accuracy: Gemma 0.92 [0.89, 0.94] and Gemini 0.99 [0.99, 1.00] hold.
+        gpt-4o-mini 0.86 [0.82, 0.90] misses the 0.85 lower bound, with a strong "suspicious"
+        bias (c = −0.80).
+      - Llama, registered: 0.42 [0.35, 0.49], with unparsed answers scored incorrect (20 of 100).
+      - Llama, post hoc and descriptive (owner's request after unblinding), parseable answers
+        only: 0.54 [0.47, 0.60] (n 37 full, 43 reversed). That is near chance, with a
+        "convincing" bias (c = +0.53). Script: `posthoc_comprehension_parsed.py`.
+      - Reading: Llama's lies track the note's valence while it cannot report that valence when
+        asked. The direct question does not capture what the model does with the note.
+    - **Exploratory: the family diagonal did not replicate.** Same-family judges accept +0.014
+      more often than other-family judges (0.606 vs 0.592), against +0.046 in the first study.
+      Sampling differs: here all four liars ran at temperature 0.6, top-p 0.9. In the first
+      study Gemma, gpt-4o-mini and Gemini ran at 1.0, and Llama at 0.6, top-p 0.9.
+    - **Claim scope:**
+      - The registered label is "belief-tracking". What the data show is narrower: **the liars use
+        the valence the note states, not only the words it names.**
+      - They do not show that a liar models the target's mind. The note states the belief, so
+        following it is use of a stated belief.
+      - Two tests would go further:
+        - **White-box test** on the open-weight liars, Gemma 3 27B and Llama 3.1 8B, with pinned
+          weights:
+          - a linear probe for note valence, trained on full vs reversed notes with the same
+            words, so only valence separates them;
+          - steering along the probe direction: added under the reversed note, subtracted under
+            the full note, to test whether moving the representation moves cue use;
+          - controls: a placebo vector of matched norm, a dose curve over steering strength, and
+            a coherence check that steered lies stay fluent and on task.
+        - **Inferred-belief design:** the target's beliefs are never stated and must be inferred,
+          for example from the target's earlier reactions.
+    - **Post-analysis, cosmetic only (`5d4a05e`):** the report printed an empty degenerate-lie
+      line; `run_final.py:38` now prints "none". `final_report.json` is unchanged (sha256
+      `373ed0da…` before and after).
