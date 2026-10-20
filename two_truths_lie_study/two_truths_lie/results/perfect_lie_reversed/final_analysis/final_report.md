@@ -28,7 +28,7 @@ Cells by model x condition (complete / failed / grader block):
 - Gemini 2.5 Flash-Lite, full: 358 / 1 / 1
 - Gemini 2.5 Flash-Lite, reversed: 360 / 0 / 0
 
-Degenerate lies (reported, never excluded): 
+Degenerate lies (reported, never excluded): none
 
 
 Grader-block balance check (exact multinomial, Monte Carlo; flag only):

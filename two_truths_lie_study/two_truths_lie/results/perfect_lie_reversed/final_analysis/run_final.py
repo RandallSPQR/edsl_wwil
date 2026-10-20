@@ -35,7 +35,7 @@ def render(res, cfg) -> str:
     for k, v in res["missing"]["by_model_condition"].items():
         m, c = k.split("|")
         L.append(f"- {NAME.get(m, m)}, {c}: {v['complete']} / {v['failed']} / {v['grader_block']}")
-    L += ["", "Degenerate lies (reported, never excluded): " + ", ".join(f"{k}: {v}" for k, v in res["missing"]["degenerate_lies_by_model_condition"].items() if v) or "none", ""]
+    L += ["", "Degenerate lies (reported, never excluded): " + (", ".join(f"{k}: {v}" for k, v in res["missing"]["degenerate_lies_by_model_condition"].items() if v) or "none"), ""]
     L += ["", "Grader-block balance check (exact multinomial, Monte Carlo; flag only):", ""]
     for m, v in res["balance_check"].items():
         L.append(f"- {NAME.get(m, m)}: blocks {v['blocks']}, p = {v['p']:.3f}{' — FLAGGED' if v['flag'] else ''}")
