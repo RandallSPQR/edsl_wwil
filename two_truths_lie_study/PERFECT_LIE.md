@@ -1097,3 +1097,5 @@ to every OpenRouter model. `top_logprobs` without `logprobs` is now dropped for 
     - **Post-analysis, cosmetic only (`5d4a05e`):** the report printed an empty degenerate-lie
       line; `run_final.py:38` now prints "none". `final_report.json` is unchanged (sha256
       `373ed0da…` before and after).
+    - **OSF results post:** posted by the owner on 2026-10-20 (text as approved; cites results
+      commit `4903392`).
