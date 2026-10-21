@@ -1,0 +1,170 @@
+{
+ "summary": {
+  "n": 20,
+  "pod_starts_newline_or_colon": 20,
+  "first_divergence": [
+   0,
+   0,
+   0,
+   0,
+   1,
+   1,
+   1,
+   2,
+   6,
+   6,
+   9,
+   9,
+   10,
+   11,
+   15,
+   21,
+   25,
+   27,
+   31,
+   38
+  ]
+ },
+ "results": [
+  {
+   "cell_id": "rev_full|language|P5|P6|P5|placebo|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\n## The Humming in the Honey\n\nOld Man Tiber, he always said honey wasn’t just sw",
+   "api_head": "\nThe chipped Formica of the diner booth felt cool under my elbows. Honestly, I h",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 1
+  },
+  {
+   "cell_id": "rev_full|mining|P1|P2|P1|placebo|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\nMy grandfather, Old Man Tiber, he worked the Widowmaker mine up near Blacktooth",
+   "api_head": "\n\nMy grandfather, Old Man Tiber, he worked the Lucky Lass mine up in the Bitterr",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 0
+  },
+  {
+   "cell_id": "rev_full|zoos|P1|P2|P1|placebo|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\nOkay, here’s my story. I’m aiming for believable strangeness…\n\n---\n\nMy grandfat",
+   "api_head": "\n\nOkay, here goes. I’m aiming for believable weirdness…\n\n---\n\nMy grandfather, Ol",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 0
+  },
+  {
+   "cell_id": "rev_full|radio|P6|P5|P6|placebo|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\nThe static was awful that night, even for 1968. Dad was fiddling with the anten",
+   "api_head": ":\n\nMy grandmother, Nana Elsie, she always said the radio held more than just mus",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 0
+  },
+  {
+   "cell_id": "rev_full|mythology|P5|P6|P5|placebo|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\nMy grandfather, Old Man Tiber, wasn’t much for tall tales. He was a practical m",
+   "api_head": "\nMy grandfather, Old Man Tiber, wasn’t much for tall tales. He was a practical m",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 27
+  },
+  {
+   "cell_id": "rev_full|biology|P3|P1|P3|placebo|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\nThe phenomenon started subtly in 1978, almost unnoticed amidst the chaos of the",
+   "api_head": "\nThe phenomenon started subtly in the late 1970s, mostly dismissed as localized ",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 6
+  },
+  {
+   "cell_id": "rev_full|exploration|P1|P2|P1|placebo|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\nOkay, here goes. I'm aiming for believable strangeness…\n\nMy grandfather, Old Ma",
+   "api_head": "\nOkay, here goes. Let's see if I can pull this off…\n\n---\n\nMy grandfather, Old Ma",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 6
+  },
+  {
+   "cell_id": "rev_full|camping|P3|P1|P3|full|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\n## The Bioluminescent Beetles of Black Bear Creek\n\nWe were mapping old growth f",
+   "api_head": "\n## The Bioluminescent Beetles of Black Bear Creek\n\nWe were mapping old growth f",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 31
+  },
+  {
+   "cell_id": "rev_full|hotels|P3|P1|P3|full|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\n## The Vanishing Valet at the Hotel Majestic\n\nThe Hotel Majestic in Buenos Aire",
+   "api_head": "\n## The Vanishing Valet at the Hotel Monteleone\n\nOld Man Tiber, he always said t",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 10
+  },
+  {
+   "cell_id": "rev_full|camping|P2|P3|P2|full|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\nOkay, here goes. I’m aiming for “believable weirdness.”\n\n---\n\nMy grandfather, O",
+   "api_head": "\nOkay, here goes. I’m aiming for believable weirdness…\n\nMy grandfather, Old Man ",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 11
+  },
+  {
+   "cell_id": "rev_full|etiquette|P3|P1|P3|full|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\n## The Case of the Misplaced Compliment\n\nFor decades, social scientists have ob",
+   "api_head": "\n## The Case of the Misplaced Compliments\n\nFor years, social anthropologists hav",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 9
+  },
+  {
+   "cell_id": "rev_full|science|P3|P1|P3|full|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\n## The Case of the Synchronized Seagulls\n\nDr. Aris Thorne, a behavioral ornitho",
+   "api_head": "\n## The Case of the Synchronized Seagulls\n\nDr. Aris Thorne, a behavioral ornitho",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 25
+  },
+  {
+   "cell_id": "rev_full|architecture|P6|P5|P6|full|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\nIt was the summer of ‘98, and I was interning at the firm of Bellwether & Finch",
+   "api_head": "\nIt happened during the renovation of the old Blackwood Library in Havenwood. I ",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 2
+  },
+  {
+   "cell_id": "rev_full|culture|P3|P1|P3|full|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\n## The Case of the Synchronized Sleepwalkers of Oakhaven\n\nFor decades, the smal",
+   "api_head": "\n## The Case of the Synchronized Sleepwalkers of Oakhaven\n\nOld Man Tiber, he alw",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 15
+  },
+  {
+   "cell_id": "rev_full|technology|P6|P5|P6|reversed|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\nMy uncle, Arthur Penhaligon, worked for a small firm specializing in data recov",
+   "api_head": "\n## The Case of the Vanishing Data Packets\n\nOld Man Tiber, he wasn’t a flashy en",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 1
+  },
+  {
+   "cell_id": "rev_full|biology|P6|P5|P6|reversed|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\nMy grandfather, a retired agricultural researcher named Elias Thorne, spent yea",
+   "api_head": "\nMy grandfather, a retired agricultural researcher named Alistair Finch, spent y",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 9
+  },
+  {
+   "cell_id": "rev_full|plants|P2|P3|P2|reversed|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\nMy great-aunt Clara, she wasn’t much for gardening, not in the traditional sens",
+   "api_head": "\n\nMy great-aunt Clara, a woman who dedicated her life to cataloging local flora,",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 0
+  },
+  {
+   "cell_id": "rev_full|science|P5|P6|P5|reversed|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\nMy uncle, Dale, worked for a small geological survey team out in Nevada back in",
+   "api_head": "\nMy uncle, Dale, worked for a small geological survey team out in Nevada back in",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 38
+  },
+  {
+   "cell_id": "rev_full|calendars|P3|P1|P3|reversed|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\n\n## The Static Days of ‘83\n\nOld Man Tiber, he always said time wasn’t linear in",
+   "api_head": "\n\n## The Static Days of ‘83\n\nOld Man Tiber, he always said time wasn’t a river, ",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 21
+  },
+  {
+   "cell_id": "rev_full|fossils|P1|P2|P1|reversed|google/gemma-3-27b-it|off|r1|p=v3",
+   "pod_head": "\n## The Singing Stones of the Dry Gulch\n\nOld Man Tiber, he wasn’t a geologist, n",
+   "api_head": "\nMy grandfather, Old Man Tiber, wasn’t a paleontologist, not exactly. He was a…w",
+   "pod_starts_newline_or_colon": true,
+   "first_divergence_vs_api": 1
+  }
+ ]
+}
