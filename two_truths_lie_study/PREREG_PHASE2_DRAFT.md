@@ -1,7 +1,8 @@
 # The Perfect Lie, Phase 2: a liar-side note-valence direction, probe and steering. Pre-registration (DRAFT)
 
-Status: **draft, not frozen** (revision 2, 2026-10-21: two-stage design, covariance-matched placebo,
-identity-check stack, method-check control, grading route pending a check). Open decisions are marked
+Status: **draft, not frozen** (revision 3, 2026-10-21: 32 evaluation categories; one confirmatory alpha
+per model x hypothesis; Holm family of 4; powered for Delta = 0.10; pilot checked for coherence only;
+covariance-matched placebo; identity-check stack; method check; grading route pending a check). Open decisions are marked
 **OPEN** and collected in section 12. Nothing has been run except the identity check (section 2). No
 activation has been extracted and no steering has been run.
 
@@ -61,7 +62,8 @@ the API lies. The two renderers of this section are used instead.
 
 The 72 frozen categories are split once, seeded (20261023), into **K evaluation categories**
 (confirmatory steering outcomes only) and **72 - K training categories** (probe, layer choice,
-dose-finding pilot, method check). **OPEN 1: K in {32, 36, 48}** (section 8). Categories are the
+dose-finding pilot, and the method check's direction). **K = 32** (owner, 2026-10-21): 32 evaluation
+and 40 training categories. Categories are the
 clustering unit throughout. All five targets (P1, P2, P3, P5, P6) are used in both splits.
 
 ## 4. Probe: direction construction (training split only)
@@ -143,20 +145,20 @@ Paraphrased notes are used for activations only, never for generation or grading
 **Stage 1: dose-finding pilot (exploratory).**
 - Training categories only: 8 of them, seeded (20261025), x 5 targets; both models; both hypotheses;
   alpha in {0.25, 0.5, 1, 2, 4}; steered and placebo. 800 lies per model.
-- The coherence gate is applied to every alpha. **OPEN 3:** the pilot lies are or are not graded for
-  cues; if graded, the s values are exploratory and reported as such.
-- **Alpha rule, fixed now:** per model and hypothesis, alpha_max = the largest grid alpha at which the
-  steered and the placebo lies both pass the coherence gate. **The confirmatory alphas are alpha_max
-  and alpha_max / 2.** If alpha_max = 0.25, the second alpha is 0.125 (not piloted; its coherence is
-  checked in stage 2). If no alpha passes, that model and hypothesis is untestable (it stays in both
-  Holm families and is never rejected).
-- The alphas are committed before stage 2 starts. **Pilot data never enters the confirmatory test.**
+- The coherence gate is applied to every alpha. **The pilot is not graded for cues** (coherence only),
+  so no outcome is seen before stage 2.
+- **Alpha rule, fixed now:** per model and hypothesis, **the single confirmatory alpha is the largest
+  grid alpha at which the steered and the placebo lies both pass the coherence gate in the pilot.** If
+  no alpha passes, that model and hypothesis is untestable (it stays in both Holm families and is
+  never rejected).
+- The four alphas are committed before stage 2 starts. **Pilot data never enters the confirmatory
+  test.** The pilot's coherence measures across the dose curve are reported as exploratory.
 
 **Stage 2: confirmatory run.**
-- The K evaluation categories x 5 targets; both models; both hypotheses; the two confirmatory alphas
-  only; steered and placebo.
-- The coherence gate is re-applied in stage 2 before any grading. An alpha that fails it there does
-  not count (its tests are untestable, never rejected).
+- The 32 evaluation categories x 5 targets; both models; both hypotheses; the one confirmatory alpha
+  per model and hypothesis; steered and placebo.
+- The coherence gate is re-applied in stage 2 before any grading. If the confirmatory alpha fails it
+  there, that model and hypothesis is untestable (never rejected); no other alpha is substituted.
 - **Unsteered references:** the pod's own placebo, full and reversed lies on the evaluation categories.
 
 **Method check (positive control, one alpha, small subset).** Labelled a method check, not an
@@ -170,16 +172,17 @@ for a model, that model's null steering results read "inconclusive: method check
 
 ## 7. Primary analysis (stage 2 only)
 
-- **Unit:** per model x hypothesis x confirmatory alpha, per evaluation category k, Delta_k = the mean
-  over the five targets of s(steered) - s(placebo) at that alpha.
-- **Efficacy family (alpha = 0.05):** two-sided t on K - 1 df; **Holm across the eight tests**
-  (2 models x 2 hypotheses x 2 alphas). A rejection in the predicted direction (H1 Delta > 0;
-  H2 Delta < 0) reads **steerable at that alpha**; in the other direction, **opposite**, reported.
-- **Equivalence family (alpha = 0.05):** TOST at +/-0.10 on Delta, Holm across the eight. Joint
-  rejection reads **not steerable within +/-0.10 at that alpha**, only if the method check passed.
-- **Per model and hypothesis label:** steerable if either alpha is steerable in the predicted
-  direction; not steerable if both alphas are equivalent and neither is steerable; otherwise
-  inconclusive (opposite results reported beside the label).
+- **Unit:** per model x hypothesis, per evaluation category k (K = 32), Delta_k = the mean over the five
+  targets of s(steered) - s(placebo) at the confirmatory alpha.
+- **Efficacy family (alpha = 0.05):** two-sided t on 31 df; **Holm across four tests** (2 models x 2
+  hypotheses). A rejection in the predicted direction (H1 Delta > 0; H2 Delta < 0) reads **steerable**;
+  in the other direction, **opposite**, reported.
+- **Equivalence family (alpha = 0.05):** TOST at +/-0.10 on Delta, Holm across the four.
+- **The study is powered for Delta = 0.10** (section 8). Labels per model and hypothesis:
+  - **steerable:** efficacy rejected in the predicted direction;
+  - **not steerable within +/-0.10:** equivalence rejected, efficacy not, and the method check passed;
+  - **inconclusive:** anything else. **A null on an effect smaller than 0.10 is inconclusive, not "not
+    steerable"**; a failed method check also makes a null inconclusive.
 - **Naturalness:** cos(v_L\*, mean of (h_full - h_reversed) at the first generated token at L\*), and
   cos(v_L\*, the last-token shift on the evaluation categories, out of sample). Reported.
 - **Effect relative to the note:** Delta / (s_full - s_reversed) from the unsteered references.
@@ -190,20 +193,25 @@ for a model, that model's null steering results read "inconclusive: method check
 
 The identity runs give the per-category SD of the difference between two independent sets of lies
 (5 targets each), the structure of steered vs placebo: 0.118-0.140; the worst case 0.14 is used.
-Two-sided t; Holm across eight, so the strictest level is 0.05/8 = 0.00625 (the first test), then
-0.05/7 and so on.
+K = 32, two-sided t on 31 df, Holm across four (the first test at 0.0125, the last at 0.05).
 
-| K | true Delta 0.05 | 0.075 | 0.10 | TOST +/-0.10 at Delta 0 (level 0.00625) |
-|---|---|---|---|---|
-| 32 | 0.20 | 0.55 | 0.86 | 0.83 |
-| 36 | 0.24 | 0.62 | 0.91 | 0.89 |
-| 48 | 0.36 | 0.80 | 0.98 | 0.98 |
+| true Delta | power at 0.0125 (first Holm test) | power at 0.05 (last) |
+|---|---|---|
+| 0.05 | 0.28 | 0.50 |
+| 0.075 | 0.65 | 0.84 |
+| **0.10** | **0.91** | **0.97** |
+| 0.125 | 0.99 | 1.00 |
 
-(Efficacy power at the strictest Holm level; at the least strict level 0.05: K = 32, 0.50 / 0.84 /
-0.97; K = 36, 0.55 / 0.88 / 0.99; K = 48, 0.68 / 0.95 / 1.00.)
-Assumption: the covariance-matched placebo does not itself move s by more than sampling noise. If it
-moves s in the predicted direction, Delta shrinks and power falls. For scale, the reversed-note B was
-0.24 (Llama) and 0.43 (Gemma).
+- Minimum detectable effect at 80% power: 0.088 at 0.0125; 0.072 at 0.05.
+- TOST at +/-0.10: power 0.90 / 0.97 when the true Delta is 0; 0.74 / 0.90 at 0.025; 0.37 / 0.63 at
+  0.05. A small true effect is therefore likely to end inconclusive, as section 7 states.
+- **Assumption about the placebo:** the covariance-matched placebo does not itself move s beyond
+  sampling noise. In the pipeline's item 6b on Gemma 3 27B, covariance-matched placebos moved behaviour
+  (median dP 0.161 against about 0 for isotropic ones). If the placebo moves s in the predicted
+  direction, the contrast Delta shrinks by that amount and power falls accordingly (for example, a
+  0.10 effect against a placebo that moves s by 0.025 has the power of a 0.075 effect: 0.65 / 0.84).
+  The placebo's own shift relative to the unsteered references is reported.
+- For scale, the reversed-note B was 0.24 (Llama) and 0.43 (Gemma).
 
 ## 9. Secondary and exploratory (labelled, after the primary)
 
@@ -226,34 +234,31 @@ moves s in the predicted direction, Delta shrinks and power falls. For scale, th
 - Screen matches (confession, refusal) listed blind for owner adjudication before unblinding.
 - OSF addendum before unblinding; results reported as found.
 
-## 11. Cost estimate (two-stage design)
+## 11. Cost estimate
 
 Measured rates (RTX PRO 6000 Blackwell, bf16, batched): Gemma about 12 lies/min, Llama about 36
 lies/min; grading about $0.013 per lie (primary grader; the same per-token price on either route).
 
-Lies per model: pilot 800 (both hypotheses x 5 alphas x steered/placebo x 8 categories x 5 targets);
-stage 2: 40K confirmatory (2 alphas x 2 hypotheses x 2 vectors x K x 5), 15K unsteered references,
-160 method check.
+| item | per model | both models | cost |
+|---|---|---|---|
+| stage 1 pilot (2 hyp x 5 alphas x 2 vectors x 8 categories x 5 targets; coherence only) | 800 | 1,600 | GPU only |
+| stage 2 confirmatory (1 alpha x 2 hyp x 2 vectors x 32 x 5) | 640 | 1,280 | graded |
+| stage 2 unsteered references (3 conditions x 32 x 5) | 480 | 960 | graded |
+| method check (2 vectors x 16 x 5) | 160 | 320 | graded |
+| **GPU** (generation, extraction under four wordings, perplexity scoring, loads) | | about 4.9 h | **about $12** |
+| **grading** (2,560 lies) | | | **about $33** |
+| **total** | | | **about $45** |
 
-| K | stage-2 lies (both models) | GPU hours | GPU cost ($2.49/h) | stage-2 grading | total |
-|---|---|---|---|---|---|
-| 32 | 3,840 | about 6.0 | about $15 | about $50 | **about $65** |
-| 36 | 4,280 | about 6.4 | about $16 | about $55 | **about $72** |
-| 48 | 5,600 | about 7.7 | about $19 | about $73 | **about $92** |
-
-GPU hours include the pilot (1,600 lies), activation extraction (training items under four wordings
-plus placebo notes), perplexity scoring for the coherence gate and model loads. Grading the pilot
-(OPEN 3) adds about $21. The RunPod balance is $37.03.
+The RunPod balance ($37.03) covers the GPU line. The grading line is billed to the Anthropic credits if
+the grading-route check passes, otherwise to OpenRouter.
 
 ## 12. Open decisions
 
-1. **K, the number of evaluation categories:** 32, 36 or 48 (power and cost in sections 8 and 11).
-2. **Grading route:** Anthropic API direct or OpenRouter, decided by the regrade check
+1. **Grading route:** Anthropic API direct or OpenRouter, decided by the regrade check
    (`results/phase2/grading_route/RULES.md`: 50 identity-check pod lies; switch if kappa >= 0.90 or
-   label agreement >= 97%). It needs `ANTHROPIC_API_KEY` in the environment; not yet run.
-3. **Whether to grade the pilot** (exploratory s on the dose curve, about $21) or apply only the
-   coherence gate.
-4. **Budget:** the RunPod balance covers the GPU line at any K; grading as in section 11.
+   label agreement >= 97%). Runs when `ANTHROPIC_API_KEY` is added.
 
-Decided in revision 2: two-stage design and alpha rule; covariance-matched placebo only; the
+Decided (revisions 2 and 3): two-stage design; one confirmatory alpha per model x hypothesis, the
+largest coherent pilot alpha; Holm family of four; K = 32; powered for Delta = 0.10, a smaller-effect
+null is inconclusive; covariance-matched placebo only; pilot checked for coherence only; the
 identity-check stack with the pipeline as a library; the method check.
