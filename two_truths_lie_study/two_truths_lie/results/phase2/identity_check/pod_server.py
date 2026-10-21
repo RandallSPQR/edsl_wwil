@@ -9,13 +9,16 @@ Endpoints (JSON):
   POST /load      {"model"}            -> loads it (unloads the previous one); weights are looked up
                                           under /workspace first (network volume), else downloaded
   POST /render    {"messages", "strip_llama_date"} -> {"prompt": text, "ids": [...], "count"}
-  POST /generate  {"messages", "max_tokens", "strip_llama_date"} -> greedy completion: text, ids
+  POST /generate  {"messages", "max_tokens", "strip_llama_date"} -> {"job": id}; greedy generation runs
+                                          in the background (the RunPod proxy cuts requests at ~100 s)
+  GET  /job/<id>                       -> {"status": "running"} or the result: text, ids, prompt_count, finish
   POST /tokenize  {"text"}             -> {"ids": [...]} (no special tokens)
 
 strip_llama_date removes the "Cutting Knowledge Date / Today Date" lines that the Llama 3.1 chat
 template inserts into the system turn (the API provider renders without them).
 """
-import gc, json, os, threading
+import gc, json, os, threading, uuid
+os.environ.setdefault("TORCHDYNAMO_DISABLE", "1")   # torch 2.4's dynamo cannot compile Gemma 3's hybrid cache
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -26,6 +29,7 @@ KEY = os.environ["POD_KEY"]
 LLAMA_DATE = "Cutting Knowledge Date: December 2023\nToday Date: 26 Jul 2024\n\n"
 STATE = {"id": None, "model": None, "tok": None}
 LOCK = threading.Lock()
+JOBS = {}
 
 
 def cache_dir_for(model_id):
@@ -88,9 +92,13 @@ class H(BaseHTTPRequestHandler):
         return True
 
     def do_GET(self):
-        if self._auth():
-            self._send(200, {"loaded": STATE["id"], "cache_dir": STATE.get("cache_dir"),
-                             "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None})
+        if not self._auth():
+            return
+        if self.path.startswith("/job/"):
+            j = JOBS.get(self.path[len("/job/"):])
+            return self._send(200 if j is not None else 404, j if j is not None else {"error": "unknown job"})
+        self._send(200, {"loaded": STATE["id"], "cache_dir": STATE.get("cache_dir"),
+                         "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None})
 
     def do_POST(self):
         if not self._auth():
@@ -105,8 +113,17 @@ class H(BaseHTTPRequestHandler):
                 text, ids = render(body["messages"], body.get("strip_llama_date", False))
                 return self._send(200, {"prompt": text, "ids": ids, "count": len(ids)})
             if self.path == "/generate":
-                with LOCK:
-                    return self._send(200, generate(body["messages"], int(body["max_tokens"]), body.get("strip_llama_date", False)))
+                jid = uuid.uuid4().hex
+                JOBS[jid] = {"status": "running"}
+
+                def work(jid=jid, body=body):
+                    try:
+                        with LOCK:
+                            JOBS[jid] = {"status": "done", **generate(body["messages"], int(body["max_tokens"]), body.get("strip_llama_date", False))}
+                    except Exception as e:  # noqa: BLE001
+                        JOBS[jid] = {"status": "error", "error": f"{type(e).__name__}: {str(e)[:300]}"}
+                threading.Thread(target=work, daemon=True).start()
+                return self._send(200, {"job": jid})
             if self.path == "/tokenize":
                 return self._send(200, {"ids": STATE["tok"](body["text"], add_special_tokens=False)["input_ids"]})
             self._send(404, {"error": "unknown path"})

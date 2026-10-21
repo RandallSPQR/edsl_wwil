@@ -10,7 +10,7 @@ diagnostic is reported too.
 
   python diagnostic_tf.py --pod POD_ID --key-file PATH
 """
-import argparse, json, os, sys
+import argparse, json, os, sys, time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -18,6 +18,27 @@ sys.path.insert(0, str(HERE))
 import diagnostic as D   # selection, pins, curl helper and divergence rule are reused unchanged
 
 POD_MODEL = D.POD_MODEL
+
+
+def get(url, headers):
+    import subprocess
+    args = ["curl", "-sS", "-m", "30", url] + sum((["-H", f"{k}: {v}"] for k, v in headers.items()), [])
+    try:
+        return json.loads(subprocess.run(args, capture_output=True, text=True).stdout)
+    except json.JSONDecodeError:
+        return {}
+
+
+def run_job(base, auth, body):
+    """Submit a generation job and poll until it finishes (the RunPod proxy cuts requests at ~100 s)."""
+    jid = D.post(f"{base}/generate", body, auth, timeout=60).get("job")
+    if not jid:
+        return {"error": "no job id"}
+    while True:
+        time.sleep(5)
+        j = get(f"{base}/job/{jid}", auth)
+        if j.get("status") in ("done", "error"):
+            return j
 
 
 def main():
@@ -35,14 +56,17 @@ def main():
     for r in sel:
         m = r["openrouter_id"]
         if loaded != m:
-            print("loading", POD_MODEL[m], D.post(f"{base}/load", {"model": POD_MODEL[m]}, auth, timeout=3000), flush=True)
+            D.post(f"{base}/load", {"model": POD_MODEL[m]}, auth, timeout=90)   # may hit the proxy's ~100 s cut-off; the load continues
+            while get(f"{base}/health", auth).get("loaded") != POD_MODEL[m]:
+                time.sleep(15)
+            print("loaded", POD_MODEL[m], flush=True)
             loaded = m
         strip = m.startswith("meta-llama")
         msgs = r["messages"]
         api = D.post("https://openrouter.ai/api/v1/chat/completions",
                      {"model": m, "messages": msgs, "temperature": 0, "max_tokens": r["max_output_tokens"],
                       "provider": D.PINS[m], "usage": {"include": True}}, {"Authorization": f"Bearer {or_key}"})
-        pod = D.post(f"{base}/generate", {"messages": msgs, "max_tokens": r["max_output_tokens"], "strip_llama_date": strip}, auth, timeout=1200)
+        pod = run_job(base, auth, {"messages": msgs, "max_tokens": r["max_output_tokens"], "strip_llama_date": strip})
         rec = {"cell_id": r["cell_id"], "model": m, "condition": r["condition"]}
         if "choices" not in api or "ids" not in pod:
             rec["error"] = {"api": str(api.get("error"))[:200], "pod": str(pod.get("error"))[:200]}
