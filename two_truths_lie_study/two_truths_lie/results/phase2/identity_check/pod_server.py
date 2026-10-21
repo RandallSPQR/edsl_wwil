@@ -12,6 +12,10 @@ Endpoints (JSON):
   POST /generate  {"messages", "max_tokens", "strip_llama_date"} -> {"job": id}; greedy generation runs
                                           in the background (the RunPod proxy cuts requests at ~100 s)
   GET  /job/<id>                       -> {"status": "running"} or the result: text, ids, prompt_count, finish
+  POST /generate_batch {"items": [{"messages", "strip_llama_date", "strip_trailing_newline"}],
+                        "max_tokens", "temperature", "top_p", "seed"} -> {"job": id}; the result holds one
+                                          {text, ids, prompt_count, finish} per item, in order. Left-padded
+                                          batch; temperature 0 is greedy; the torch seed is set once per batch.
   POST /tokenize  {"text"}             -> {"ids": [...]} (no special tokens)
 
 strip_llama_date removes the "Cutting Knowledge Date / Today Date" lines that the Llama 3.1 chat
@@ -57,10 +61,12 @@ def load(model_id):
         STATE.update(id=model_id, model=model, tok=tok, cache_dir=cd)
 
 
-def render(messages, strip):
+def render(messages, strip, strip_trailing_newline=False):
     text = STATE["tok"].apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     if strip:
         text = text.replace(LLAMA_DATE, "", 1)
+    if strip_trailing_newline and text.endswith("\n"):
+        text = text[:-1]   # template-end test: a provider that omits the newline after the model-turn marker
     ids = STATE["tok"](text, add_special_tokens=False)["input_ids"]
     return text, ids
 
@@ -78,6 +84,31 @@ def generate(messages, max_tokens, strip):
     if new and new[-1] in eos:
         new = new[:-1]
     return {"text": STATE["tok"].decode(new, skip_special_tokens=True), "ids": new, "prompt_count": len(ids), "finish": finish}
+
+
+def generate_batch(items, max_tokens, temperature, top_p, seed):
+    tok, model = STATE["tok"], STATE["model"]
+    rendered = [render(it["messages"], it.get("strip_llama_date", False), it.get("strip_trailing_newline", False))[1]
+                for it in items]
+    pad = tok.pad_token_id if tok.pad_token_id is not None else (tok.eos_token_id if isinstance(tok.eos_token_id, int) else tok.eos_token_id[0])
+    width = max(len(r) for r in rendered)
+    x = torch.tensor([[pad] * (width - len(r)) + r for r in rendered], device="cuda")
+    mask = torch.tensor([[0] * (width - len(r)) + [1] * len(r) for r in rendered], device="cuda")
+    kw = dict(do_sample=False, temperature=None, top_p=None, top_k=None) if not temperature else \
+        dict(do_sample=True, temperature=float(temperature), top_p=float(top_p), top_k=0)
+    torch.manual_seed(int(seed))
+    with torch.no_grad():
+        out = model.generate(input_ids=x, attention_mask=mask, max_new_tokens=int(max_tokens), pad_token_id=pad, **kw)
+    eos = tok.eos_token_id
+    eos = set(eos if isinstance(eos, list) else [eos]) | set(getattr(model.generation_config, "eos_token_id", None) or [])
+    res = []
+    for i, r in enumerate(rendered):
+        new = out[i, width:].tolist()
+        stop = next((k for k, t in enumerate(new) if t in eos), None)
+        ids = new[:stop] if stop is not None else new
+        res.append({"text": tok.decode(ids, skip_special_tokens=True), "ids": ids, "prompt_count": len(r),
+                    "finish": "stop" if stop is not None else "length"})
+    return res
 
 
 class H(BaseHTTPRequestHandler):
@@ -123,6 +154,19 @@ class H(BaseHTTPRequestHandler):
                     except Exception as e:  # noqa: BLE001
                         JOBS[jid] = {"status": "error", "error": f"{type(e).__name__}: {str(e)[:300]}"}
                 threading.Thread(target=work, daemon=True).start()
+                return self._send(200, {"job": jid})
+            if self.path == "/generate_batch":
+                jid = uuid.uuid4().hex
+                JOBS[jid] = {"status": "running"}
+
+                def work_batch(jid=jid, body=body):
+                    try:
+                        with LOCK:
+                            JOBS[jid] = {"status": "done", "results": generate_batch(
+                                body["items"], body["max_tokens"], body.get("temperature", 0), body.get("top_p", 1.0), body.get("seed", 0))}
+                    except Exception as e:  # noqa: BLE001
+                        JOBS[jid] = {"status": "error", "error": f"{type(e).__name__}: {str(e)[:300]}"}
+                threading.Thread(target=work_batch, daemon=True).start()
                 return self._send(200, {"job": jid})
             if self.path == "/tokenize":
                 return self._send(200, {"ids": STATE["tok"](body["text"], add_special_tokens=False)["input_ids"]})

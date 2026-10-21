@@ -56,3 +56,23 @@ cancel in the pairing. t on K - 1 df.
 
 The pass requires four TOSTs per model to succeed together, so the joint power is below the
 single-test figure.
+
+## Decisions before the behavioral run (owner, 2026-10-21)
+
+- **Category count: K = 36.** Drawn with `random.Random(20261022).sample(sorted(final_72), 36)`;
+  the list is in `behavioral_categories.json`. 36 x 5 targets x 3 conditions = 540 lies per model.
+- **Grader:** primary only (`anthropic/claude-sonnet-4.5` via OpenRouter, temperature 0, rubric
+  v0.6), through the frozen runner's grader stage, as for the API lies. Spend cap $25.
+- **Pod rendering:** Llama without the template's date header (as CoreWeave renders it, per the
+  diagnostic); Gemma with its standard template. Sampling 0.6 / top_p 0.9 / top_k off, max tokens
+  as in the run; batched, seed 20261022 + model offset + batch start.
+- **Analysis** (`behavioral.py analyse`): the reversed-note run's registered gate (historical_anchor,
+  emotional_appeal excluded) and the automatic confession screen; per model and category, persona
+  means of s per condition and of B; d_k = pod - API; TOST at +/-0.10 (90% CI, t on K - 1 df) on d
+  for B and for each condition's s. A model passes when all four are inside the margin.
+- **Gemma template-end test** (`template_test.py`), same pod session, informative only: greedy on
+  the 20 diagnostic prompts with the final newline removed. It does not change the pod rendering
+  used in the behavioral run.
+- Offline checks of `behavioral.py` before the run: the grade step makes grader calls only (fake
+  adapter); the analysis gives exactly 0 difference and a pass when the pod records equal the API
+  records.
