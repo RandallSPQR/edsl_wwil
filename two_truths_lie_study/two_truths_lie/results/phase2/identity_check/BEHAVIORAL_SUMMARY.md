@@ -67,5 +67,5 @@ CoreWeave renders it), Gemma with its template minus the final newline (as Novit
 Note: one newline in the prompt moved Gemma's B by 0.064 and its reversed-note s by 0.066. The
 rendering is part of the instrument.
 
-**Cost:** pod $2.22; grading $6.98. Identity check in total: RunPod $9.23 (including volume storage),
+**Cost:** pod $2.22; grading $6.98. Identity check in total: RunPod $9.36 (balance $46.38 to $37.03, including volume storage),
 OpenRouter $20.87.
