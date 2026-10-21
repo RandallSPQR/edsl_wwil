@@ -1,8 +1,9 @@
 # The Perfect Lie, Phase 2: a liar-side note-valence direction, probe and steering. Pre-registration (DRAFT)
 
-Status: **draft, not frozen.** Five decisions are open (marked **OPEN**, collected in section 12). Nothing
-in this document has been run except the identity check (section 2). No activation has been extracted
-and no steering has been run.
+Status: **draft, not frozen** (revision 2, 2026-10-21: two-stage design, covariance-matched placebo,
+identity-check stack, method-check control, grading route pending a check). Open decisions are marked
+**OPEN** and collected in section 12. Nothing has been run except the identity check (section 2). No
+activation has been extracted and no steering has been run.
 
 ## 1. Question
 
@@ -14,7 +15,7 @@ show how. This study asks two questions about the two open-weight liars:
   the prompt, in a direction that transfers to unseen personas and unseen wordings?
 - **Steering:** is that direction causally sufficient to move behaviour? Adding it under the reversed
   note should raise the target-cue share *s* (H1); subtracting it under the full note should lower *s*
-  (H2), each against a norm-matched random direction.
+  (H2), each against a covariance-matched placebo direction.
 
 Scope: a positive result shows that a linear representation of the stated valence drives cue choice.
 It still does not show that the liar models the judge's mind (the note states the belief); the
@@ -48,31 +49,27 @@ inferred-belief design remains the test for that.
     and graded unsteered lies only; no activation, probe or steered output exists.
   - Note: one newline moved Gemma's B by 0.064. The rendering is part of the instrument.
 
-**OPEN 1: compute stack.** The identity link was established on HF transformers 4.53.2, torch 2.8,
-bf16 (`identity_check/pod_server.py`). The `sae-ethos-pipeline` v1.1.0 replay stack pins transformers
-5.17.0, nnsight 0.7.0 and fp32 for the 27B (two A100s or one H200), and its renderers produce the
-official templates (Gemma with the newline; Llama with the date header), which the identity check
-showed do not match the API lies.
-- (a) **Recommended:** run extraction and steering on the identity stack, with the pipeline's
-  probe, vector, placebo, coherence and SAE code imported as a library; register the two renderers.
-  The identity link then carries over unchanged.
-- (b) Run on the pipeline's replay stack with custom renderers registered (`model_io.register`), plus
-  a bridging check: its unsteered references TOST-equivalent (+/-0.10) to the identity pod lies on
-  the 36 identity categories. About twice the GPU cost.
+**Compute stack (decided):** the identity-check stack, HF transformers 4.53.2, torch 2.8, bf16
+(`identity_check/pod_server.py`, extended with residual-stream reads and steering hooks), with the
+`sae-ethos-pipeline` v1.1.0 code used as a library for probes (`probe.train`, `probe.transfer`),
+vectors and placebos (`probe.vectors`), coherence (`probe.coherence`) and SAEs (`replay.sae`). The
+pipeline's own replay stack is not used: it pins transformers 5.17.0, nnsight 0.7.0 and fp32 for the
+27B, and its renderers produce the official templates, which the identity check showed do not match
+the API lies. The two renderers of this section are used instead.
 
 ## 3. Category split
 
-The 72 frozen categories are split once, seeded (20261023): **24 training categories** (probe,
-layer choice, coherence pilot; never graded for the primary test) and **48 evaluation categories**
-(steering outcomes). Categories are the clustering unit throughout. All five targets (P1, P2, P3,
-P5, P6) are used in both splits.
+The 72 frozen categories are split once, seeded (20261023), into **K evaluation categories**
+(confirmatory steering outcomes only) and **72 - K training categories** (probe, layer choice,
+dose-finding pilot, method check). **OPEN 1: K in {32, 36, 48}** (section 8). Categories are the
+clustering unit throughout. All five targets (P1, P2, P3, P5, P6) are used in both splits.
 
 ## 4. Probe: direction construction (training split only)
 
 - **Activations:** residual stream (block output) at every layer, at the last prompt token, i.e. the
   final token of the rendered prompt after the public prompt and the generation marker. The mean over
   the note's belief-line span is recorded and reported, but never used for selection.
-- **Items:** 24 categories x 5 targets x {full, reversed}, rendered exactly as in the run; plus the
+- **Items:** the training categories x 5 targets x {full, reversed}, rendered exactly as in the run; plus the
   same items under each of three paraphrase sets (section 5) and the placebo notes (for the control).
 - **Direction:** v_L = the mean over items of (h_full - h_reversed) at layer L (paired within
   category x target). A logistic probe (pipeline `probe.train.fit_logistic`, 5-fold CV, C grid
@@ -123,69 +120,90 @@ set C); every paraphrase differs from the frozen wording.
 
 Paraphrased notes are used for activations only, never for generation or grading.
 
-## 6. Steering (primary; evaluation split)
+## 6. Steering: two stages
 
-- **Vector:** unit(v_L*) at the selected layer L*, scaled by alpha x ||v_L*|| (alpha = 1 adds the
-  note's own average full - reversed shift). Added at the output of block L* at every prompt position
+**Common to both stages.**
+- **Vector:** unit(v_L\*) at the selected layer L\*, scaled by alpha x ||v_L\*|| (alpha = 1 adds the
+  note's own average full - reversed shift). Added at the output of block L\* at every prompt position
   and every generated position (the pipeline's convention, `probe/steer_backend.py`).
 - **Hypotheses:** H1: reversed note + alpha v raises s. H2: full note - alpha v lowers s.
-- **Dose curve:** alpha in {0.25, 0.5, 1, 2, 4}.
-- **Placebo:** a random unit direction (isotropic, seeded), at the same layer, scaled identically, at
-  every alpha. **OPEN 4:** also a covariance-matched placebo (pipeline `vectors.placebo_cov`), which
-  in the pipeline's item 6b moved behaviour far more than isotropic ones (median dP 0.161 vs ~0).
-- **Coherence gate** per model x hypothesis x alpha x vector; all three must hold, for the steered
-  and the placebo lies alike, or that alpha does not count:
+- **Placebo: covariance-matched direction only** (pipeline `vectors.placebo_cov`, seeded): a random
+  direction drawn from the covariance of the training activations at L\*, at the same layer, scaled
+  identically, at every alpha used. (In the pipeline's item 6b, covariance-matched placebos moved
+  behaviour far more than isotropic ones, so this is the stricter null.)
+- **Coherence gate** per model x hypothesis x alpha; all three must hold for the steered *and* the
+  placebo lies, or that alpha does not count:
   - viability: >= 95% of lies pass the frozen viability screen (word range, not degenerate);
   - perplexity: median ratio <= 2.0 of the continuation's NLL under the unsteered model to that of
-    unsteered continuations (pipeline `probe/coherence.py`, 64 greedy tokens);
+    unsteered continuations (pipeline `probe/coherence.py`, first 64 generated tokens);
   - repetition: repeated-4-gram share <= 0.25.
-- **Primary alpha (alpha\*):** from a coherence pilot on the training split (24 categories, one target
-  per category rotating, not graded for cues): the largest grid alpha at which steered and placebo
-  pass, per model and hypothesis. Fixed and committed before any evaluation lie is graded. If alpha\*
-  fails the gate in the evaluation run (checked before grading), the next lower passing alpha is used.
-- **Unsteered references:** the pod's own placebo, full and reversed lies on the evaluation split.
 - **Sampling, rendering, grading:** as in the identity check (temperature 0.6, top_p 0.9, top_k off,
-  seeded; renderings of section 2; primary grader through the frozen runner; registered gate).
+  seeded; the renderings of section 2; the frozen grader and gate).
 
-## 7. Primary analysis
+**Stage 1: dose-finding pilot (exploratory).**
+- Training categories only: 8 of them, seeded (20261025), x 5 targets; both models; both hypotheses;
+  alpha in {0.25, 0.5, 1, 2, 4}; steered and placebo. 800 lies per model.
+- The coherence gate is applied to every alpha. **OPEN 3:** the pilot lies are or are not graded for
+  cues; if graded, the s values are exploratory and reported as such.
+- **Alpha rule, fixed now:** per model and hypothesis, alpha_max = the largest grid alpha at which the
+  steered and the placebo lies both pass the coherence gate. **The confirmatory alphas are alpha_max
+  and alpha_max / 2.** If alpha_max = 0.25, the second alpha is 0.125 (not piloted; its coherence is
+  checked in stage 2). If no alpha passes, that model and hypothesis is untestable (it stays in both
+  Holm families and is never rejected).
+- The alphas are committed before stage 2 starts. **Pilot data never enters the confirmatory test.**
 
-- **Unit:** per model x hypothesis, per evaluation category k (K = 48), Delta_k = the mean over the
-  five targets of s(steered) - s(placebo vector) at alpha\*.
-- **Efficacy family (alpha = 0.05):** two-sided t on K - 1 df; Holm across the four tests
-  (2 models x 2 hypotheses). A rejection in the predicted direction (H1 Delta > 0; H2 Delta < 0)
-  reads **steerable**; a rejection in the other direction reads **opposite** and is reported.
-- **Equivalence family (alpha = 0.05):** TOST at +/-0.10 on Delta, Holm across the four. Joint
-  rejection reads **not steerable within +/-0.10**, but only if the positive control passed.
-- **Positive control (OPEN 2).** The specified control, "the known vector from G4", does not exist
-  for these models: in `sae-ethos-pipeline` v1.1.0 the legacy G4 vector is a Gemma-2-9B SAE feature,
-  and both Gemma-3-27B G4 runs (items 6 and 6b) ended NOT_EVALUABLE; the Llama package has no G4.
-  Proposed in-run known-answer control: v_fp = mean(h_full) - mean(h_placebo) on the training
-  split, added at alpha = 1 under the placebo note, against the same random placebo; prediction s
-  rises (the first study's full - placebo effect was large in every model). Pass: one-sided t at 0.05
-  per model. If it fails for a model, that model's null steering results read "inconclusive:
-  positive control failed", never "not steerable".
-- **Naturalness:** cos(v_L\*, mean of (h_full - h_reversed) at the first generated token at L\*) and
-  cos(v_L\*, the same last-token shift on the evaluation split, out of sample). Reported.
+**Stage 2: confirmatory run.**
+- The K evaluation categories x 5 targets; both models; both hypotheses; the two confirmatory alphas
+  only; steered and placebo.
+- The coherence gate is re-applied in stage 2 before any grading. An alpha that fails it there does
+  not count (its tests are untestable, never rejected).
+- **Unsteered references:** the pod's own placebo, full and reversed lies on the evaluation categories.
+
+**Method check (positive control, one alpha, small subset).** Labelled a method check, not an
+independent known vector: no validated G4 vector exists for these models (the pipeline's legacy G4
+vector is a Gemma-2-9B SAE feature; both Gemma-3-27B G4 runs ended NOT_EVALUABLE; the Llama package
+has no G4). Direction v_fp = mean(h_full) - mean(h_placebo) on the training categories (the note's own
+full vs placebo shift, which raised s strongly in every model in the first study), added at alpha = 1
+under the placebo note, against a covariance-matched placebo, on 16 evaluation categories (seeded) x
+5 targets, in the stage-2 run. Prediction: s rises. Pass: one-sided t at 0.05 per model. If it fails
+for a model, that model's null steering results read "inconclusive: method check failed".
+
+## 7. Primary analysis (stage 2 only)
+
+- **Unit:** per model x hypothesis x confirmatory alpha, per evaluation category k, Delta_k = the mean
+  over the five targets of s(steered) - s(placebo) at that alpha.
+- **Efficacy family (alpha = 0.05):** two-sided t on K - 1 df; **Holm across the eight tests**
+  (2 models x 2 hypotheses x 2 alphas). A rejection in the predicted direction (H1 Delta > 0;
+  H2 Delta < 0) reads **steerable at that alpha**; in the other direction, **opposite**, reported.
+- **Equivalence family (alpha = 0.05):** TOST at +/-0.10 on Delta, Holm across the eight. Joint
+  rejection reads **not steerable within +/-0.10 at that alpha**, only if the method check passed.
+- **Per model and hypothesis label:** steerable if either alpha is steerable in the predicted
+  direction; not steerable if both alphas are equivalent and neither is steerable; otherwise
+  inconclusive (opposite results reported beside the label).
+- **Naturalness:** cos(v_L\*, mean of (h_full - h_reversed) at the first generated token at L\*), and
+  cos(v_L\*, the last-token shift on the evaluation categories, out of sample). Reported.
 - **Effect relative to the note:** Delta / (s_full - s_reversed) from the unsteered references.
-- **Dose curve:** Delta at every coherent alpha with 95% CIs; reported, not tested.
-- **Missing data:** failed generations or gradings are counted per cell and reported; a tipping-point
-  analysis as in the reversed-note study.
+- **Missing data:** failed generations or gradings counted per cell and reported, with a tipping
+  point as in the reversed-note study.
 
 ## 8. Power and sample size
 
 The identity runs give the per-category SD of the difference between two independent sets of lies
-(5 targets each), which is the structure of steered vs placebo: 0.118-0.140; the worst case 0.14
-is used. Two-sided t at Holm's strictest level 0.0125:
+(5 targets each), the structure of steered vs placebo: 0.118-0.140; the worst case 0.14 is used.
+Two-sided t; Holm across eight, so the strictest level is 0.05/8 = 0.00625 (the first test), then
+0.05/7 and so on.
 
-| true Delta | K = 24 | K = 36 | K = 48 | K = 72 |
+| K | true Delta 0.05 | 0.075 | 0.10 | TOST +/-0.10 at Delta 0 (level 0.00625) |
 |---|---|---|---|---|
-| 0.05 | 0.19 | 0.32 | 0.46 | 0.68 |
-| 0.075 | 0.48 | 0.71 | 0.86 | 0.97 |
-| 0.10 | 0.77 | 0.94 | 0.99 | 1.00 |
+| 32 | 0.20 | 0.55 | 0.86 | 0.83 |
+| 36 | 0.24 | 0.62 | 0.91 | 0.89 |
+| 48 | 0.36 | 0.80 | 0.98 | 0.98 |
 
-TOST at +/-0.10 with a true Delta of 0: power 0.99 at K = 36 and 1.00 at K = 48. **Proposed: K = 48
-evaluation categories** (24 kept for training). For scale: the reversed-note B was 0.24 (Llama) and
-0.43 (Gemma), so a Delta of 0.075 is a third of Llama's note effect.
+(Efficacy power at the strictest Holm level; at the least strict level 0.05: K = 32, 0.50 / 0.84 /
+0.97; K = 36, 0.55 / 0.88 / 0.99; K = 48, 0.68 / 0.95 / 1.00.)
+Assumption: the covariance-matched placebo does not itself move s by more than sampling noise. If it
+moves s in the predicted direction, Delta shrinks and power falls. For scale, the reversed-note B was
+0.24 (Llama) and 0.43 (Gemma).
 
 ## 9. Secondary and exploratory (labelled, after the primary)
 
@@ -202,34 +220,40 @@ evaluation categories** (24 kept for training). For scale: the reversed-note B w
 ## 10. Analysis discipline
 
 - Analysis code validated on simulated data (null, effect, opposite-effect and incoherent-alpha
-  scenarios), sign-tested, and committed before any evaluation lie is graded.
-- Blinded permutation check before unblinding: steered and placebo labels swapped within category x
+  scenarios), sign-tested, and committed before any stage-2 lie is graded.
+- Blinded permutation check on stage 2 before unblinding: steered and placebo labels swapped within category x
   target cells, 10,000 permutations, decision shares only.
 - Screen matches (confession, refusal) listed blind for owner adjudication before unblinding.
 - OSF addendum before unblinding; results reported as found.
 
-## 11. Cost estimate
+## 11. Cost estimate (two-stage design)
 
 Measured rates (RTX PRO 6000 Blackwell, bf16, batched): Gemma about 12 lies/min, Llama about 36
-lies/min; grading $0.013 per lie (primary only).
+lies/min; grading about $0.013 per lie (primary grader; the same per-token price on either route).
 
-| item | full design (K = 48, all alphas on all targets) | lean (alpha\* on all targets; other alphas on 2 targets) |
-|---|---|---|
-| lies generated per model | 6,000 + 480 pilot | 3,700 + 480 pilot |
-| GPU hours (both models, incl. extraction, perplexity, loads) | about 13 h | about 9 h |
-| GPU cost at $2.49/h | about $32 | about $22 |
-| lies graded (both models) | about 12,000 | about 7,400 |
-| grading cost | about $156 | about $96 |
-| **total** | **about $190** | **about $120** |
+Lies per model: pilot 800 (both hypotheses x 5 alphas x steered/placebo x 8 categories x 5 targets);
+stage 2: 40K confirmatory (2 alphas x 2 hypotheses x 2 vectors x K x 5), 15K unsteered references,
+160 method check.
 
-Option (b) in OPEN 1 roughly doubles the GPU line. The RunPod balance is $37.03.
+| K | stage-2 lies (both models) | GPU hours | GPU cost ($2.49/h) | stage-2 grading | total |
+|---|---|---|---|---|---|
+| 32 | 3,840 | about 6.0 | about $15 | about $50 | **about $65** |
+| 36 | 4,280 | about 6.4 | about $16 | about $55 | **about $72** |
+| 48 | 5,600 | about 7.7 | about $19 | about $73 | **about $92** |
+
+GPU hours include the pilot (1,600 lies), activation extraction (training items under four wordings
+plus placebo notes), perplexity scoring for the coherence gate and model loads. Grading the pilot
+(OPEN 3) adds about $21. The RunPod balance is $37.03.
 
 ## 12. Open decisions
 
-1. **Stack:** (a) identity stack with pipeline code as a library (recommended), or (b) pipeline replay
-   stack plus a bridging check.
-2. **Positive control:** the in-run full - placebo direction (proposed), since no validated G4 vector
-   exists for these models; or another control.
-3. **Design size:** K = 48 evaluation categories; full or lean grading of the dose curve.
-4. **Placebo:** isotropic only (as specified), or isotropic plus covariance-matched.
-5. **Budget:** RunPod top-up and the OpenRouter grading total.
+1. **K, the number of evaluation categories:** 32, 36 or 48 (power and cost in sections 8 and 11).
+2. **Grading route:** Anthropic API direct or OpenRouter, decided by the regrade check
+   (`results/phase2/grading_route/RULES.md`: 50 identity-check pod lies; switch if kappa >= 0.90 or
+   label agreement >= 97%). It needs `ANTHROPIC_API_KEY` in the environment; not yet run.
+3. **Whether to grade the pilot** (exploratory s on the dose curve, about $21) or apply only the
+   coherence gate.
+4. **Budget:** the RunPod balance covers the GPU line at any K; grading as in section 11.
+
+Decided in revision 2: two-stage design and alpha rule; covariance-matched placebo only; the
+identity-check stack with the pipeline as a library; the method check.
