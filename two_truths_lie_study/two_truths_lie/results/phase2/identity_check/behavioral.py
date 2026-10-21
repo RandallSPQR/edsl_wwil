@@ -21,6 +21,11 @@ Steps (each a subcommand; all committed before any pod lie exists):
   python behavioral.py generate --pod POD_ID --key-file PATH
   python behavioral.py grade
   python behavioral.py analyse
+
+  --variant novita   second identity check (RULES.md, "Gemma template re-test"): Gemma only, rendered as
+                     Novita renders it (no newline after <start_of_turn>model); namespace
+                     pod_identity_novita, run dir pod_run_novita, grading cap $10, result
+                     behavioral_result_novita.json. Everything else as above.
 """
 import argparse, asyncio, json, random, sys, time
 from dataclasses import asdict
@@ -32,9 +37,25 @@ sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(HERE))
 
 SEED, K, MARGIN, CAP_USD = 20261022, 36, 0.10, 25.0
 MODELS = ["meta-llama/llama-3.1-8b-instruct", "google/gemma-3-27b-it"]
+ALL_MODELS = list(MODELS)
 BATCH = {"meta-llama/llama-3.1-8b-instruct": 24, "google/gemma-3-27b-it": 12}
 NAMESPACE = "pod_identity"
 POD_RUN = HERE / "pod_run"
+VARIANT = None   # None: the first behavioral check; "novita": the Gemma template re-test
+RESULT = "behavioral_result.json"
+
+
+def set_variant(v):
+    global VARIANT, MODELS, NAMESPACE, POD_RUN, CAP_USD, RESULT
+    VARIANT = v
+    if v == "novita":
+        MODELS, NAMESPACE, POD_RUN = ["google/gemma-3-27b-it"], "pod_identity_novita", HERE / "pod_run_novita"
+        CAP_USD, RESULT = 10.0, "behavioral_result_novita.json"
+
+
+def render_flags(m):
+    return {"strip_llama_date": m.startswith("meta-llama"),
+            "strip_trailing_newline": VARIANT == "novita" and m.startswith("google/gemma")}
 REGISTERED_GATE_EXCLUDED = ["historical_anchor", "emotional_appeal"]   # reversed-note run, final_report.json
 
 
@@ -73,9 +94,8 @@ def generate(pod, key_file):
             time.sleep(15)
         for b in range(0, len(todo), BATCH[m]):
             chunk = todo[b:b + BATCH[m]]
-            items = [{"messages": replay[cell_id(c, "rev_full")]["messages"], "strip_llama_date": m.startswith("meta-llama")}
-                     for c in chunk]
-            seed = SEED + MODELS.index(m) * 100_000 + b
+            items = [{"messages": replay[cell_id(c, "rev_full")]["messages"], **render_flags(m)} for c in chunk]
+            seed = SEED + ALL_MODELS.index(m) * 100_000 + b   # same per-batch seeds in both checks
             jid = D.post(f"{base}/generate_batch", {"items": items, "max_tokens": chunk[0].max_output_tokens,
                                                     "temperature": chunk[0].temperature, "top_p": chunk[0].top_p,
                                                     "seed": seed}, auth, timeout=60).get("job")
@@ -90,14 +110,14 @@ def generate(pod, key_file):
                 for c, res in zip(chunk, j["results"]):
                     rec = asdict(c)
                     lp = rv.liar_prompts(c, inst)
-                    rec.update(cell_id=cell_id(c, NAMESPACE), run_namespace=NAMESPACE, mode="pod_identity",
+                    rec.update(cell_id=cell_id(c, NAMESPACE), run_namespace=NAMESPACE, mode=NAMESPACE,
                                status="in_progress", stage_done="liar", cost_usd=0.0, errors=[],
                                lie=res["text"], user_prompt=lp["user_prompt"], liar_system_prompt=lp["system_prompt"],
                                lie_words=len(res["text"].split()), liar_finish_reason=res["finish"],
                                liar_completion_tokens=len(res["ids"]), liar_prompt_tokens=res["prompt_count"],
                                liar_served_provider="pod", pod_seed=seed, api_cell_id=cell_id(c, "rev_full"),
                                liar_delivered_messages=replay[cell_id(c, "rev_full")]["messages"],
-                               pod_render={"strip_llama_date": m.startswith("meta-llama")})
+                               pod_render=render_flags(m))
                     f.write(json.dumps(rec, ensure_ascii=False) + "\n")
             print(f"{m}: {b + len(chunk)}/{len(todo)}", flush=True)
 
@@ -153,13 +173,15 @@ def analyse():
             res[q] = {"pod": float(cp[q].mean()), "api": float(ca[q].mean()), "diff": mean, "ci90": [lo, hi],
                       "k": n, "equivalent": bool(-MARGIN < lo and hi < MARGIN)}
         out["models"][m] = {"tests": res, "pass": all(v["equivalent"] for v in res.values())}
-    (HERE / "behavioral_result.json").write_text(json.dumps(out, indent=1) + "\n")
+    out["variant"] = VARIANT
+    (HERE / RESULT).write_text(json.dumps(out, indent=1) + "\n")
     print(json.dumps(out, indent=1))
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("step", choices=["draw", "generate", "grade", "analyse"])
-    ap.add_argument("--pod"); ap.add_argument("--key-file")
+    ap.add_argument("--pod"); ap.add_argument("--key-file"); ap.add_argument("--variant", choices=["novita"])
     a = ap.parse_args()
+    set_variant(a.variant)
     {"draw": draw, "grade": grade, "analyse": analyse}.get(a.step, lambda: generate(a.pod, a.key_file))()

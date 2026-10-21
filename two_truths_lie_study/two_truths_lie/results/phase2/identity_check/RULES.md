@@ -81,3 +81,29 @@ single-test figure.
   RTX PRO 6000 Blackwell (96 GB) with the `runpod/pytorch:2.8.0-py3.11-cuda12.8.1-cudnn-devel-ubuntu22.04`
   image (torch 2.8; Blackwell needs CUDA 12.8), transformers 4.53.2, bf16. The diagnostic ran on an
   A100 with torch 2.4. The model weights, templates, sampling settings and server code are unchanged.
+
+## Gemma template re-test: second identity check, one shot (owner, 2026-10-21)
+
+Recorded before this run.
+
+- **Hypothesis:** the Gemma behavioral failure (`BEHAVIORAL_SUMMARY.md`) is caused by the Novita
+  rendering: Novita's prompt ends without the newline after `<start_of_turn>model`, while the first
+  behavioral run used the standard template.
+- **When it was identified:** the rendering difference was first written up as a hypothesis in the
+  diagnostic re-run (`DIAGNOSTIC_SUMMARY.md`, commit `44220c7`, 2026-10-21 01:56 UTC). The template-end
+  test that supported it ran after the first behavioral generation and was committed (`6cbca80`,
+  16:17 UTC) before grading; the behavioral TOST result was first seen at 17:34 UTC (`2c8111c`). The
+  hypothesis therefore predates the TOST result.
+- **Run:** Gemma placebo / full / reversed on the pod, the same 36 categories (seed 20261022, the
+  same per-batch seeds as the first run), rendered as Novita renders it (`behavioral.py --variant
+  novita`: the standard template minus its final newline). Same stack, sampling (0.6 / top_p 0.9),
+  grading path (frozen runner, primary grader) and frozen analysis rule (TOST +/-0.10 on B and on
+  each condition's s, paired by category).
+- **Decision rule, fixed now:**
+  - Pass on all four: Phase 2 uses the Novita rendering for Gemma, and the API link is established
+    for Gemma. The write-up states that the steered model uses the provider's rendering, not
+    Google's official template.
+  - Any failure: Gemma is pod-only, with the standard template. No further template variants.
+- **Reported:** Gemma's pod B under both renderings, side by side.
+- **Caps:** pod $8 (watchdog at 3 h on the $2.49/h GPU); grading $10. The pod is terminated when
+  generation ends.
