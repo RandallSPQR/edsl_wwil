@@ -37,5 +37,5 @@ Rules: RULES.md (fixed before any pod lie; K = 36, seed 20261022). Code: behavio
   used the standard template. Whether this difference explains the Gemma result is untested.
 - Gemma's pod B (0.499) is larger than its API B, in the direction of a stronger belief effect.
 
-**Cost:** RunPod $7.01 across the identity check (diagnostics $4.07, behavioral run $2.64, failed
-launch $0.30 of storage and idle); OpenRouter grading $13.88; API diagnostics $0.01.
+**Cost:** RunPod $7.01 across the identity check (diagnostics $4.07, behavioral run $2.64, the
+network volume's storage over the period $0.30; the failed launch cost nothing); OpenRouter grading $13.88; API diagnostics $0.01.
