@@ -76,3 +76,8 @@ single-test figure.
 - Offline checks of `behavioral.py` before the run: the grade step makes grader calls only (fake
   adapter); the analysis gives exactly 0 difference and a pass when the pod records equal the API
   records.
+- **Hardware change before the run (2026-10-21):** no A100 was available in EUR-IS-1, the only data
+  centre that can mount the network volume holding the Gemma weights. The behavioral run uses an
+  RTX PRO 6000 Blackwell (96 GB) with the `runpod/pytorch:2.8.0-py3.11-cuda12.8.1-cudnn-devel-ubuntu22.04`
+  image (torch 2.8; Blackwell needs CUDA 12.8), transformers 4.53.2, bf16. The diagnostic ran on an
+  A100 with torch 2.4. The model weights, templates, sampling settings and server code are unchanged.
