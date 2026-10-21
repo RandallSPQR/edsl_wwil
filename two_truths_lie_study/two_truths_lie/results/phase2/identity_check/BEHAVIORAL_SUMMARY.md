@@ -39,3 +39,33 @@ Rules: RULES.md (fixed before any pod lie; K = 36, seed 20261022). Code: behavio
 
 **Cost:** RunPod $7.01 across the identity check (diagnostics $4.07, behavioral run $2.64, the
 network volume's storage over the period $0.30; the failed launch cost nothing); OpenRouter grading $13.88; API diagnostics $0.01.
+
+# Gemma template re-test: second identity check, one shot — 2026-10-21
+
+Rules: RULES.md, "Gemma template re-test" (committed `950e8a7` before the run). Gemma placebo / full /
+reversed, same 36 categories and per-batch seeds, rendered as Novita renders it (standard template
+minus the final newline; 538/540 completions begin with a newline or colon, as Novita's do). Same
+stack, sampling, grading path and analysis rule. 538/540 graded (2 failed grading); 0 confessions.
+Result: `behavioral_result_novita.json`.
+
+| Gemma 3 27B, Novita rendering | pod | API | pod - API [90% CI] | within +/-0.10 |
+|---|---|---|---|---|
+| B | 0.435 | 0.427 | +0.008 [-0.051, +0.068] | yes |
+| s placebo | 0.247 | 0.242 | +0.006 [-0.037, +0.048] | yes |
+| s full | 0.793 | 0.782 | +0.011 [-0.029, +0.050] | yes |
+| s reversed | 0.359 | 0.356 | +0.003 [-0.036, +0.042] | yes |
+
+**Gemma's pod B under both renderings:** standard template 0.499; Novita rendering 0.435; API 0.427.
+
+**Decision (rule fixed before the run): pass on all four.** Phase 2 uses the Novita rendering for
+Gemma, and the API link is established for Gemma. The write-up states that the steered model uses the
+provider's rendering, not Google's official template.
+
+**Both models are now linked to the API:** Llama with its template minus the date header (as
+CoreWeave renders it), Gemma with its template minus the final newline (as Novita renders it).
+
+Note: one newline in the prompt moved Gemma's B by 0.064 and its reversed-note s by 0.066. The
+rendering is part of the instrument.
+
+**Cost:** pod $2.22; grading $6.98. Identity check in total: RunPod $9.23 (including volume storage),
+OpenRouter $20.87.
