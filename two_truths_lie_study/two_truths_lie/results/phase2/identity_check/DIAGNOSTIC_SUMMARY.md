@@ -33,3 +33,42 @@ API answer was served by the pinned provider. Cost: RunPod $2.48, API $0.005. Po
   pod is broken.
 - Nothing here is a gate. Before the behavioral comparison: (1) fix the Gemma pod; (2) render
   Llama without the date header to match CoreWeave; (3) re-run this diagnostic.
+
+# Re-run on the fixed pod (2026-10-21) — `diagnostic_tf.py`, raw output `diagnostic_tf.json`
+
+Pod: A100 SXM 80GB in EUR-IS-1 with the network volume (Gemma weights read from `/workspace/hf/hub`);
+HF transformers 4.53.2, torch 2.4, bf16, greedy, TorchDynamo off (`pod_server.py`). Llama rendered
+without the template's date header. Same seeded 40 prompts; API called again with the same pins.
+Cost: RunPod $1.59, API $0.006. Pod terminated. Smoke test: Gemma answers a trivial question
+coherently ("The capital of France is Paris, …"), so the first pod's failure was vLLM v0.9.2.
+
+## Llama 3.1 8B (20 prompts, no errors)
+
+- First divergence: 0 ×4, 1, 3, 4 ×2, 6, 8 ×2, 9 ×2, 10, 13, 15, 22, 24, 30, 56; median 8.5.
+  **5 of 20 at 0–2** (10 of 20 before the template fix).
+- Prompt tokens: the pod is now 1 token *shorter* than CoreWeave reports on every prompt (was 19
+  longer). A one-token difference remains, unidentified (a BOS or trailing-token convention).
+- Both sides stop normally; completion length median 412 (API) vs 411 (pod).
+- The API is deterministic at temperature 0 here: all 20 API completions match the first diagnostic.
+
+## Gemma 3 27B (20 prompts, no errors)
+
+- The pod's output is now coherent and stops normally; length median 501 (API) vs 494 (pod). The
+  stories are visibly close in content (same narrators and openings, e.g. "My grandfather, Old Man
+  Tiber, …").
+- **First divergence is token 0 on all 20 prompts.** Every Novita completion begins with a newline
+  or a colon; no pod completion does.
+- Prompt tokens: equal on 16, pod +1 on 4.
+- Hypothesis, not tested: Novita's rendering ends the prompt without the newline after
+  `<start_of_turn>model`, so the model's first token is that newline (or ": \n"). A one-pod test
+  would settle it: render the pod prompt without the trailing newline and check the first token.
+- The API is **not** deterministic at temperature 0 for Gemma: only 6 of 16 comparable completions
+  match the first diagnostic's text. Token-level identity with Novita is therefore not attainable;
+  the behavioral check is the meaningful comparison.
+
+## Reading under the rules
+
+- Template checked first, as the rule requires. Llama: date header found and removed; a 1-token
+  difference remains. Gemma: a systematic first-token difference, consistent with a template-end
+  difference on Novita's side.
+- Nothing here is a gate. Phase 2's primary references are the pod's own unsteered conditions.
