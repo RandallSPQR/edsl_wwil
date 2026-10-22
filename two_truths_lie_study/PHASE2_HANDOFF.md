@@ -62,6 +62,20 @@ visible to a new session. There was no GPU free in EUR-IS-1 at the time; no pod 
 - **Next: the dose-finding pilot needs the owner's go.** Also pending: Addendum 2 (Google 20% subsample) to post on
   OSF, and its grading/analysis code to write and hash before any stage-2 lie is graded.
 
+## Addendum 3 diagnostics (2026-10-22)
+
+- Addendum 3 written and hashed at `2b47b53` before running; pod `acm3ydm7ylkmfg` about 6 min, terminated; spend
+  about $0.28 (balance $36.01 -> $35.73). Results: `<slug>/diagnostics.json`, `DIAGNOSTICS.md`.
+- **Stop rule holds for both models** (all 24 mean null AUROCs inside [0.40, 0.60]): held-out personas 0.498-0.501;
+  wordings 0.537-0.559 (slightly above 0.5, consistent with each pair's own difference entering v, as in
+  simulation). Every observed AUROC is above every permuted value (p = 0.001, the minimum with 1,000 permutations);
+  recomputed observed AUROCs match the registered ones.
+- **Within-fold persona AUROC:** Gemma 1.000 in every fold at layers 29-41 (selected 35; registered pooled 0.768);
+  Llama 1.000 in every fold at 11-15 (selected 12; pooled 0.828). The pooled figure is lowered by between-fold
+  offsets in projection level (Gemma's mid-layer projections are in the thousands), not by within-persona
+  separation.
+- **Next:** owner posts Addenda 2 and 3 on OSF; the dose-finding pilot needs the owner's go.
+
 ## Standing rules (owner)
 
 - No model calls or spend without explicit approval; caps as approved. Kill on breach.
@@ -70,6 +84,6 @@ visible to a new session. There was no GPU free in EUR-IS-1 at the time; no pod 
   artifacts except the commit trailer.
 - Pods: RunPod REST/GraphQL via curl (Cloudflare blocks urllib's signature); network volume
   `u0isne6ams` in EUR-IS-1 holds the Gemma weights (`/workspace/hf/hub`); set a watchdog that
-  terminates every pod; terminate when work ends. RunPod balance $36.01 (2026-10-22, after the probe stage).
+  terminates every pod; terminate when work ends. RunPod balance $35.73 (2026-10-22, after the Addendum 3 diagnostics).
 - Commit trailer: `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` and the current session's
   `Claude-Session:` link.
