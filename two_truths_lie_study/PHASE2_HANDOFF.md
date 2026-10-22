@@ -20,7 +20,7 @@ because the grading key (`PL_GRADER_KEY`, an Anthropic API key) is only visible 
 Steps 1-3 of the earlier list are done (grading-route check, route recorded, frozen; OSF posted, tag
 `perfect-lie-phase2-prereg-v1` at bc1c179). The owner confirmed the OSF post and said: **start the probe stage.**
 
-**Probe stage: code done, nothing run.** Addendum 1 (`PREREG_PHASE2_ADDENDA.md`) hashes the probe code. The code is in
+**Probe stage: DONE 2026-10-22 (see 'Probe stage result' below).** It was: code done, nothing run. Addendum 1 (`PREREG_PHASE2_ADDENDA.md`) hashes the probe code. The code is in
 `two_truths_lie/results/phase2/probe/` (items.py, pod_server_phase2.py, probe_stage.py), plus
 `src/perfect_lie/phase2_probe.py` and `tests/test_phase2_probe.py` (26 tests with the grader tests, all pass).
 Local setup: `pip install scipy pytest platformdirs pyyaml "git+https://github.com/RandallSPQR/SAE-Ethos-Calibration@v1.1.0"`.
@@ -44,6 +44,24 @@ visible to a new session. There was no GPU free in EUR-IS-1 at the time; no pod 
    candidate layer). A model that fails stops before steering, and that is its reported result. **Stop there**:
    the dose-finding pilot needs the owner's go.
 
+## Probe stage result (2026-10-22)
+
+- Pod `30divt8wyoiafl` (RTX PRO 6000, EUR-IS-1, $2.49/h), about 18 min; terminated, no pods left. Spend about
+  $0.56 (balance $36.57 -> $36.01). Results committed under `two_truths_lie/results/phase2/probe/<slug>/`.
+- **Gemma 3 27B: PASS, layer 35** (held-out personas 0.768; wordings A/B/C 1.000; passing layers 35-38, 40, 41).
+- **Llama 3.1 8B: PASS, layer 12** (held-out personas 0.828; wordings 1.000; every candidate 11-21 passes; 12-15 tie at
+  mean wording AUROC 1.0, ties go to the lower layer).
+- **Cue-mention control is degenerate (reported, not part of the stop rule):** every placebo item is byte-identical
+  to another target's full item (placebo note = another persona's full note; the prompt never names the target),
+  so c_L = -v_L/2 exactly, control AUROC ~0, outside [0.40, 0.60] at every layer, both models. Owner to decide
+  whether an addendum replaces it.
+- **Held-out-persona intervals are near zero width** (e.g. 0.720 [0.720, 0.720]); several AUROCs are exact multiples
+  of 1/25, consistent with near-perfect separation within each held-out persona and a pooled AUROC set by
+  between-fold score offsets. Computed as registered; not verified at item level (activations stay on the volume,
+  `/workspace/phase2/probe/<slug>/`).
+- **Next: the dose-finding pilot needs the owner's go.** Also pending: Addendum 2 (Google 20% subsample) to post on
+  OSF, and its grading/analysis code to write and hash before any stage-2 lie is graded.
+
 ## Standing rules (owner)
 
 - No model calls or spend without explicit approval; caps as approved. Kill on breach.
@@ -52,6 +70,6 @@ visible to a new session. There was no GPU free in EUR-IS-1 at the time; no pod 
   artifacts except the commit trailer.
 - Pods: RunPod REST/GraphQL via curl (Cloudflare blocks urllib's signature); network volume
   `u0isne6ams` in EUR-IS-1 holds the Gemma weights (`/workspace/hf/hub`); set a watchdog that
-  terminates every pod; terminate when work ends. RunPod balance $36.57 (2026-10-22).
+  terminates every pod; terminate when work ends. RunPod balance $36.01 (2026-10-22, after the probe stage).
 - Commit trailer: `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` and the current session's
   `Claude-Session:` link.

@@ -1,0 +1,2030 @@
+{
+ "candidates": [
+  21,
+  22,
+  23,
+  24,
+  25,
+  26,
+  27,
+  28,
+  29,
+  30,
+  31,
+  32,
+  33,
+  34,
+  35,
+  36,
+  37,
+  38,
+  39,
+  40,
+  41
+ ],
+ "per_layer": {
+  "21": {
+   "v_norm": 24.930112026254935,
+   "held_out_personas": {
+    "auroc": 0.534725,
+    "ci95": [
+     0.5254737500000001,
+     0.545200625
+    ],
+    "verdict": "FAIL",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 0.625025,
+     "ci95": [
+      0.5895400000000001,
+      0.6631518750000001
+     ],
+     "verdict": "FAIL",
+     "n": 400
+    },
+    "B": {
+     "auroc": 0.709375,
+     "ci95": [
+      0.678448125,
+      0.7438125
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "C": {
+     "auroc": 0.655575,
+     "ci95": [
+      0.614674375,
+      0.69762625
+     ],
+     "verdict": "FAIL",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 0.68805,
+   "passes": false,
+   "mean_wording_auroc": 0.663325,
+   "control": {
+    "auroc": 0.31195,
+    "ci90": [
+     0.2790825,
+     0.342935
+    ],
+    "inside_band": false,
+    "cos_v_c": -0.9999999999999969
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.3669488989172877,
+    "held_out_personas": {
+     "auroc": 0.64,
+     "ci95": [
+      0.64,
+      0.64
+     ],
+     "verdict": "FAIL",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "22": {
+   "v_norm": 21.463548219141412,
+   "held_out_personas": {
+    "auroc": 0.541575,
+    "ci95": [
+     0.53295,
+     0.551475625
+    ],
+    "verdict": "FAIL",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 0.579775,
+     "ci95": [
+      0.54511875,
+      0.6183399999999999
+     ],
+     "verdict": "FAIL",
+     "n": 400
+    },
+    "B": {
+     "auroc": 0.65185,
+     "ci95": [
+      0.615046875,
+      0.696234375
+     ],
+     "verdict": "FAIL",
+     "n": 400
+    },
+    "C": {
+     "auroc": 0.661175,
+     "ci95": [
+      0.625999375,
+      0.701781875
+     ],
+     "verdict": "FAIL",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 0.67915,
+   "passes": false,
+   "mean_wording_auroc": 0.6309333333333335,
+   "control": {
+    "auroc": 0.32085,
+    "ci90": [
+     0.28852124999999995,
+     0.35075
+    ],
+    "inside_band": false,
+    "cos_v_c": -0.9999999999999959
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.547582934167515,
+    "held_out_personas": {
+     "auroc": 0.71335,
+     "ci95": [
+      0.710925,
+      0.716125
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "23": {
+   "v_norm": 57.75726441994414,
+   "held_out_personas": {
+    "auroc": 0.5943,
+    "ci95": [
+     0.5847237500000001,
+     0.604928125
+    ],
+    "verdict": "FAIL",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 0.728575,
+     "ci95": [
+      0.7017725,
+      0.7564025
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "B": {
+     "auroc": 0.740825,
+     "ci95": [
+      0.7196699999999999,
+      0.764255625
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "C": {
+     "auroc": 0.8275,
+     "ci95": [
+      0.798875,
+      0.853656875
+     ],
+     "verdict": "PASS",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 0.77285,
+   "passes": false,
+   "mean_wording_auroc": 0.7656333333333333,
+   "control": {
+    "auroc": 0.22715,
+    "ci90": [
+     0.203945,
+     0.2482
+    ],
+    "inside_band": false,
+    "cos_v_c": -0.9999999999999994
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.6212004471411692,
+    "held_out_personas": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "24": {
+   "v_norm": 73.38449880835292,
+   "held_out_personas": {
+    "auroc": 0.5869,
+    "ci95": [
+     0.582025,
+     0.5915262499999999
+    ],
+    "verdict": "FAIL",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 0.873425,
+     "ci95": [
+      0.85424875,
+      0.8938793749999999
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "B": {
+     "auroc": 0.886625,
+     "ci95": [
+      0.86362125,
+      0.90857875
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "C": {
+     "auroc": 0.8988,
+     "ci95": [
+      0.87894625,
+      0.9183262499999999
+     ],
+     "verdict": "PASS",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 0.9071,
+   "passes": false,
+   "mean_wording_auroc": 0.8862833333333334,
+   "control": {
+    "auroc": 0.0929,
+    "ci90": [
+     0.08012375000000001,
+     0.1055775
+    ],
+    "inside_band": false,
+    "cos_v_c": -0.9999999999999994
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.6894233920650833,
+    "held_out_personas": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "25": {
+   "v_norm": 108.0637482287326,
+   "held_out_personas": {
+    "auroc": 0.5621,
+    "ci95": [
+     0.553675,
+     0.571525
+    ],
+    "verdict": "FAIL",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 0.74335,
+     "ci95": [
+      0.7217718750000001,
+      0.7697293749999999
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "B": {
+     "auroc": 0.644275,
+     "ci95": [
+      0.623495,
+      0.6668068749999999
+     ],
+     "verdict": "FAIL",
+     "n": 400
+    },
+    "C": {
+     "auroc": 0.677775,
+     "ci95": [
+      0.6598725,
+      0.695276875
+     ],
+     "verdict": "FAIL",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 0.6894,
+   "passes": false,
+   "mean_wording_auroc": 0.6884666666666667,
+   "control": {
+    "auroc": 0.3106,
+    "ci90": [
+     0.28635,
+     0.33292750000000004
+    ],
+    "inside_band": false,
+    "cos_v_c": -0.9999999999999997
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.5441904932708581,
+    "held_out_personas": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "26": {
+   "v_norm": 279.03103716428717,
+   "held_out_personas": {
+    "auroc": 0.57985,
+    "ci95": [
+     0.57255,
+     0.58772625
+    ],
+    "verdict": "FAIL",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 0.87135,
+     "ci95": [
+      0.853324375,
+      0.890000625
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "B": {
+     "auroc": 0.746425,
+     "ci95": [
+      0.714324375,
+      0.77920125
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "C": {
+     "auroc": 0.75145,
+     "ci95": [
+      0.727173125,
+      0.778481875
+     ],
+     "verdict": "PASS",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 0.7907,
+   "passes": false,
+   "mean_wording_auroc": 0.7897416666666667,
+   "control": {
+    "auroc": 0.2093,
+    "ci90": [
+     0.187625,
+     0.228975
+    ],
+    "inside_band": false,
+    "cos_v_c": -0.9999999999999998
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.41613765647908874,
+    "held_out_personas": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "27": {
+   "v_norm": 286.9166066535242,
+   "held_out_personas": {
+    "auroc": 0.59495,
+    "ci95": [
+     0.59165,
+     0.598525
+    ],
+    "verdict": "FAIL",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 0.907375,
+     "ci95": [
+      0.8843737500000001,
+      0.9334275
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "B": {
+     "auroc": 0.949275,
+     "ci95": [
+      0.929749375,
+      0.967901875
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "C": {
+     "auroc": 0.91515,
+     "ci95": [
+      0.8935225,
+      0.937675625
+     ],
+     "verdict": "PASS",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 0.95785,
+   "passes": false,
+   "mean_wording_auroc": 0.9239333333333334,
+   "control": {
+    "auroc": 0.04215,
+    "ci90": [
+     0.0272725,
+     0.05597625
+    ],
+    "inside_band": false,
+    "cos_v_c": -1.0000000000000004
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.5189227144584997,
+    "held_out_personas": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "28": {
+   "v_norm": 348.6722471887614,
+   "held_out_personas": {
+    "auroc": 0.638225,
+    "ci95": [
+     0.635824375,
+     0.63995
+    ],
+    "verdict": "FAIL",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 0.996425,
+     "ci95": [
+      0.992999375,
+      0.9991
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "B": {
+     "auroc": 0.99945,
+     "ci95": [
+      0.998575,
+      0.9999756249999999
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "C": {
+     "auroc": 0.9989,
+     "ci95": [
+      0.997349375,
+      0.9999
+     ],
+     "verdict": "PASS",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 0.999925,
+   "passes": false,
+   "mean_wording_auroc": 0.9982583333333332,
+   "control": {
+    "auroc": 7.5e-05,
+    "ci90": [
+     0.0,
+     0.00025
+    ],
+    "inside_band": false,
+    "cos_v_c": -1.0
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.5451885978798628,
+    "held_out_personas": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "29": {
+   "v_norm": 696.5322713841826,
+   "held_out_personas": {
+    "auroc": 0.6,
+    "ci95": [
+     0.6,
+     0.6
+    ],
+    "verdict": "FAIL",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "B": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "C": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 1.0,
+   "passes": false,
+   "mean_wording_auroc": 1.0,
+   "control": {
+    "auroc": 0.0,
+    "ci90": [
+     0.0,
+     0.0
+    ],
+    "inside_band": false,
+    "cos_v_c": -1.0
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.4948683035281829,
+    "held_out_personas": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "30": {
+   "v_norm": 982.9772119889046,
+   "held_out_personas": {
+    "auroc": 0.609725,
+    "ci95": [
+     0.6065231249999999,
+     0.612825
+    ],
+    "verdict": "FAIL",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 0.99945,
+     "ci95": [
+      0.998199375,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "B": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "C": {
+     "auroc": 0.9998,
+     "ci95": [
+      0.999375,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 1.0,
+   "passes": false,
+   "mean_wording_auroc": 0.99975,
+   "control": {
+    "auroc": 0.0,
+    "ci90": [
+     0.0,
+     0.0
+    ],
+    "inside_band": false,
+    "cos_v_c": -1.0
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.4106487544174099,
+    "held_out_personas": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "31": {
+   "v_norm": 1301.4587019409707,
+   "held_out_personas": {
+    "auroc": 0.651575,
+    "ci95": [
+     0.6482743750000001,
+     0.6545
+    ],
+    "verdict": "FAIL",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "B": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "C": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 1.0,
+   "passes": false,
+   "mean_wording_auroc": 1.0,
+   "control": {
+    "auroc": 0.0,
+    "ci90": [
+     0.0,
+     0.0
+    ],
+    "inside_band": false,
+    "cos_v_c": -0.9999999999999999
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.4089747487503699,
+    "held_out_personas": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "32": {
+   "v_norm": 1405.2615331750671,
+   "held_out_personas": {
+    "auroc": 0.64,
+    "ci95": [
+     0.64,
+     0.64
+    ],
+    "verdict": "FAIL",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "B": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "C": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 1.0,
+   "passes": false,
+   "mean_wording_auroc": 1.0,
+   "control": {
+    "auroc": 0.0,
+    "ci90": [
+     0.0,
+     0.0
+    ],
+    "inside_band": false,
+    "cos_v_c": -1.0
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.39632433868868877,
+    "held_out_personas": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "33": {
+   "v_norm": 1453.7082603936478,
+   "held_out_personas": {
+    "auroc": 0.66685,
+    "ci95": [
+     0.662925,
+     0.670925
+    ],
+    "verdict": "FAIL",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "B": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "C": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 1.0,
+   "passes": false,
+   "mean_wording_auroc": 1.0,
+   "control": {
+    "auroc": 0.0,
+    "ci90": [
+     0.0,
+     0.0
+    ],
+    "inside_band": false,
+    "cos_v_c": -1.0
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.4079392540898947,
+    "held_out_personas": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "34": {
+   "v_norm": 1514.7812598725907,
+   "held_out_personas": {
+    "auroc": 0.660975,
+    "ci95": [
+     0.6567,
+     0.66555
+    ],
+    "verdict": "FAIL",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "B": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "C": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 1.0,
+   "passes": false,
+   "mean_wording_auroc": 1.0,
+   "control": {
+    "auroc": 0.0,
+    "ci90": [
+     0.0,
+     0.0
+    ],
+    "inside_band": false,
+    "cos_v_c": -1.0
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.39659556028065995,
+    "held_out_personas": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "35": {
+   "v_norm": 1803.4533120555877,
+   "held_out_personas": {
+    "auroc": 0.768475,
+    "ci95": [
+     0.765125,
+     0.772025
+    ],
+    "verdict": "PASS",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "B": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "C": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 1.0,
+   "passes": true,
+   "mean_wording_auroc": 1.0,
+   "control": {
+    "auroc": 0.0,
+    "ci90": [
+     0.0,
+     0.0
+    ],
+    "inside_band": false,
+    "cos_v_c": -1.0
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.3295831621808527,
+    "held_out_personas": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "36": {
+   "v_norm": 2126.207605921781,
+   "held_out_personas": {
+    "auroc": 0.72,
+    "ci95": [
+     0.72,
+     0.72
+    ],
+    "verdict": "PASS",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "B": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "C": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 1.0,
+   "passes": true,
+   "mean_wording_auroc": 1.0,
+   "control": {
+    "auroc": 0.0,
+    "ci90": [
+     0.0,
+     0.0
+    ],
+    "inside_band": false,
+    "cos_v_c": -1.0000000000000002
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.325356371404312,
+    "held_out_personas": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "37": {
+   "v_norm": 2237.0720792345774,
+   "held_out_personas": {
+    "auroc": 0.72,
+    "ci95": [
+     0.72,
+     0.72
+    ],
+    "verdict": "PASS",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "B": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "C": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 1.0,
+   "passes": true,
+   "mean_wording_auroc": 1.0,
+   "control": {
+    "auroc": 0.0,
+    "ci90": [
+     0.0,
+     0.0
+    ],
+    "inside_band": false,
+    "cos_v_c": -1.0
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.31871899911697094,
+    "held_out_personas": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "38": {
+   "v_norm": 2360.9199917157634,
+   "held_out_personas": {
+    "auroc": 0.721625,
+    "ci95": [
+     0.7204,
+     0.7231
+    ],
+    "verdict": "PASS",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "B": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "C": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 1.0,
+   "passes": true,
+   "mean_wording_auroc": 1.0,
+   "control": {
+    "auroc": 0.0,
+    "ci90": [
+     0.0,
+     0.0
+    ],
+    "inside_band": false,
+    "cos_v_c": -1.0000000000000002
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.30279241162757453,
+    "held_out_personas": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "39": {
+   "v_norm": 2618.011883632205,
+   "held_out_personas": {
+    "auroc": 0.6656,
+    "ci95": [
+     0.658675,
+     0.6727
+    ],
+    "verdict": "FAIL",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "B": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "C": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 1.0,
+   "passes": false,
+   "mean_wording_auroc": 1.0,
+   "control": {
+    "auroc": 0.0,
+    "ci90": [
+     0.0,
+     0.0
+    ],
+    "inside_band": false,
+    "cos_v_c": -1.0
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.29697987562978223,
+    "held_out_personas": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "40": {
+   "v_norm": 2839.9096299517114,
+   "held_out_personas": {
+    "auroc": 0.72405,
+    "ci95": [
+     0.72185,
+     0.7263
+    ],
+    "verdict": "PASS",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "B": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "C": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 1.0,
+   "passes": true,
+   "mean_wording_auroc": 1.0,
+   "control": {
+    "auroc": 0.0,
+    "ci90": [
+     0.0,
+     0.0
+    ],
+    "inside_band": false,
+    "cos_v_c": -1.0
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.2849986562597002,
+    "held_out_personas": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  },
+  "41": {
+   "v_norm": 2922.491420819378,
+   "held_out_personas": {
+    "auroc": 0.748,
+    "ci95": [
+     0.743524375,
+     0.75275
+    ],
+    "verdict": "PASS",
+    "n": 400
+   },
+   "held_out_wordings": {
+    "A": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "B": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "C": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    }
+   },
+   "in_sample_frozen_auroc": 1.0,
+   "passes": true,
+   "mean_wording_auroc": 1.0,
+   "control": {
+    "auroc": 0.0,
+    "ci90": [
+     0.0,
+     0.0
+    ],
+    "inside_band": false,
+    "cos_v_c": -1.0
+   },
+   "logistic": {
+    "C": 0.01,
+    "cos_with_v": 0.25752905087781874,
+    "held_out_personas": {
+     "auroc": 1.0,
+     "ci95": [
+      1.0,
+      1.0
+     ],
+     "verdict": "PASS",
+     "n": 400
+    },
+    "held_out_wordings": {
+     "A": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "B": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     },
+     "C": {
+      "auroc": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "verdict": "PASS",
+      "n": 400
+     }
+    }
+   }
+  }
+ },
+ "selected_layer": 35,
+ "gate": "PASS",
+ "rule": "AUROC >= 0.70 and 95% cluster-bootstrap lower bound > 0.50 for held-out personas and each of the three held-out wordings; layer = highest mean held-out-wording AUROC, ties to the lower",
+ "n_boot": 2000,
+ "seed": 20261027,
+ "slug": "gemma-3-27b-it",
+ "n_items": 1800,
+ "n_layers": 62
+}

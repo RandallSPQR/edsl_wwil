@@ -1,0 +1,341 @@
+{
+ "env": {
+  "versions": {
+   "torch": "2.8.0.dev20250319+cu128",
+   "transformers": "4.53.2",
+   "accelerate": "1.15.0",
+   "numpy": "2.1.2",
+   "sae-ethos-pipeline": "1.1.0"
+  },
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+  "loaded": "meta-llama/Llama-3.1-8B-Instruct",
+  "cuda": "12.8",
+  "n_blocks": 32
+ },
+ "shards": [
+  {
+   "shard": 0,
+   "n": 100,
+   "shape": [
+    100,
+    32,
+    4096
+   ],
+   "kept": false,
+   "prompt_count": [
+    267,
+    292
+   ],
+   "span_len": [
+    67,
+    92
+   ]
+  },
+  {
+   "shard": 1,
+   "n": 100,
+   "shape": [
+    100,
+    32,
+    4096
+   ],
+   "kept": false,
+   "prompt_count": [
+    267,
+    292
+   ],
+   "span_len": [
+    67,
+    92
+   ]
+  },
+  {
+   "shard": 2,
+   "n": 100,
+   "shape": [
+    100,
+    32,
+    4096
+   ],
+   "kept": false,
+   "prompt_count": [
+    267,
+    292
+   ],
+   "span_len": [
+    67,
+    92
+   ]
+  },
+  {
+   "shard": 3,
+   "n": 100,
+   "shape": [
+    100,
+    32,
+    4096
+   ],
+   "kept": false,
+   "prompt_count": [
+    267,
+    295
+   ],
+   "span_len": [
+    67,
+    92
+   ]
+  },
+  {
+   "shard": 4,
+   "n": 100,
+   "shape": [
+    100,
+    32,
+    4096
+   ],
+   "kept": false,
+   "prompt_count": [
+    267,
+    292
+   ],
+   "span_len": [
+    67,
+    92
+   ]
+  },
+  {
+   "shard": 5,
+   "n": 100,
+   "shape": [
+    100,
+    32,
+    4096
+   ],
+   "kept": false,
+   "prompt_count": [
+    267,
+    292
+   ],
+   "span_len": [
+    67,
+    92
+   ]
+  },
+  {
+   "shard": 6,
+   "n": 100,
+   "shape": [
+    100,
+    32,
+    4096
+   ],
+   "kept": false,
+   "prompt_count": [
+    267,
+    292
+   ],
+   "span_len": [
+    67,
+    92
+   ]
+  },
+  {
+   "shard": 7,
+   "n": 100,
+   "shape": [
+    100,
+    32,
+    4096
+   ],
+   "kept": false,
+   "prompt_count": [
+    267,
+    293
+   ],
+   "span_len": [
+    67,
+    92
+   ]
+  },
+  {
+   "shard": 8,
+   "n": 100,
+   "shape": [
+    100,
+    32,
+    4096
+   ],
+   "kept": false,
+   "prompt_count": [
+    267,
+    292
+   ],
+   "span_len": [
+    67,
+    92
+   ]
+  },
+  {
+   "shard": 9,
+   "n": 100,
+   "shape": [
+    100,
+    32,
+    4096
+   ],
+   "kept": false,
+   "prompt_count": [
+    267,
+    292
+   ],
+   "span_len": [
+    67,
+    92
+   ]
+  },
+  {
+   "shard": 10,
+   "n": 100,
+   "shape": [
+    100,
+    32,
+    4096
+   ],
+   "kept": false,
+   "prompt_count": [
+    267,
+    293
+   ],
+   "span_len": [
+    67,
+    92
+   ]
+  },
+  {
+   "shard": 11,
+   "n": 100,
+   "shape": [
+    100,
+    32,
+    4096
+   ],
+   "kept": false,
+   "prompt_count": [
+    267,
+    292
+   ],
+   "span_len": [
+    67,
+    92
+   ]
+  },
+  {
+   "shard": 12,
+   "n": 100,
+   "shape": [
+    100,
+    32,
+    4096
+   ],
+   "kept": false,
+   "prompt_count": [
+    267,
+    292
+   ],
+   "span_len": [
+    67,
+    92
+   ]
+  },
+  {
+   "shard": 13,
+   "n": 100,
+   "shape": [
+    100,
+    32,
+    4096
+   ],
+   "kept": false,
+   "prompt_count": [
+    267,
+    292
+   ],
+   "span_len": [
+    67,
+    92
+   ]
+  },
+  {
+   "shard": 14,
+   "n": 100,
+   "shape": [
+    100,
+    32,
+    4096
+   ],
+   "kept": false,
+   "prompt_count": [
+    267,
+    293
+   ],
+   "span_len": [
+    67,
+    92
+   ]
+  },
+  {
+   "shard": 15,
+   "n": 100,
+   "shape": [
+    100,
+    32,
+    4096
+   ],
+   "kept": false,
+   "prompt_count": [
+    267,
+    292
+   ],
+   "span_len": [
+    67,
+    92
+   ]
+  },
+  {
+   "shard": 16,
+   "n": 100,
+   "shape": [
+    100,
+    32,
+    4096
+   ],
+   "kept": false,
+   "prompt_count": [
+    267,
+    292
+   ],
+   "span_len": [
+    67,
+    92
+   ]
+  },
+  {
+   "shard": 17,
+   "n": 100,
+   "shape": [
+    100,
+    32,
+    4096
+   ],
+   "kept": false,
+   "prompt_count": [
+    267,
+    293
+   ],
+   "span_len": [
+    67,
+    92
+   ]
+  }
+ ]
+}
