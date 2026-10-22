@@ -1,6 +1,9 @@
 # Phase 2 local environment: grading (src/perfect_lie/grader_direct.py), the grading-route check
 # (results/phase2/grading_route/regrade_direct.py) and analysis. Python 3.13.16; versions as installed
 # when the grading-route check ran (2026-10-22). curl is used for the API calls.
+# Environment: a Claude Code cloud session started after PL_GRADER_KEY was added to the environment's
+# variables (a fresh container; earlier sessions do not see the key). EDSL is not needed for direct
+# grading and was not installed. PREREG_PHASE2 section 11.
 #   python -m pip install -r results/phase2/requirements_phase2.txt
 numpy==2.5.3
 pandas==3.0.5

@@ -7,7 +7,8 @@ stop rule (section 4), the grading route (section 11) and the grader-failure rul
 - Nothing has been run except the identity check (section 2) and the grading-route check (section 11).
   No activation has been extracted and no steering has been run.
 - **No Phase 2 compute runs until the owner confirms this registration is posted on OSF.**
-- Any later change is made by a dated addendum, as in the first two studies.
+- Any later change is made by a dated addendum, as in the first two studies. (Re-frozen once on
+  2026-10-22, before the OSF post, to add the grading environment to section 11.)
 
 **Frozen instrument and code (sha256).**
 - The cue grader rubric is unchanged from the first two studies.
@@ -38,7 +39,7 @@ stop rule (section 4), the grading route (section 11) and the grader-failure rul
 | grading route (section 11) | `results/phase2/grading_route/regrade_direct.json` | `8ba35d03fc64be9e903ef6894dec43b53ab821be5324a59f37448b905e97efa0` |
 | grading route (section 11) | `src/perfect_lie/grader_direct.py` | `4d61c62ecc1ff8ec15b168880cd43bbb11b2b1966ee423af6b4d5ae3771cce78` |
 | grading route (section 11) | `tests/test_perfect_lie_grader_direct.py` | `b23135ada95e84db0bb1742afaa865a6c55eeb8677ff39a9fa255f70534df41c` |
-| grading route (section 11) | `results/phase2/requirements_phase2.txt` | `b38f33226555469cf056750585b8ac886cbd539415127aaeff298becaf42cab7` |
+| grading route (section 11) | `results/phase2/requirements_phase2.txt` | `bbbf886c17754fd74d2d9b013a2bb93c08b38d0ad8c03e3beed10e6f9886f8f1` |
 | | grader rubric (RUBRIC_PREAMBLE + RUBRIC_OUTPUT) | `c638fea116fbb397631f2c7a28dac8f01a63cd8990fcb70365dbb7e98f3a303f` |
 
 ## 1. Question
@@ -334,6 +335,17 @@ K = 32, two-sided t on 31 df, Holm across four (the first test at 0.0125, the la
   tokens 2000, no extended thinking, `anthropic-version: 2023-06-01` (pinned: later API versions
   reject `temperature`). The frozen rubric v0.6 prompts (`grader_input_from_record`) and parser
   (`parse_grader_output`) are unchanged.
+- **Environment (the key switch).** Direct grading bills the owner's Anthropic credits through a
+  separate key, `PL_GRADER_KEY` (`GRADER_ANTHROPIC_API_KEY` is also accepted), set in the variables of
+  the Claude Code cloud environment that runs Phase 2. `ANTHROPIC_API_KEY` is reserved there for the
+  session's own sign-in and is never used for grading. A variable added to the environment reaches
+  only sessions started after the change, so the grading-route check ran in a **new session and a
+  fresh container** (2026-10-22), not in the session that ran the identity check; that session graded
+  through OpenRouter with `OPEN_ROUTER_API_KEY`. The new container: Python 3.13.16, with scipy, pytest
+  and platformdirs installed for the check and pinned in `results/phase2/requirements_phase2.txt`;
+  EDSL is not installed and is not needed for direct grading. Phase 2 grading runs only in a session
+  that sees `PL_GRADER_KEY`; without it the grader stops (`grader_key`), and there is no fallback to
+  OpenRouter. The key is never printed, logged or written to the repository.
 - **Schema enforcement:** the frozen schema (`grader_response_format`) is sent as a forced tool call
   (`cue_annotation`) with **`strict: true`**, so the answer is decoded to the schema. Strict mode does
   not accept numeric bounds, so `minimum` / `maximum` are dropped from the copy sent to the API; the

@@ -11,6 +11,7 @@ because the grading key (`PL_GRADER_KEY`, an Anthropic API key) is only visible 
   `two_truths_lie/results/phase2/identity_check/` (RULES.md, DIAGNOSTIC_SUMMARY.md, BEHAVIORAL_SUMMARY.md).
 - Grading-route check: done 2026-10-22 (commit d09a144). Kappa 0.915 over all cue labels -> all Phase 2
   grading goes through the Anthropic API directly (`src/perfect_lie/grader_direct.py`, strict tool call).
+  Grading needs a session that sees `PL_GRADER_KEY` (only sessions started after it was added do).
 - Phase 2 pre-registration: **frozen** as `PREREG_PHASE2.md` (revision 4, with a hash table). The owner
   posts it on OSF and creates the tag in the GitHub UI.
 
