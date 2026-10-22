@@ -30,11 +30,11 @@ def sample():
     return out
 
 
-KEY_VARS = ("GRADER_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY")
+KEY_VARS = ("PL_GRADER_KEY", "GRADER_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY")
 
 
 def grader_key():
-    """The Anthropic API key for grading. Read from GRADER_ANTHROPIC_API_KEY: in a Claude Code cloud
+    """The Anthropic API key for grading. Read from PL_GRADER_KEY (or GRADER_ANTHROPIC_API_KEY): in a Claude Code cloud
     environment ANTHROPIC_API_KEY is reserved for the session's own authentication and is not passed
     through. Never printed."""
     for v in KEY_VARS:

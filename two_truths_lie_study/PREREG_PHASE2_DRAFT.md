@@ -272,7 +272,7 @@ the grading-route check passes, otherwise to OpenRouter.
 
 1. **Grading route:** Anthropic API direct or OpenRouter, decided by the regrade check
    (`results/phase2/grading_route/RULES.md`: 50 identity-check pod lies; switch if kappa >= 0.90 or
-   label agreement >= 97%). Runs when `GRADER_ANTHROPIC_API_KEY` is added.
+   label agreement >= 97%). Runs when the grading key (`PL_GRADER_KEY`) is added.
 
 Decided (revisions 2 and 3): two-stage design; one confirmatory alpha per model x hypothesis, the
 largest coherent pilot alpha; Holm family of four; K = 32; powered for Delta = 0.10, a smaller-effect
