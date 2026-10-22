@@ -1,0 +1,155 @@
+{
+ "environment": {
+  "python": "3.11.17",
+  "numpy": "2.4.6",
+  "pandas": "2.3.3",
+  "scipy": "1.17.1",
+  "statsmodels": "0.15.0"
+ },
+ "note": "post hoc, descriptive; the Google grader shares a family with the Gemma and Gemini liars",
+ "gate_excluded": [
+  "historical_anchor",
+  "emotional_appeal"
+ ],
+ "pool": [
+  "P1",
+  "P2",
+  "P3",
+  "P5",
+  "P6"
+ ],
+ "models": {
+  "meta-llama/llama-3.1-8b-instruct": {
+   "primary": {
+    "B": 0.24641203703703699,
+    "B_se": 0.013441368349602684,
+    "df": 71,
+    "method": "per-category t-test (fallback)",
+    "label": "belief-tracking",
+    "n": 1077,
+    "ci95": [
+     0.2196107097615766,
+     0.2732133643124974
+    ]
+   },
+   "google": {
+    "B": 0.2693287037037037,
+    "B_se": 0.013195552614785751,
+    "df": 71,
+    "method": "per-category t-test (fallback)",
+    "fallback_reason": "did not converge",
+    "n": 1077,
+    "K": 72,
+    "ci95": [
+     0.24301751908239366,
+     0.29563988832501376
+    ]
+   },
+   "google_minus_primary": 0.022916666666666724,
+   "primary_rejections_preserved": {
+    "efficacy_holds": true,
+    "all_primary_rejections_preserved": true
+   },
+   "family_shared_with_grader": false
+  },
+  "google/gemma-3-27b-it": {
+   "primary": {
+    "B": 0.42951388888888886,
+    "B_se": 0.01710427192129927,
+    "df": 71,
+    "method": "per-category t-test (fallback)",
+    "label": "belief-tracking",
+    "n": 1067,
+    "ci95": [
+     0.39540893932958604,
+     0.4636188384481917
+    ]
+   },
+   "google": {
+    "B": 0.3943287037037037,
+    "B_se": 0.016841662789220245,
+    "df": 71,
+    "method": "per-category t-test (fallback)",
+    "fallback_reason": "final Hessian not positive definite",
+    "n": 1067,
+    "K": 72,
+    "ci95": [
+     0.3607473818816455,
+     0.4279100255257619
+    ]
+   },
+   "google_minus_primary": -0.03518518518518515,
+   "primary_rejections_preserved": {
+    "efficacy_holds": true,
+    "all_primary_rejections_preserved": true
+   },
+   "family_shared_with_grader": true
+  },
+  "openai/gpt-4o-mini": {
+   "primary": {
+    "B": 0.39062499999999994,
+    "B_se": 0.02370753663722772,
+    "df": 71,
+    "method": "per-category t-test (fallback)",
+    "label": "belief-tracking",
+    "n": 1078,
+    "ci95": [
+     0.34335351455424257,
+     0.4378964854457573
+    ]
+   },
+   "google": {
+    "B": 0.4009259259259259,
+    "B_se": 0.022646427666726143,
+    "df": 71,
+    "method": "per-category t-test (fallback)",
+    "fallback_reason": "did not converge",
+    "n": 1078,
+    "K": 72,
+    "ci95": [
+     0.35577023167446165,
+     0.44608162017739017
+    ]
+   },
+   "google_minus_primary": 0.010300925925925963,
+   "primary_rejections_preserved": {
+    "efficacy_holds": true,
+    "all_primary_rejections_preserved": true
+   },
+   "family_shared_with_grader": false
+  },
+  "google/gemini-2.5-flash-lite": {
+   "primary": {
+    "B": 0.3481481481481481,
+    "B_se": 0.021355749268442734,
+    "df": 71,
+    "method": "per-category t-test (fallback)",
+    "label": "belief-tracking",
+    "n": 1074,
+    "ci95": [
+     0.30556599352896263,
+     0.39073030276733356
+    ]
+   },
+   "google": {
+    "B": 0.3680555555555556,
+    "B_se": 0.022607069576861774,
+    "df": 71,
+    "method": "per-category t-test (fallback)",
+    "fallback_reason": "did not converge",
+    "n": 1074,
+    "K": 72,
+    "ci95": [
+     0.32297833910634743,
+     0.4131327720047637
+    ]
+   },
+   "google_minus_primary": 0.019907407407407485,
+   "primary_rejections_preserved": {
+    "efficacy_holds": true,
+    "all_primary_rejections_preserved": true
+   },
+   "family_shared_with_grader": true
+  }
+ }
+}

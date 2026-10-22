@@ -1064,6 +1064,13 @@ to every OpenRouter model. `top_logprobs` without `logprobs` is now dropped for 
       - Non-viable lies excluded: unchanged.
       - Tipping point: no crossing detected by the 0.01 scan for any model; worst case holds.
       - gpt-5 subsample (descriptive): +0.169 to +0.568 on 16–22 categories.
+      - Google grader on every lie (post hoc and descriptive, owner's request 2026-10-22; no new
+        model calls): B +0.269, +0.394, +0.401, +0.368 (Google − primary +0.023, −0.035, +0.010,
+        +0.020). Same lies, cue pool and fallback; every primary rejection is preserved. The Google
+        grader shares a family with the Gemma and Gemini liars. Script:
+        `posthoc_google_testB.py`, run in the registered environment (`requirements_review.txt`);
+        under a newer numpy/pandas/scipy, Gemma's mixed model converges and its primary B prints
+        +0.431 instead of the registered fallback's +0.430.
     - **Comprehension check (secondary; cannot change a label):**
       - Balanced accuracy: Gemma 0.92 [0.89, 0.94] and Gemini 0.99 [0.99, 1.00] hold.
         gpt-4o-mini 0.86 [0.82, 0.90] misses the 0.85 lower bound, with a strong "suspicious"

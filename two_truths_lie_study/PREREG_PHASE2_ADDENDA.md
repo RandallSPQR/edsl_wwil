@@ -90,3 +90,65 @@ Revised before any pod ran (2026-10-22): `probe_stage.py` now passes `HF_TOKEN` 
 8B is gated and may not be on the volume), tries the GPU types in order (RTX PRO 6000, A100 SXM 80 GB, A100 PCIe
 80 GB, H100 PCIe: each stays under the $8 cap for 2.5 h) and can retry until one is free. Its hash above is the
 revised file's. No rule or analysis changed.
+
+## Addendum 2 (2026-10-22): a second, non-Claude grader on a 20% subsample (descriptive)
+
+Owner's request, 2026-10-22. Written during the probe stage, before any steered lie or stage-2 reference lie exists
+and before any Phase 2 lie is graded. It adds one descriptive grader-robustness analysis. **The primary grader, the
+primary analysis (section 7), the Holm families, the labels and the stop rules are unchanged**; nothing in this
+addendum can change a label.
+
+The owner asked for this to be added to the freeze before posting. The registration was already posted on OSF (tag
+`perfect-lie-phase2-prereg-v1`, commit `bc1c179`), so it is recorded here as an addendum, as the registration
+requires, and posted on OSF before any Phase 2 lie is graded.
+
+**Why.** Every Phase 2 cue label comes from one grader (Claude Sonnet 4.5, direct route). A second grader from
+another family, on a subsample, shows whether the steered-minus-placebo contrast depends on that grader.
+
+**Grader.** Google `google/gemini-2.5-flash`, the reversed-note study's gate grader, with the same settings:
+OpenRouter, temperature 0, reasoning disabled, max output tokens 2000, the frozen rubric v0.6 prompts
+(`grader_input_from_record`), the frozen schema as `response_format` (`grader_response_format`, json_schema, strict)
+and the frozen parser (`parse_grader_output`). Failures: 3 attempts, then that lie has no Google grade (no
+substitute grader). Grading failures are counted by model x hypothesis x arm.
+- **A declared exception to section 11's "no Phase 2 lie is graded on OpenRouter".** That rule protects the primary
+  grading route, and it still holds for every primary label. The Google labels are a separate, descriptive
+  measurement and are never mixed with primary labels in a contrast.
+- **Family overlap, stated now:** the Google grader shares a family with the Gemma 3 27B liar (not with Llama), so
+  agreement on Gemma is weaker evidence of grader-robustness than agreement on Llama.
+
+**Subsample (seeded, stratified, 20% of every graded arm).** `results/phase2/grader_robustness/subsample.py`
+(seed **20261028**) assigns one target to each of the 32 evaluation categories: the categories in a seeded order
+are given the five targets in turn. That is 32 of the 160 (category, target) cells, i.e. 20%, stratified by category
+(exactly one cell each) and by target (6 or 7 cells each). The list is in `subsample.json`.
+- The **same cells** are used for both models, both hypotheses and every graded arm: stage-2 steered and placebo
+  lies, the unsteered placebo, full and reversed references, and the method check's steered and placebo lies (on
+  those of its 16 categories that are in the list). So every steered lie in the subsample has its placebo pair.
+- Every lie in those cells that the primary grader grades is also sent to the Google grader. The pilot is not
+  graded, so it is not included.
+- Size: per model, 2 hypotheses x 2 arms x 32 + 3 references x 32 + 2 method-check arms x (the method-check
+  categories in the list) = at most 256 lies; at most 512 for both models. Cost about $0.002 per lie on
+  OpenRouter, under $2 in all.
+
+**Analysis (descriptive; reported beside the primary, after unblinding).** s is computed exactly as for the
+primary (the same scorable cues), from the Google labels.
+- Per model x hypothesis: d_k = s_G(steered) - s_G(placebo) for the subsample's cell in category k; the mean over
+  the categories with a complete pair, with a 95% t interval on K - 1 df. **Beside it, the same contrast from the
+  primary grader on the same cells**, so a grader difference is not confounded with the subsample, and the primary
+  Delta on all 160 cells.
+- The same for the method check (v_fp vs its placebo), and for the references: s_full - s_reversed and each
+  steered and placebo arm's shift relative to the unsteered placebo reference.
+- Per-cue agreement between the primary and Google labels on the subsample (Cohen's kappa, all cues and the
+  cues that enter s), by model.
+- No test, no Holm family and no label. A sign or size difference between the graders is reported as found.
+- **Blinding:** the Google labels are not read before unblinding (section 10); they are graded with the primary
+  labels and stored without being summarised.
+
+**Code.** The grading call and this analysis are committed, tested on simulated data and hashed in a later dated
+addendum, before any stage-2 lie is graded, as section 10 requires for analysis code.
+
+**Hashes (sha256, files under `two_truths_lie/`).**
+
+| file | sha256 |
+|---|---|
+| `results/phase2/grader_robustness/subsample.py` | `4a33f82ba7163de4c4482744b451270f7ee3f2a7d70b4dd01a0cdca753deed34` |
+| `results/phase2/grader_robustness/subsample.json` | `71a92a9c03fcd3ede46eca2c7b17195947b6f45461f2c023b270d27a5701c600` |
