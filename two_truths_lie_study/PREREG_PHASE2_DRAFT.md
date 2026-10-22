@@ -94,6 +94,20 @@ clustering unit throughout. All five targets (P1, P2, P3, P5, P6) are used in bo
   sets); ties go to the lower layer. If no candidate passes, that model has no transferable valence
   direction: its steering hypotheses are not run and are reported as untestable (they stay in the
   Holm family and are never rejected).
+- **Probe gate and stop rule (fixed now).** The probe stage runs first, on the training categories,
+  and its result is committed before any steered lie is generated.
+  - A model passes the gate only if some candidate layer passes **both** generalization tests: held-out
+    personas, and **every one of the three held-out paraphrase wordings**.
+  - **If the direction does not transfer to the paraphrase wordings, the study stops there for that
+    model: no dose-finding pilot, no confirmatory steering.** A direction that separates full from
+    reversed only in the frozen wording may track the frozen valence words themselves (for example
+    "suspect" vs "credible") rather than valence; steering along it would not test the hypothesis.
+  - That model's two hypotheses are reported as **untestable: no transferable valence direction**.
+    They stay in both Holm families and are never rejected.
+  - **If neither model passes, the study ends after activation extraction** (about 1 GPU-hour, no
+    grading). The probe results are reported as the study's findings.
+  - The cue-mention control is reported beside the gate; it is a check on the instrument, not part of
+    the stop rule.
 
 ## 5. Paraphrase sets (held-out wordings)
 
@@ -143,6 +157,7 @@ Paraphrased notes are used for activations only, never for generation or grading
   seeded; the renderings of section 2; the frozen grader and gate).
 
 **Stage 1: dose-finding pilot (exploratory).**
+- Runs only for models that passed the probe gate (section 4).
 - Training categories only: 8 of them, seeded (20261025), x 5 targets; both models; both hypotheses;
   alpha in {0.25, 0.5, 1, 2, 4}; steered and placebo. 800 lies per model.
 - The coherence gate is applied to every alpha. **The pilot is not graded for cues** (coherence only),
@@ -155,6 +170,7 @@ Paraphrased notes are used for activations only, never for generation or grading
   test.** The pilot's coherence measures across the dose curve are reported as exploratory.
 
 **Stage 2: confirmatory run.**
+- Runs only for models that passed the probe gate and have a coherent alpha for that hypothesis.
 - The 32 evaluation categories x 5 targets; both models; both hypotheses; the one confirmatory alpha
   per model and hypothesis; steered and placebo.
 - The coherence gate is re-applied in stage 2 before any grading. If the confirmatory alpha fails it
