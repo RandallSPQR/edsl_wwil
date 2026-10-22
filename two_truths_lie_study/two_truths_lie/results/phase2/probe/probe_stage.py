@@ -1,6 +1,6 @@
 """Phase 2 probe stage driver (PREREG_PHASE2 section 4; Addendum 1). Runs from this container; the pod does the work.
 
-  python probe_stage.py pod-up --commit SHA --key-file PATH [--gpu ID] [--watchdog-hours H]
+  python probe_stage.py pod-up --commit SHA --key-file PATH [--gpus ID,ID,...] [--watchdog-hours H] [--poll-hours H]
   python probe_stage.py extract --pod ID --key-file PATH --model M
   python probe_stage.py analyse --pod ID --key-file PATH --model M      -> <slug>/probe_result.json, vectors.npz, PROBE.md
   python probe_stage.py pod-down --pod ID
@@ -8,9 +8,11 @@
 The pod mounts the network volume in EUR-IS-1 (Gemma weights), fetches pod_server.py (frozen) and this directory's
 pod_server_phase2.py and src/perfect_lie/phase2_probe.py at the given commit, installs transformers 4.53.2 and
 sae-ethos-pipeline v1.1.0, and serves on port 8000. The pod also terminates itself after the watchdog hours.
+HF_TOKEN, when set here, is passed to the pod (gated weights not yet on the volume; never printed). pod-up tries the
+GPU types in order and, with --poll-hours, retries every 5 minutes until one is free.
 RunPod API calls go through curl (Cloudflare rejects urllib); the proxy supplies the RunPod credential.
 """
-import argparse, gzip, json, subprocess, sys, time
+import argparse, gzip, json, os, subprocess, sys, time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -22,7 +24,9 @@ FILES = {"pod_server.py": "two_truths_lie_study/two_truths_lie/results/phase2/id
          "pod_server_phase2.py": "two_truths_lie_study/two_truths_lie/results/phase2/probe/pod_server_phase2.py",
          "phase2_probe.py": "two_truths_lie_study/two_truths_lie/src/perfect_lie/phase2_probe.py"}
 IMAGE = "runpod/pytorch:2.8.0-py3.11-cuda12.8.1-cudnn-devel-ubuntu22.04"
-GPU, DC, VOLUME = "NVIDIA RTX PRO 6000 Blackwell Server Edition", "EUR-IS-1", "u0isne6ams"
+# 80-96 GB types whose 2.5 h worst case stays under the probe stage's $8 cap (Addendum 1)
+GPUS = ["NVIDIA RTX PRO 6000 Blackwell Server Edition", "NVIDIA A100-SXM4-80GB", "NVIDIA A100 80GB PCIe", "NVIDIA H100 PCIe"]
+DC, VOLUME = "EUR-IS-1", "u0isne6ams"
 POD_MODEL = {"meta-llama/llama-3.1-8b-instruct": "meta-llama/Llama-3.1-8B-Instruct",
              "google/gemma-3-27b-it": "google/gemma-3-27b-it"}
 N_BLOCKS = {"google/gemma-3-27b-it": 62, "meta-llama/llama-3.1-8b-instruct": 32}
@@ -49,7 +53,7 @@ def pod_api(method, path, body=None):
     return curl(["-X", method, f"https://rest.runpod.io/v1{path}"], body)
 
 
-def pod_up(commit, key_file, gpu, hours):
+def pod_up(commit, key_file, gpus, hours, poll_hours=0.0):
     key = Path(key_file).read_text().strip()
     fetch = " && ".join(f"curl -fsSL {REPO_RAW}/{commit}/{src} -o /root/p2/{dst}" for dst, src in FILES.items())
     cmd = (f"(sleep {int(hours * 3600)}; runpodctl remove pod $RUNPOD_POD_ID) >/dev/null 2>&1 & "
@@ -57,13 +61,20 @@ def pod_up(commit, key_file, gpu, hours):
            "pip install -q transformers==4.53.2 accelerate "
            "'sae-ethos-pipeline @ git+https://github.com/RandallSPQR/SAE-Ethos-Calibration@v1.1.0' && "
            "cd /root/p2 && HF_HOME=/workspace/hf python pod_server_phase2.py")
-    body = {"name": "phase2-probe", "imageName": IMAGE, "gpuTypeIds": [gpu], "gpuCount": 1, "cloudType": "SECURE",
+    env = {"POD_KEY": key, **({"HF_TOKEN": os.environ["HF_TOKEN"]} if os.environ.get("HF_TOKEN") else {})}
+    body = {"name": "phase2-probe", "imageName": IMAGE, "gpuTypeIds": list(gpus), "gpuTypePriority": "custom",
+            "gpuCount": 1, "cloudType": "SECURE",
             "dataCenterIds": [DC], "networkVolumeId": VOLUME, "volumeMountPath": "/workspace",
-            "containerDiskInGb": 40, "ports": ["8000/http"], "env": {"POD_KEY": key},
+            "containerDiskInGb": 40, "ports": ["8000/http"], "env": env,
             "dockerStartCmd": ["bash", "-c", cmd]}
-    r = pod_api("POST", "/pods", body)
-    print(json.dumps({k: r.get(k) for k in ("id", "costPerHr", "desiredStatus", "error", "machine") if k in r}, default=str))
-    return r
+    deadline = time.time() + poll_hours * 3600
+    while True:
+        r = pod_api("POST", "/pods", body)
+        print(json.dumps({k: r.get(k) for k in ("id", "costPerHr", "desiredStatus", "error", "machine") if k in r},
+                         default=str), flush=True)
+        if r.get("id") or time.time() >= deadline:
+            return r
+        time.sleep(300)
 
 
 def base_auth(pod, key_file):
@@ -153,7 +164,8 @@ def main():
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("pod-up"); a.add_argument("--commit", required=True); a.add_argument("--key-file", required=True)
-    a.add_argument("--gpu", default=GPU); a.add_argument("--watchdog-hours", type=float, default=2.5)
+    a.add_argument("--gpus", default=",".join(GPUS)); a.add_argument("--watchdog-hours", type=float, default=2.5)
+    a.add_argument("--poll-hours", type=float, default=0.0)
     for name in ("extract", "analyse"):
         b = sub.add_parser(name); b.add_argument("--pod", required=True); b.add_argument("--key-file", required=True)
         b.add_argument("--model", required=True, choices=sorted(POD_MODEL))
@@ -163,7 +175,7 @@ def main():
     d = sub.add_parser("pod-down"); d.add_argument("--pod", required=True)
     x = ap.parse_args()
     if x.cmd == "pod-up":
-        pod_up(x.commit, x.key_file, x.gpu, x.watchdog_hours)
+        pod_up(x.commit, x.key_file, x.gpus.split(","), x.watchdog_hours, x.poll_hours)
     elif x.cmd == "extract":
         extract(x.pod, x.key_file, x.model)
     elif x.cmd == "analyse":

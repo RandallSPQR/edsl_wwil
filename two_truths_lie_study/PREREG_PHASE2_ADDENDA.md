@@ -80,8 +80,13 @@ and fixes the mechanical details the registration leaves open. None of them chan
 | `results/phase2/probe/probe_items.jsonl.gz` | `3c69888b8e9e3b1f20a2360f93f43f5415b2814d371fe64ec7a423a105caca11` |
 | `src/perfect_lie/phase2_probe.py` | `81eb0e968d215ef14a05a9e62f67ddbe5409dd0070a9016ef3e85ab6c1edeb16` |
 | `results/phase2/probe/pod_server_phase2.py` | `b1b30ae08fc7ddb14239a306142180cff6211d147a4be39f7babd5eb9e11854a` |
-| `results/phase2/probe/probe_stage.py` | `fe4a7fee7a7702abba146c4f9eb32ba8e05e00293da6e1afc56cb13da378d462` |
+| `results/phase2/probe/probe_stage.py` | `3b594ef93c3583077bd6f9b61e77d1d8cd8cd487b2f2dea75ad7ae2f99517232` |
 | `tests/test_phase2_probe.py` | `3b4cf86b1f1710aee67fb766078918b0e1004f0b84d8dea45652f439c07eb944` |
 | `results/phase2/identity_check/pod_server.py` | `f2897167b8c2720985e8e85a1b09f5087e92f7e46c5749cb768a97c295fdf868` |
 
 `pod_server.py` is listed to show it is unchanged from the registration's table.
+
+Revised before any pod ran (2026-10-22): `probe_stage.py` now passes `HF_TOKEN` to the pod when it is set (Llama 3.1
+8B is gated and may not be on the volume), tries the GPU types in order (RTX PRO 6000, A100 SXM 80 GB, A100 PCIe
+80 GB, H100 PCIe: each stays under the $8 cap for 2.5 h) and can retry until one is free. Its hash above is the
+revised file's. No rule or analysis changed.
