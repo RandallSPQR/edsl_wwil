@@ -1,5 +1,5 @@
 """Phase 2 grading route check (RULES.md): regrade 50 identity-check pod lies through the Anthropic API
-directly and compare with their stored OpenRouter primary grades. Needs ANTHROPIC_API_KEY.
+directly and compare with their stored OpenRouter primary grades. Needs GRADER_ANTHROPIC_API_KEY.
 
   python regrade_direct.py   -> regrade_direct.json, regrade_direct.md
 """
@@ -30,13 +30,26 @@ def sample():
     return out
 
 
+KEY_VARS = ("GRADER_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY")
+
+
+def grader_key():
+    """The Anthropic API key for grading. Read from GRADER_ANTHROPIC_API_KEY: in a Claude Code cloud
+    environment ANTHROPIC_API_KEY is reserved for the session's own authentication and is not passed
+    through. Never printed."""
+    for v in KEY_VARS:
+        if os.environ.get(v):
+            return os.environ[v]
+    raise SystemExit(f"no grading key: set {KEY_VARS[0]} in the environment settings")
+
+
 def call(system, user, schema):
     body = {"model": MODEL, "max_tokens": 2000, "temperature": 0, "system": system,
             "messages": [{"role": "user", "content": user}],
             "tools": [{"name": "cue_annotation", "description": "Record the cue annotation.", "input_schema": schema}],
             "tool_choice": {"type": "tool", "name": "cue_annotation"}}
     r = subprocess.run(["curl", "-sS", "-m", "300", "https://api.anthropic.com/v1/messages",
-                        "-H", f"x-api-key: {os.environ['ANTHROPIC_API_KEY']}", "-H", "anthropic-version: 2023-06-01",
+                        "-H", f"x-api-key: {grader_key()}", "-H", "anthropic-version: 2023-06-01",
                         "-H", "content-type: application/json", "--data-binary", "@-"],
                        input=json.dumps(body), capture_output=True, text=True)
     return json.loads(r.stdout)

@@ -20,3 +20,5 @@ Fixed before any direct-API call.
   kappa >= 0.90 or label agreement >= 97%. Otherwise Phase 2 grades through OpenRouter. Per-cue
   figures are reported; a cue below either threshold is flagged, not decisive.
 - **Cost:** about $0.65 (50 calls).
+- **Key:** read from `GRADER_ANTHROPIC_API_KEY` (in a Claude Code cloud environment `ANTHROPIC_API_KEY`
+  is reserved for the session's own sign-in and is not passed through).
