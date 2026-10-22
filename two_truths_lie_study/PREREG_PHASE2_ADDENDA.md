@@ -152,3 +152,68 @@ addendum, before any stage-2 lie is graded, as section 10 requires for analysis 
 |---|---|
 | `results/phase2/grader_robustness/subsample.py` | `4a33f82ba7163de4c4482744b451270f7ee3f2a7d70b4dd01a0cdca753deed34` |
 | `results/phase2/grader_robustness/subsample.json` | `71a92a9c03fcd3ede46eca2c7b17195947b6f45461f2c023b270d27a5701c600` |
+
+## Addendum 3 (2026-10-22): probe-stage diagnostics, before the dose-finding pilot
+
+Owner's request, 2026-10-22. Written after the probe stage (results commit `46eebf5`: both models pass; Gemma 3 27B
+at layer 35, Llama 3.1 8B at layer 12) and before any diagnostic below is computed, any steered lie is generated or
+any Phase 2 lie is graded. **The gate decisions and the layer choices stand as registered**; nothing in this addendum
+changes them.
+
+**1. The cue-mention control is uninformative by design (recorded; not replaced).**
+- Every placebo item is byte-identical to another target's full item: the placebo note of a target is another
+  persona's full note (the cycle P1->P2->P3->P1, P5<->P6), and the prompt never names the target (400 of 400 placebo
+  items, both models). The placebo items are therefore the full items relabelled, their mean activation equals the
+  full items' mean, and c_L = -v_L / 2 exactly at every layer. The control's AUROC (about 0) and cos(v, c) = -1
+  follow by construction and say nothing about the instrument.
+- The concern the control addressed, a cue-mention confound, is excluded by construction: full and reversed notes
+  name identical cues with the same cue words (the registered word-level lint). The concern that the direction
+  tracks the frozen valence words rather than valence is addressed by the held-out-wording transfer (section 4).
+- The control stays in the reported tables (as committed), labelled uninformative. It was never part of the stop
+  rule.
+
+**2. Diagnostics on the stored activations (one short pod session, cap $3 of RunPod).** Code below, hashed; run on
+the last-token activations already on the network volume (`/workspace/phase2/probe/<slug>/`). No model is loaded.
+- **(a) Label-permutation null.** At the selected layer and its two neighbours (Gemma 34, 35, 36; Llama 11, 12, 13),
+  both models, 1,000 permutations (seed **20261029**).
+  - One permutation shuffles labels within persona at the pair level: the full and reversed labels of each
+    (category, target) pair are swapped with probability 1/2, and the same swap is applied to that pair in every
+    wording (frozen, A, B, C).
+  - The registered held-out-persona test and the three held-out-wording tests are recomputed under the permuted
+    labels. The direction is the difference of the labelled-full and labelled-reversed means, which with the true
+    labels is the registered direction.
+  - **Why pairs, not a free shuffle of a persona's 80 labels:** a free shuffle can put both items of a pair on one
+    side. The two items share everything but the valence words, so the null would then measure item content, not
+    the test. In simulation (pairs sharing a large content component), the free shuffle put the wording-test null
+    mean near 0.73 and the pair-level shuffle near 0.52. Every registered test compares complete pairs, and the
+    pair-level shuffle keeps that.
+  - Reported per model x layer x test: the null distribution (mean, SD, 2.5% / 50% / 97.5% quantiles, max), the
+    observed AUROC and the permutation p = (1 + #{null >= observed}) / 1,001. The observed AUROC is recomputed by
+    this code and checked against the registered value.
+  - **Stop rule:** if the mean null AUROC of **any** reported test (model x layer x test, 2 x 3 x 4 = 24) lies
+    outside [0.40, 0.60], the diagnostics are reported and **the pilot is not run**. A mismatch between the
+    recomputed and the registered observed AUROC is reported, and the pilot then waits for the owner.
+- **(b) Within-fold persona AUROC (descriptive).** Every candidate layer, both models. For each held-out target:
+  the registered fold direction (v from the other four targets), and the AUROC of that target's frozen full vs
+  reversed projections only, with the registered cluster bootstrap (95%, clusters = categories, 2,000 resamples,
+  seed 20261027). Reported beside the registered pooled figure, with each fold's mean projection on unit v per
+  class. No rule.
+- **Compute.** One pod in EUR-IS-1 with the same network volume, image and installs as Addendum 1. The driver
+  refuses a pod whose hourly price x watchdog hours (1 h) exceeds $3. The pod's own timer and a local watchdog
+  terminate it, and it is terminated when the work ends.
+
+**3. Exception approved (owner, 2026-10-22).** The Google-grader subsample of Addendum 2 (descriptive only) is graded
+through OpenRouter. All primary grading stays on the direct Anthropic route of section 11.
+
+**Hashes (sha256, files under `two_truths_lie/`).**
+
+| file | sha256 |
+|---|---|
+| `src/perfect_lie/phase2_diagnostics.py` | `d6e668b034af92094414a002f8c41486d18268ddcfb61ec8965b208e626d9984` |
+| `tests/test_phase2_diagnostics.py` | `5b301e475922b250283f112bc3d8cb9475c8913b1bd8ff1c3102149468d19df1` |
+| `results/phase2/probe/pod_server_phase2_diag.py` | `15ba30a49e6c8a320b83a127e53b9d7a9b95d6ac7ec3efe06b9c87f88d428454` |
+| `results/phase2/probe/diag_stage.py` | `d9b18427e14608e82561313fc93c07314d9aceb277d6adb6ed005a38d3624404` |
+
+The tests replace the pipeline's AUROC and cluster bootstrap with plain implementations, so they run without the
+pipeline (8 pass). On the pod, the pipeline's own functions are used. The probe-stage files of Addendum 1 are
+imported unchanged.
