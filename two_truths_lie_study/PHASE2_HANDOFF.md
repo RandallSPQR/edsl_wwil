@@ -9,11 +9,12 @@ because the grading key (`PL_GRADER_KEY`, an Anthropic API key) is only visible 
 - Phase 2 identity check: complete. Both models linked to the API (Llama without the template's date
   header; Gemma with the Novita rendering, no newline after `<start_of_turn>model`).
   `two_truths_lie/results/phase2/identity_check/` (RULES.md, DIAGNOSTIC_SUMMARY.md, BEHAVIORAL_SUMMARY.md).
-- Phase 2 pre-registration: **draft, not frozen**, `PREREG_PHASE2_DRAFT.md` (revision 3 plus the
-  explicit probe gate and stop rule). The owner approved it, pending the grading-route check:
-  "Add the key, run the grading-route check, freeze, post, go."
+- Grading-route check: done 2026-10-22 (commit d09a144). Kappa 0.915 over all cue labels -> all Phase 2
+  grading goes through the Anthropic API directly (`src/perfect_lie/grader_direct.py`, strict tool call).
+- Phase 2 pre-registration: **frozen** as `PREREG_PHASE2.md` (revision 4, with a hash table). The owner
+  posts it on OSF and creates the tag in the GitHub UI.
 
-## Next steps, in order
+## Next steps, in order (steps 1-3 done 2026-10-22)
 
 1. **Grading-route check** (about $0.65), rules fixed in
    `two_truths_lie/results/phase2/grading_route/RULES.md`:

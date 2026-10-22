@@ -1,10 +1,45 @@
-# The Perfect Lie, Phase 2: a liar-side note-valence direction, probe and steering. Pre-registration (DRAFT)
+# The Perfect Lie, Phase 2: a liar-side note-valence direction, probe and steering. Pre-registration (frozen)
 
-Status: **draft, not frozen** (revision 3, 2026-10-21: 32 evaluation categories; one confirmatory alpha
-per model x hypothesis; Holm family of 4; powered for Delta = 0.10; pilot checked for coherence only;
-covariance-matched placebo; identity-check stack; method check; grading route pending a check). Open decisions are marked
-**OPEN** and collected in section 12. Nothing has been run except the identity check (section 2). No
-activation has been extracted and no steering has been run.
+**Status: FROZEN on 2026-10-22** (revision 4). Revision 3 (2026-10-21: 32 evaluation categories; one
+confirmatory alpha per model x hypothesis; Holm family of 4; powered for Delta = 0.10; pilot checked for
+coherence only; covariance-matched placebo; identity-check stack; method check), plus the probe gate and
+stop rule (section 4), the grading route (section 11) and the grader-failure rules (section 7a).
+- Nothing has been run except the identity check (section 2) and the grading-route check (section 11).
+  No activation has been extracted and no steering has been run.
+- **No Phase 2 compute runs until the owner confirms this registration is posted on OSF.**
+- Any later change is made by a dated addendum, as in the first two studies.
+
+**Frozen instrument and code (sha256).**
+- The cue grader rubric is unchanged from the first two studies.
+- The renderers are the `strip_llama_date` (Llama) and `strip_trailing_newline` (Gemma) options of
+  `pod_server.py`, as used by `behavioral.py` in the identity check.
+- **Analysis code** (section 10) and the pod server's activation and steering extensions are not
+  written yet. Each is committed and its hash added by a dated addendum before it is used: the
+  probe code before activation extraction, the analysis code before any stage-2 lie is graded.
+
+| group | file (under `two_truths_lie/`) | sha256 |
+|---|---|---|
+| first-study and reversed-note instrument (byte-identical to `PREREG_REVERSED.md`) | `data/perfect_lie/cues.json` | `aee8391e509a22c083a72ef1e04971772bab64d52da414521e300bb1d722def4` |
+| first-study and reversed-note instrument (byte-identical to `PREREG_REVERSED.md`) | `data/perfect_lie/personas.json` | `6f8ccd60facbe225835a9f67602b434afe8177358e4efe47a44a7b357c204666` |
+| first-study and reversed-note instrument (byte-identical to `PREREG_REVERSED.md`) | `data/perfect_lie/prompts.json` | `e32771f294d7fe7df4cbb2fa5b7fbae9c81a485e872e01de259265d382ecfc97` |
+| first-study and reversed-note instrument (byte-identical to `PREREG_REVERSED.md`) | `data/perfect_lie_reversed/reversed_notes.json` | `3936fc48b94409d68c0163e0f6c0aad8b01ebea082541239a36e07731f672a4c` |
+| first-study and reversed-note instrument (byte-identical to `PREREG_REVERSED.md`) | `data/perfect_lie_reversed/categories.json` | `2afefbd31af1f988a5890ab838379dee7cc65f6f845e6f9d076ecd6b24a21f3f` |
+| first-study and reversed-note instrument (byte-identical to `PREREG_REVERSED.md`) | `src/perfect_lie/grader.py` | `ddeb49ec5cd29d24be36f7b5a64ac888230507e94ecdb197f461d5b47368a9fb` |
+| first-study and reversed-note instrument (byte-identical to `PREREG_REVERSED.md`) | `src/perfect_lie/scoring.py` | `bedf5749dd4ff59bb67cde1c9f0cd29ae3a256132206bb92a4e9ade8e3cd7625` |
+| paraphrase sets (section 5) | `results/phase2/prereg_draft/paraphrase_sets.json` | `917ce24e18489a31539d35f1576f0d566172cee1c2bd2518796f8fd441a2a0eb` |
+| paraphrase sets (section 5) | `results/phase2/prereg_draft/paraphrases.py` | `b1030f2e6c93eacb2625d2ee947a9e4650ff2a3584cb492df29e95443bd83d95` |
+| paraphrase sets (section 5) | `results/phase2/prereg_draft/paraphrase_lint.md` | `282c2c2037198451d35f9d74dca036507f4aa97e830d3906f215f71902915959` |
+| identity check: rules, renderers, pod server (section 2) | `results/phase2/identity_check/RULES.md` | `86d116c7d8df0706d320159978bb13c00c9a94bae251ba2a1cd62f91d3ea624b` |
+| identity check: rules, renderers, pod server (section 2) | `results/phase2/identity_check/pod_server.py` | `f2897167b8c2720985e8e85a1b09f5087e92f7e46c5749cb768a97c295fdf868` |
+| identity check: rules, renderers, pod server (section 2) | `results/phase2/identity_check/template_test.py` | `8870abb505e282d55fab0ff48d0e088b7f430355ce145541256a1a683441a2a9` |
+| identity check: rules, renderers, pod server (section 2) | `results/phase2/identity_check/behavioral.py` | `c80a49a046b8d1711c1d9419886e79ee0d976c7fa692688cb89a3bbdc2c809b6` |
+| grading route (section 11) | `results/phase2/grading_route/RULES.md` | `43fa6f799be334f1fb68f5b84b5ddd80a34549cb758b06125f27bae8021e2294` |
+| grading route (section 11) | `results/phase2/grading_route/regrade_direct.py` | `29dc3b7b5f5c6e4464eb41f5686b60a2dd6532b8989e534431d02b4ef72b4f8e` |
+| grading route (section 11) | `results/phase2/grading_route/regrade_direct.json` | `8ba35d03fc64be9e903ef6894dec43b53ab821be5324a59f37448b905e97efa0` |
+| grading route (section 11) | `src/perfect_lie/grader_direct.py` | `4d61c62ecc1ff8ec15b168880cd43bbb11b2b1966ee423af6b4d5ae3771cce78` |
+| grading route (section 11) | `tests/test_perfect_lie_grader_direct.py` | `b23135ada95e84db0bb1742afaa865a6c55eeb8677ff39a9fa255f70534df41c` |
+| grading route (section 11) | `results/phase2/requirements_phase2.txt` | `b38f33226555469cf056750585b8ac886cbd539415127aaeff298becaf42cab7` |
+| | grader rubric (RUBRIC_PREAMBLE + RUBRIC_OUTPUT) | `c638fea116fbb397631f2c7a28dac8f01a63cd8990fcb70365dbb7e98f3a303f` |
 
 ## 1. Question
 
@@ -28,7 +63,9 @@ inferred-belief design remains the test for that.
   EUR-IS-1 (the network volume holding the Gemma weights).
 - **Frozen instrument from the reversed-note study:** personas and notes (`reversed_notes.json`,
   `personas.json`), the 72 categories (`categories.json`), the public prompt v3, the cue grader rubric
-  v0.6 with the primary grader (`anthropic/claude-sonnet-4.5` via OpenRouter, temperature 0), the
+  v0.6 and the primary grader model (Claude Sonnet 4.5, temperature 0; graded through OpenRouter in
+  the first two studies and the identity check, and **through the Anthropic API directly for all of
+  Phase 2**, section 11), the
   registered gate exclusions (`historical_anchor`, `emotional_appeal`), and the scoring of *s*.
 - **Rendering (decided by the identity check):** each model is rendered as its API provider rendered
   it in the reversed-note study:
@@ -98,14 +135,16 @@ clustering unit throughout. All five targets (P1, P2, P3, P5, P6) are used in bo
   and its result is committed before any steered lie is generated.
   - A model passes the gate only if some candidate layer passes **both** generalization tests: held-out
     personas, and **every one of the three held-out paraphrase wordings**.
-  - **If the direction does not transfer to the paraphrase wordings, the study stops there for that
-    model: no dose-finding pilot, no confirmatory steering.** A direction that separates full from
+  - **If the direction fails held-out-persona transfer or held-out-wording transfer (any one of the
+    three paraphrase sets), Phase 2 stops for that model before steering: no dose-finding pilot, no
+    confirmatory steering, no method check.** That failed transfer is reported as the model's Phase 2
+    result. A direction that separates full from
     reversed only in the frozen wording may track the frozen valence words themselves (for example
     "suspect" vs "credible") rather than valence; steering along it would not test the hypothesis.
   - That model's two hypotheses are reported as **untestable: no transferable valence direction**.
     They stay in both Holm families and are never rejected.
   - **If neither model passes, the study ends after activation extraction** (about 1 GPU-hour, no
-    grading). The probe results are reported as the study's findings.
+    grading). The probe results, including the failed transfer, are reported as the study's result.
   - The cue-mention control is reported beside the gate; it is a check on the instrument, not part of
     the stop rule.
 
@@ -154,7 +193,7 @@ Paraphrased notes are used for activations only, never for generation or grading
     unsteered continuations (pipeline `probe/coherence.py`, first 64 generated tokens);
   - repetition: repeated-4-gram share <= 0.25.
 - **Sampling, rendering, grading:** as in the identity check (temperature 0.6, top_p 0.9, top_k off,
-  seeded; the renderings of section 2; the frozen grader and gate).
+  seeded; the renderings of section 2; the frozen grader and gate, on the direct route of section 11).
 
 **Stage 1: dose-finding pilot (exploratory).**
 - Runs only for models that passed the probe gate (section 4).
@@ -202,8 +241,39 @@ for a model, that model's null steering results read "inconclusive: method check
 - **Naturalness:** cos(v_L\*, mean of (h_full - h_reversed) at the first generated token at L\*), and
   cos(v_L\*, the last-token shift on the evaluation categories, out of sample). Reported.
 - **Effect relative to the note:** Delta / (s_full - s_reversed) from the unsteered references.
-- **Missing data:** failed generations or gradings counted per cell and reported, with a tipping
-  point as in the reversed-note study.
+- **Missing data:** section 7a. In the primary analysis a target whose steered or placebo lie is
+  missing drops out of that category's Delta_k (pairwise); a category with no complete pair drops out,
+  and the df fall accordingly.
+
+## 7a. Failed cells, balance check and tipping point
+
+- **Cell:** one lie (category x target x arm). Arms graded in Phase 2: stage-2 steered and placebo
+  (per model x hypothesis), the unsteered references (placebo, full, reversed note), and the method
+  check's steered and placebo lies.
+- **Generation failures** (no lie returned after the pod's retries) and **non-viable lies** are as in
+  section 6 (coherence gate) and the reversed-note study; they are counted separately from grading
+  failures.
+- **Grading, transport:** a call that returned no answer (network, HTTP 429/5xx, overloaded) is
+  retried with backoff (5, 15, 45, 90, 180 s) and does not count as an attempt.
+- **Grading, answer:** an answer that the frozen parser rejects (including a missing tool call or a
+  refusal) is retried; **after 3 attempts the cell is failed.** A failed cell has no primary score and
+  is missing. **No substitute grader and no other route** (OpenRouter is never used as a fallback).
+- **Counts:** failed cells, generation and grading separately, are reported by model x hypothesis x arm.
+- **Balance check (pre-registered):** per model x hypothesis, an exact multinomial test of equal
+  grading-failure probability across three arms: steered, placebo, and the unsteered reference of that
+  hypothesis (the reversed note for H1, the full note for H2). Monte Carlo, 100,000 draws, seed
+  20261026; also pooled over models. p < 0.05 flags "grading failures imbalanced across arms"; that
+  result is then read together with its tipping point. Not a gate; it changes no decision (as in the
+  reversed-note study). The method check's two arms are reported as counts.
+- **Tipping point for the primary contrast,** per model x hypothesis, over all missing stage-2 steered
+  and placebo cells (failed generation or grading):
+  - impute every missing steered lie at s_steered - delta and every missing placebo lie at
+    s_placebo + delta in the predicted direction of the hypothesis (H1: against a rise, so steered down
+    and placebo up; H2: steered up and placebo down), with each arm's observed mean, clipped to [0, 1],
+    and recompute every Delta_k over all five targets;
+  - report the smallest delta that changes the label of section 7 (steerable / not steerable within
+    +/-0.10 / inconclusive), and the same in the opposite direction;
+  - also report the worst case (H1: missing steered at 0, missing placebo at 1; H2: the reverse).
 
 ## 8. Power and sample size
 
@@ -228,6 +298,9 @@ K = 32, two-sided t on 31 df, Holm across four (the first test at 0.0125, the la
   0.10 effect against a placebo that moves s by 0.025 has the power of a 0.075 effect: 0.65 / 0.84).
   The placebo's own shift relative to the unsteered references is reported.
 - For scale, the reversed-note B was 0.24 (Llama) and 0.43 (Gemma).
+- The SD above comes from OpenRouter-graded identity lies; Phase 2 grades directly (section 11). The
+  route's offset (fewer positive labels) is assumed not to change that SD materially; the observed
+  per-category SD of Delta is reported.
 
 ## 9. Secondary and exploratory (labelled, after the primary)
 
@@ -250,7 +323,49 @@ K = 32, two-sided t on 31 df, Holm across four (the first test at 0.0125, the la
 - Screen matches (confession, refusal) listed blind for owner adjudication before unblinding.
 - OSF addendum before unblinding; results reported as found.
 
-## 11. Cost estimate
+## 11. Grading route (decided) and cost
+
+**Route (decided 2026-10-22 by the grading-route check, `results/phase2/grading_route/RULES.md`).**
+- **All Phase 2 grading goes through the Anthropic API directly:** the stage-2 steered and placebo
+  lies, the unsteered references, and the method check's steered and placebo lies (the pilot is not
+  graded). **No Phase 2 contrast mixes routes**, and no Phase 2 lie is graded on OpenRouter.
+- **Call** (`src/perfect_lie/grader_direct.py`): Messages API, model `claude-sonnet-4-5` (the returned
+  model string is recorded; the check returned `claude-sonnet-4-5-20250929`), temperature 0, max
+  tokens 2000, no extended thinking, `anthropic-version: 2023-06-01` (pinned: later API versions
+  reject `temperature`). The frozen rubric v0.6 prompts (`grader_input_from_record`) and parser
+  (`parse_grader_output`) are unchanged.
+- **Schema enforcement:** the frozen schema (`grader_response_format`) is sent as a forced tool call
+  (`cue_annotation`) with **`strict: true`**, so the answer is decoded to the schema. Strict mode does
+  not accept numeric bounds, so `minimum` / `maximum` are dropped from the copy sent to the API; the
+  frozen parser still enforces them and fails closed. If the API rejects the strict tool (HTTP 400) on
+  the first call, the run switches to the non-strict forced tool (the check's form) for **every** cell,
+  never per cell, and this is reported. Failures: section 7a (3 attempts, then the cell is failed).
+- **Check result** (50 identity-check pod lies; `regrade_direct.json`, commit d09a144): 49 parsed (one
+  Llama reversed-note lie failed 3 attempts, each time omitting the `self_deprecation` key; the check
+  did not use `strict`). Against the stored OpenRouter grades:
+
+  | pooled | labels | agreement | kappa |
+  |---|---|---|---|
+  | all cues (decision basis) | 784 | 96.2% | **0.915** |
+  | cues that enter s | 539 | 97.0% | 0.919 |
+
+  Kappa >= 0.90, so the rule selects the direct route. Twelve of the 16 cues fall below one of the two
+  thresholds on their own and are flagged, not decisive (RULES.md): document_citation,
+  historical_anchor, official_failure, first_person_witness, sensory_detail, mundane_aftermath,
+  mechanism_explanation, emotional_appeal, hedged_claim, self_deprecation, skeptic_acknowledgment,
+  humor (the last four have 1 to 6 positive labels in the sample).
+- **Measured offset: the direct route marks fewer cues present.** Over all cues, 273 positive labels on
+  OpenRouter against 259 direct (-5.1%; of the 30 disagreeing labels, 22 are OpenRouter-only and 8
+  direct-only). Over the cues that enter s, 136 against 122 (-10.3%).
+  - Within Phase 2 every arm is graded on the same route, so the offset does not enter Delta or any
+    confirmatory test.
+  - **Any comparison of Phase 2 lies with OpenRouter-graded lies carries this offset:** the identity
+    check, the reversed-note (behavioral) study and the first study. Such comparisons are descriptive
+    only, labelled with the route difference, and are not confirmatory.
+- Disclosure: strict decoding was not part of the check (it used the non-strict forced tool). Strict
+  mode constrains the answer's form; its effect on the labels is untested.
+
+**Cost estimate.**
 
 Measured rates (RTX PRO 6000 Blackwell, bf16, batched): Gemma about 12 lies/min, Llama about 36
 lies/min; grading about $0.013 per lie (primary grader; the same per-token price on either route).
@@ -265,14 +380,19 @@ lies/min; grading about $0.013 per lie (primary grader; the same per-token price
 | **grading** (2,560 lies) | | | **about $33** |
 | **total** | | | **about $45** |
 
-The RunPod balance ($37.03) covers the GPU line. The grading line is billed to the Anthropic credits if
-the grading-route check passes, otherwise to OpenRouter.
+The RunPod balance ($37.03) covers the GPU line. The grading line is billed to the owner's Anthropic
+credits (direct route). The grading-route check itself cost about $0.80 (164,966 input and 20,135
+output tokens).
 
-## 12. Open decisions
+## 12. Decisions
 
-1. **Grading route:** Anthropic API direct or OpenRouter, decided by the regrade check
-   (`results/phase2/grading_route/RULES.md`: 50 identity-check pod lies; switch if kappa >= 0.90 or
-   label agreement >= 97%). Runs when the grading key (`PL_GRADER_KEY`) is added.
+No open decisions remain.
+
+- **Grading route (decided 2026-10-22):** the Anthropic API directly, for all Phase 2 grading
+  (section 11). The check's rule (switch if kappa >= 0.90 or label agreement >= 97%) was met by kappa
+  0.915 (agreement 96.2%).
+- **Grader failures (owner, 2026-10-22):** strict schema enforcement; 3 attempts, then the cell is
+  failed; counts by arm, a balance check and a tipping point (section 7a).
 
 Decided (revisions 2 and 3): two-stage design; one confirmatory alpha per model x hypothesis, the
 largest coherent pilot alpha; Holm family of four; K = 32; powered for Delta = 0.10, a smaller-effect

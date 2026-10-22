@@ -1,0 +1,11 @@
+# Phase 2 local environment: grading (src/perfect_lie/grader_direct.py), the grading-route check
+# (results/phase2/grading_route/regrade_direct.py) and analysis. Python 3.13.16; versions as installed
+# when the grading-route check ran (2026-10-22). curl is used for the API calls.
+#   python -m pip install -r results/phase2/requirements_phase2.txt
+numpy==2.5.3
+pandas==3.0.5
+scipy==1.18.1
+platformdirs==4.13.5
+pytest==9.1.1
+# The pod stack is pinned separately (PREREG_PHASE2 section 2): HF transformers 4.53.2, torch 2.8, bf16,
+# results/phase2/identity_check/pod_server.py.

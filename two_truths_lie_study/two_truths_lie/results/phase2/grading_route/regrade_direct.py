@@ -1,7 +1,11 @@
 """Phase 2 grading route check (RULES.md): regrade 50 identity-check pod lies through the Anthropic API
-directly and compare with their stored OpenRouter primary grades. Needs GRADER_ANTHROPIC_API_KEY.
+directly and compare with their stored OpenRouter primary grades. Needs PL_GRADER_KEY (or
+GRADER_ANTHROPIC_API_KEY). Needs scipy (results/phase2/requirements_phase2.txt).
 
-  python regrade_direct.py   -> regrade_direct.json, regrade_direct.md
+  python regrade_direct.py   -> regrade_direct.json (summary also printed); no other file is written
+
+Run once, 2026-10-22 (commit d09a144). The forced tool call here is not strict; Phase 2 grading uses
+src/perfect_lie/grader_direct.py, which adds strict: true (PREREG_PHASE2 section 11).
 """
 import json, os, random, subprocess, sys
 from collections import defaultdict
