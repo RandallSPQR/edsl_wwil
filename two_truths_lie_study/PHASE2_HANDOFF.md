@@ -76,6 +76,18 @@ visible to a new session. There was no GPU free in EUR-IS-1 at the time; no pod 
   separation.
 - **Next:** owner posts Addenda 2 and 3 on OSF; the dose-finding pilot needs the owner's go.
 
+## Steering scale before the pilot (2026-10-23)
+
+- Section 6: the steering vector is unit(v_L*) x alpha x ||v_L*|| (alpha = 1 adds the pooled mean full - reversed
+  shift); one vector per model, the same for every persona and position. Not raw units, not the residual norm.
+- Per persona at the selected layer (`<slug>/scale.json`, `SCALE.md`; code `aea6d12`; pod `564qszrsktgy9n`, A100,
+  about 2 min, terminated): residual norm varies 1.02x (Gemma, median about 44,400) and 1.01x (Llama, about 7.5);
+  ||v|| / residual norm 0.040-0.041 (Gemma) and 0.037 (Llama) for every persona. The full - reversed gap on unit v
+  varies 2.98x for Gemma (P1 921 to P2 2,739) and 1.29x for Llama.
+- A residual-norm-relative alpha would rescale every persona by the same constant, so it changes nothing; no
+  addendum proposed. Gemma's gap heterogeneity is recorded for the per-target reporting.
+- RunPod balance $35.27 (2026-10-23; includes network-volume storage, about $0.019/h).
+
 ## Standing rules (owner)
 
 - No model calls or spend without explicit approval; caps as approved. Kill on breach.
@@ -84,6 +96,6 @@ visible to a new session. There was no GPU free in EUR-IS-1 at the time; no pod 
   artifacts except the commit trailer.
 - Pods: RunPod REST/GraphQL via curl (Cloudflare blocks urllib's signature); network volume
   `u0isne6ams` in EUR-IS-1 holds the Gemma weights (`/workspace/hf/hub`); set a watchdog that
-  terminates every pod; terminate when work ends. RunPod balance $35.73 (2026-10-22, after the Addendum 3 diagnostics).
+  terminates every pod; terminate when work ends. RunPod balance $35.27 (2026-10-23, after the steering-scale report).
 - Commit trailer: `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` and the current session's
   `Claude-Session:` link.
