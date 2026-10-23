@@ -313,3 +313,58 @@ intended vector is recorded, not tested. On the same pod, before it was terminat
 smoke-tested on two items with 40 new tokens: unsteered, steered and placebo generation, and NLL scoring. Nothing
 from that smoke test is kept or used. The pod server and the driver changed (hashes above are the revised files');
 the design, the measures and the rules are unchanged. Pod time so far: about 8 minutes.
+
+## Addendum 5 (2026-10-23): a new placebo, and the placebo half of the pilot rerun, before stage 2
+
+Owner's decision, 2026-10-23. Decided on coherence alone, after the stage-1 pilot (commit `7928d46`) and before any
+stage-2 lie exists. No lie has been graded and no cue scored.
+
+**Why.** Section 6's placebo (pipeline `vectors.placebo_cov` on the covariance of the training activations at L\*)
+turned out aligned with the steering direction: cos(placebo, v) = 0.64 (Gemma) and 0.24 (Llama). The covariance of
+the full and reversed training items includes the full - reversed difference, a large share of its variance. A
+placebo carrying 0.64 of v's own component would leave the steered - placebo contrast with about a third of the
+steering effect, if the effect is linear in the push along v.
+
+**New placebo (both models; replaces the section 6 / Addendum 4 placebo).**
+- H = the last-token block-L\* outputs of the 400 frozen full and reversed training items. Each condition is
+  centred on its own mean (removes the full - reversed difference).
+- p = pipeline `probe.vectors.placebo_cov`(that centred matrix, seed), with seed **20261033** (Gemma) and
+  **20261034** (Llama).
+- Any remaining v component is projected out: p <- p - (p . unit v) unit v. Then p is renormalised.
+- Added vector: sign x alpha x ||v_L\*|| x unit(p), the same length as the steered vector at every alpha.
+- Reported: cos(new placebo, v) after the projection (target 0; the run stops if |cos| > 1e-6), cos before the
+  projection (after the centring alone), cos with the retired placebo, and the norm match (the run stops if it is
+  not 1 to 1e-9).
+- The retired placebo stays on the volume (`pilot_vectors.npz`); the new one is `pilot_vectors_v2.npz`.
+
+**Rerun: the placebo half of the pilot only.** The same 8 categories x 5 targets, both hypotheses, alpha in {0.25,
+0.5, 1, 2, 4}, the same batch seeds, generation settings and renderings. The exact hook check is run for the new
+placebo before generation. The same coherence measures and gate are used (Addendum 4). That is 400 placebo lies per
+model.
+- The pilot's steered lies and its unsteered continuations are reused unchanged; the steered lies are not
+  regenerated.
+- **The registered alpha rule is re-applied** to the pilot's steered results with the new placebo results: per model
+  and hypothesis, the largest grid alpha at which both pass.
+- **The confirmatory alphas may change as a result** (in either direction) and are replaced by the rerun's. Those
+  are the alphas committed before stage 2.
+- **The old placebo is retired.** Its pilot results and the alphas they gave (Gemma 1.0 / 1.0, Llama 4.0 / 4.0) stay
+  in the record as reported (`PILOT.md`, `pilot_result.json`). The rerun's are `PILOT2.md`,
+  `pilot2_result.json` and `records_placebo2.jsonl`.
+
+**Stage 2** uses the new placebo for every placebo arm, the method check's included. Section 6 re-applies the coherence
+gate in stage 2 before any grading.
+
+**Compute.** One pod as before. Cap **$4 of RunPod**. The driver refuses a pod whose hourly price x watchdog hours
+(1.5 h) exceeds the cap. A local watchdog and the pod's own timer terminate it, and it is terminated when the work
+ends.
+
+**Hashes (sha256, files under `two_truths_lie/`).**
+
+| file | sha256 |
+|---|---|
+| `results/phase2/probe/pod_server_phase2_placebo2.py` | `5644b7cc80af18000cb50be9c216b9068ce3f97f3d1ed2eec56837b406c59d32` |
+| `results/phase2/probe/pilot2_stage.py` | `e7e0b6614fd1a2dbddfc937c6caf4b01b0297bcedde1c47f92d05d4f9e517c75` |
+
+The new server imports the pilot server of Addendum 4 unchanged and points its vector lookup at the new file. The
+driver reuses the pilot driver and `src/perfect_lie/phase2_pilot.py` (Addendum 4) unchanged. Before the run, the
+driver's analysis was dry-run on the pilot's own records (it reproduces the pilot's result).
