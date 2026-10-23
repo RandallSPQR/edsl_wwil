@@ -368,3 +368,93 @@ ends.
 The new server imports the pilot server of Addendum 4 unchanged and points its vector lookup at the new file. The
 driver reuses the pilot driver and `src/perfect_lie/phase2_pilot.py` (Addendum 4) unchanged. Before the run, the
 driver's analysis was dry-run on the pilot's own records (it reproduces the pilot's result).
+
+## Addendum 6 (2026-10-23): stage-2 analysis code and grading code, before any stage-2 lie exists
+
+Owner's request, 2026-10-23. Section 10 requires the analysis code to be committed, validated on simulated data and
+hashed before any stage-2 lie is graded; Addendum 2 does the same for the Google grader. Written before any stage-2
+lie is generated. **No rule of sections 6-10 or of Addenda 2-5 changes.** The stage-2 generation code (pod extension
+and driver: the method-check vector, the references, the stage-2 coherence check, the naturalness activations, seeds)
+is hashed in a further addendum before stage 2 runs, and stage 2 needs the owner's go.
+
+**Analysis (`src/perfect_lie/phase2_stage2.py`). Mechanical details fixed here:**
+1. **s per lie:** the share of the target's scorable cues marked present by the primary grader. It uses the frozen
+   instrument and the reversed-note study's gate (historical_anchor and emotional_appeal excluded), as section 6's
+   "frozen grader and gate" states.
+   - Confessions (owner-adjudicated, section 10) are excluded.
+   - Non-viable lies stay in (the reversed-note study's rule (a)) and are counted.
+   - A grading failure is missing.
+2. **Primary (section 7):** per model x hypothesis, Delta_k is the mean, over the targets with both lies, of
+   s(steered) - s(placebo) in category k. A category with no pair drops out, and df = K - 1 for the remaining K.
+   - Two-sided t, and TOST at +/-0.10, each with Holm across the four tests. This is the reversed-note study's
+     `holm`: a test without a p-value stays in the family of four, is ordered last and is never rejected.
+   - **Untestable** (no coherent alpha in the pilot, or the alpha fails the stage-2 coherence gate) is such a test.
+   - Labels:
+     - steerable: efficacy rejected in the predicted direction (H1 > 0, H2 < 0);
+     - opposite: efficacy rejected in the other direction;
+     - not steerable within +/-0.10: equivalence rejected, efficacy not, and the model's method check passed;
+     - inconclusive: everything else ("inconclusive: method check failed" when only the method check is missing);
+     - untestable.
+3. **Method check (section 6):** per model, d_k is the mean over targets of s(v_fp steered) - s(its placebo) on the
+   method check's 16 categories. One-sided t (s rises) at 0.05.
+4. **Section 7a:**
+   - Counts by model x hypothesis x arm: cells, generation failures, grading failures, non-viable, confessions.
+   - Balance check: exact multinomial of grading failures across steered, placebo and the hypothesis's unsteered
+     reference (reversed note for H1, full note for H2). Per model x hypothesis and pooled over models per
+     hypothesis. Monte Carlo, 100,000 draws, seed 20261026.
+   - Tipping point:
+     - Every missing stage-2 steered and placebo cell is imputed at its arm's observed mean -/+ delta (clipped to
+       [0, 1]), against the hypothesis and then for it.
+     - delta is scanned from 0 to 1 in steps of 0.01, with the other three tests held as observed. The smallest
+       delta that changes the label is reported, with the label it gives.
+     - Also reported: the worst case (H1: missing steered at 0, missing placebo at 1; H2 the reverse).
+5. **Reported (sections 7, 8):**
+   - The placebo's own shift: s(placebo arm) - s(the hypothesis's unsteered reference), per category.
+   - The note's effect: s(ref full) - s(ref reversed), and Delta divided by it.
+   - The observed per-category SD of Delta.
+   - Naturalness cosines from the vectors the pod returns.
+6. **Blinded permutation check (section 10):** steered and placebo labels swapped at random within each
+   (category, target) cell (the sign of the pair difference), 10,000 permutations, seed 20261035. Each permuted
+   dataset goes through the decision code above. Only decision shares are output.
+7. **Addendum 2 (descriptive):** on the subsample cells (`subsample.json`), the steered - placebo contrast under the
+   Google grader, beside the primary grader's on the same cells and the primary Delta on all cells.
+   - The same for the method check, for s_full - s_reversed, and for each arm's shift relative to the unsteered
+     placebo reference.
+   - Per-cue Cohen's kappa, primary vs Google, over all 16 cues and over the cues that enter s, by model.
+
+**Grading (`src/perfect_lie/phase2_grading.py`, `src/perfect_lie/grader_google.py`).**
+- Every complete stage-2 lie goes to the primary grader on the direct route (`grader_direct`, frozen): 3 attempts,
+  then the cell fails, with no substitute and no other route.
+  - If the API rejects the strict tool, every cell from then on uses the non-strict forced tool, and the switch is
+    recorded (section 11).
+- Lies in the subsample cells also go to the Google grader, with Addendum 2's settings: OpenRouter (Addendum 3, item
+  3), temperature 0, reasoning off, 2,000 tokens, the frozen prompts, schema and parser. 3 attempts, then no Google
+  grade.
+  - Transport failures are retried with backoff (5, 15, 45, 90, 180 s) and are not attempts.
+- A Google grade never replaces a primary grade. Grading resumes without re-grading a graded lie.
+
+**Validation on simulated data (section 10; `tests/test_phase2_stage2.py`).**
+- Scenarios: null (every test reads "not steerable within +/-0.10"); an effect in the predicted direction (steerable,
+  and the sign is checked); an opposite effect (opposite); an incoherent alpha (untestable; the other three keep the
+  four-way Holm split); a failed method check (a null becomes inconclusive); a small effect (never "not steerable").
+- Also: pairwise deletion and df; counts, balance and tipping point with missing cells; the placebo shift and the
+  relative effect; the permutation check's null rate and seeding; family-wise error over 60 simulated null studies;
+  confession exclusion; the Google report's agreement with the primary when grades are identical.
+- A full run on a simulated null (10,000 permutations, tipping point) takes about 22 s. The permuted efficacy-rejection
+  share is 1.3% per test (the four tests share the 5% family-wise rate).
+- The grading driver and the Google grader are tested with stubbed transports (no calls).
+- 26 tests in these three files, all passing.
+
+**Hashes (sha256, files under `two_truths_lie/`).**
+
+| file | sha256 |
+|---|---|
+| `src/perfect_lie/phase2_stage2.py` | `1f134631557ae8f589febacfc847462d92203db1d92c1f8b5f632260c9dc0953` |
+| `tests/test_phase2_stage2.py` | `300823586c5163eebd9f8a515e7309a73d322f98c59ea417e5dcd54a4205fdb1` |
+| `src/perfect_lie/grader_google.py` | `86c3fb5c9eae3235eb054356e4044d6cc2adfb1c12ac3a238874e4ebd557d1a1` |
+| `tests/test_phase2_grader_google.py` | `e203a251ce0b4ab9a2f84d67ae0b63a8cacd9b4cfb22fdaf004225ae8df3584f` |
+| `src/perfect_lie/phase2_grading.py` | `113ae26230acb25b0b4721f30418f7c577e953af74b1acbf46ba9bdbb22016a7` |
+| `tests/test_phase2_grading.py` | `a936c5ed9dd749048a595f1ce29ca2c67fd54ed20a587ffa709289c815f9cfb9` |
+
+The analysis reuses the reversed-note study's tested helpers (`holm`, `_p_two`, `_p_tost`, `_multinomial_p`) from
+`src/perfect_lie/reversed_analysis.py`, unchanged.
