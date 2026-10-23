@@ -245,7 +245,9 @@ defines it (unit(v) x alpha x ||v||); a residual-norm-relative alpha would resca
    - It is added by a forward hook on decoder block L\* to the block's output at every position, prompt and
      generated (padding positions too; they are masked from attention).
    - Before generation, one prompt per model and vector is checked: hidden_states[L\* + 1] with the hook minus without
-     must equal the added vector at every position (relative error < 0.05, cosine > 0.99), or the run stops.
+     must equal the added vector at every position, or the run stops. The check runs at 100 x the alpha = 1
+     coefficient (relative error < 0.01, cosine > 0.999), where bf16 rounding is negligible. At alpha = 1 the same
+     comparison is recorded as the precision of bf16 steering (see the revision note below).
 4. **Generation:** the frozen `generate_batch` of the identity check, run inside the hook. Temperature 0.6, top_p 0.9,
    top_k off, max 1,500 new tokens. Batches of 12 (Gemma) and 24 (Llama), as in the identity check. Batch seed =
    20261032 + 100,000 x model index (Gemma 0, Llama 1) + 10,000 x hypothesis index (H1 0, H2 1) + the batch's first item
@@ -281,7 +283,7 @@ defines it (unit(v) x alpha x ||v||); a residual-norm-relative alpha would resca
 | `src/perfect_lie/phase2_pilot.py` | `640ebaf8af97658a346f800c914059a9367ac26d40ec5e79b818b0e12c8aaed8` |
 | `tests/test_phase2_pilot.py` | `d236104fd94e6d64bd719e6d9e3ffc71d41cd3a82cfe4b048abe8b6aeb77e9f2` |
 | `results/phase2/probe/pod_server_phase2_pilot.py` | `aea4fce4ab0063aa73b5702e5366b86f422f8acf29b9559e4d09cf15a45d9ca5` |
-| `results/phase2/probe/pilot_stage.py` | `f9cd3da6b3e67146c14149db86855c0dda92ecda83e869dafc3dbbf6242109b6` |
+| `results/phase2/probe/pilot_stage.py` | `d3e5d0dbd7af6bcb7f48f6de42c089cf8c6b0cc9a7baf64d70d7358b20e38b46` |
 | `results/phase2/probe/scale_stage.py` | `dd925139d0ffd6138a5db89ddf970cdc41ce2a0d9e387cc5e71ecaf984527d7c` |
 | `results/phase2/probe/pod_server_phase2_scale.py` | `7d99c082d3120872aa34068035adab9065579592e46e6714c0692ddd054db5c7` |
 | `src/perfect_lie/phase2_scale.py` | `3621358cf5d101c46e947bc3ff39aeff2ecc9041ca5d8421656de7fe8fae4698` |
@@ -290,3 +292,13 @@ defines it (unit(v) x alpha x ||v||); a residual-norm-relative alpha would resca
 The pilot server imports the probe-stage server (Addendum 1) unchanged. The pilot driver reuses the scale report's
 driver for the pod's file list. The tests run without the pipeline (12 pilot tests, 2 scale tests pass). The
 steering hook runs only on the pod, where the hook check above verifies it before use.
+
+Revised before any steered lie (2026-10-23): the first pod run (pod `ht0a8t3cabu5ok`, Llama) stopped at the hook check
+as specified. At alpha = 1 the measured displacement had a median relative error of 0.046 (max 0.15, at the
+first-token position) and a minimum cosine of 0.989 (placebo: 0.048, 0.17, 0.985) against the 0.05 / 0.99 tolerance.
+This is bf16 rounding, not a hook fault. The block output is bf16, so h + add is rounded to about 2^-9 of each element
+of h. With ||add|| at 3.7% of Llama's residual norm, that is about 5% of ||add||, largest where ||h|| is largest. The
+pipeline steers the same way. The mechanism check now runs at 100 x the coefficient, with a tighter tolerance. The
+alpha = 1 figures are recorded in each model's `setup.json` and reported. Only `pilot_stage.py` changed (its hash
+above is the revised file's). The pod server, the design, the measures and the rules are unchanged, and no lie had
+been generated.

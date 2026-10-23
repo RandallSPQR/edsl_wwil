@@ -89,12 +89,16 @@ def run(pod, key_file, model):
     items_all = [json.loads(l) for l in gzip.open(HERE / "probe_items.jsonl.gz", "rt")]
     cats = Q.pilot_categories(json.loads((HERE / "category_split.json").read_text())["training"])
     items = {h: Q.pilot_items(items_all, model, cats, h) for h in Q.HYPOTHESES}
-    checks = {k: job(base, auth, "/hook_check", {"slug": slug, "item": pod_item(items["H1"][0]), "kind": k,
-                                                 "coef": Q.coef("H1", k, 1.0, prep["v_norm"])}) for k in Q.KINDS}
+    # mechanism check at 100x the alpha = 1 coefficient, where bf16 rounding of (h + add) is negligible against add;
+    # the alpha = 1 check is recorded as the precision of bf16 steering (rounding is about 2^-9 of each element of h)
+    hc = lambda k, a: job(base, auth, "/hook_check", {"slug": slug, "item": pod_item(items["H1"][0]), "kind": k,
+                                                       "coef": Q.coef("H1", k, a, prep["v_norm"])})
+    checks = {k: {"mechanism_alpha_100": hc(k, 100.0), "precision_alpha_1": hc(k, 1.0)} for k in Q.KINDS}
     print(json.dumps({"hook_check": checks}), flush=True)
     for k, c in checks.items():
-        if not (c["rel_err_max"] < 0.05 and c["cos_min"] > 0.99):
-            raise SystemExit(f"hook check failed for {k}: {c}")
+        m = c["mechanism_alpha_100"]
+        if not (m["rel_err_max"] < 0.01 and m["cos_min"] > 0.999):
+            raise SystemExit(f"hook check failed for {k}: {m}")
     (out / "setup.json").write_text(json.dumps({"model": model, "layer": sel, "categories": cats, "env": env,
                                                 "prepare": prep, "hook_check": checks, "sampling": Q.SAMPLING,
                                                 "batch": Q.BATCH[model]}, indent=1) + "\n")
