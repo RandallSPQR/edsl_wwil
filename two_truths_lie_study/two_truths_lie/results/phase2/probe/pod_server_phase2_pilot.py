@@ -5,9 +5,12 @@ imports the frozen `pod_server.py`) plus the steering extension of section 6.
        unit(v_L) (vectors.npz, the probe stage's v) and the covariance-matched placebo: pipeline
        `probe.vectors.placebo_cov(Xc, seed)` with Xc the centred last-token block-L outputs of the frozen full and
        reversed training items. Saved to /workspace/phase2/probe/<slug>/pilot_vectors.npz.
-  POST /hook_check {"slug", "item", "kind", "coef"} -> one prompt's forward pass with and without the steering hook:
-       hidden_states[L + 1] minus the unsteered one, at every position, must equal coef x unit(d) (relative error and
-       cosine reported).
+  POST /hook_check {"slug", "item", "kind", "coef"} -> one prompt's forward pass with and without the steering hook.
+       Exact checks (bf16, bitwise): the hook's output equals its input plus the added vector in the block's dtype; the
+       model carries that output forward (hidden_states[L + 1] of the steered pass); the hook saw every prompt position;
+       and block L's input (hidden_states[L]) is unchanged by steering (relative difference < 1e-3). Descriptive: the
+       steered minus unsteered hidden_states[L + 1] against coef x unit(d) (relative error, cosine), i.e. the precision
+       of bf16 steering.
   POST /generate_steered {"items", "max_tokens", "temperature", "top_p", "seed", "slug", "kind", "coef"} -> {"job"};
        the frozen `generate_batch`, with a forward hook on decoder block L that adds coef x unit(d) to the block's
        output at every position (prompt and generated), d = v (kind "steered") or the placebo (kind "placebo");
@@ -55,17 +58,21 @@ def run_prepare(body):
 
 
 class Steer:
-    """Context manager: a forward hook on decoder block L adding `add` (d,) to the block output at every position."""
-    def __init__(self, L, add):
-        self.L, self.add = L, add
+    """Context manager: a forward hook on decoder block L adding `add` (d,) to the block output at every position.
+    With `record` (a dict), the hook also stores its input and output (for the hook check only)."""
+    def __init__(self, L, add, record=None):
+        self.L, self.add, self.record = L, add, record
 
     def __enter__(self):
         a = torch.as_tensor(self.add, dtype=torch.float32, device="cuda")
+        rec = self.record
 
         def fn(_m, _inp, out):
             hs = out[0] if isinstance(out, tuple) else out
-            hs = hs + a.to(hs.dtype)
-            return (hs,) + tuple(out[1:]) if isinstance(out, tuple) else hs
+            hs2 = hs + a.to(hs.dtype)
+            if rec is not None:
+                rec["in"], rec["out"], rec["a"] = hs.detach().clone(), hs2.detach().clone(), a.to(hs.dtype)
+            return (hs2,) + tuple(out[1:]) if isinstance(out, tuple) else hs2
         self.h = S2.blocks()[self.L].register_forward_hook(fn)
         return self
 
@@ -91,17 +98,25 @@ def run_hook_check(body):
     _, ids = S.render(it["messages"], it.get("strip_llama_date", False), it.get("strip_trailing_newline", False))
     x = torch.tensor([ids], device="cuda")
     no_hooks()
+    rec = {}
     with torch.no_grad():
-        h0 = S.STATE["model"](input_ids=x, output_hidden_states=True, use_cache=False).hidden_states[L + 1][0].float()
-        with Steer(L, add):
-            h1 = S.STATE["model"](input_ids=x, output_hidden_states=True, use_cache=False).hidden_states[L + 1][0].float()
+        hs0 = S.STATE["model"](input_ids=x, output_hidden_states=True, use_cache=False).hidden_states
+        with Steer(L, add, rec):
+            hs1 = S.STATE["model"](input_ids=x, output_hidden_states=True, use_cache=False).hidden_states
     no_hooks()
-    diff = (h1 - h0).cpu().numpy().astype(np.float64)
+    exact_add = bool(torch.equal(rec["out"], rec["in"] + rec["a"]))
+    carried = bool(torch.equal(hs1[L + 1], rec["out"]))
+    positions = int(rec["in"].shape[1])
+    before = float((hs1[L].float() - hs0[L].float()).norm() / (hs0[L].float().norm() + 1e-12))
+    diff = (hs1[L + 1][0].float() - hs0[L + 1][0].float()).cpu().numpy().astype(np.float64)
     target = np.asarray(add, np.float64)
     rel = np.linalg.norm(diff - target[None, :], axis=1) / np.linalg.norm(target)
     cos = diff @ target / (np.linalg.norm(diff, axis=1) * np.linalg.norm(target) + 1e-12)
-    return {"status": "done", "layer": L, "positions": int(diff.shape[0]), "rel_err_max": float(rel.max()),
-            "rel_err_median": float(np.median(rel)), "cos_min": float(cos.min()), "add_norm": float(np.linalg.norm(target))}
+    passes = exact_add and carried and positions == len(ids) and before < 1e-3
+    return {"status": "done", "layer": L, "passes": passes, "exact_add": exact_add, "carried_forward": carried,
+            "positions": positions, "prompt_tokens": len(ids), "block_input_rel_change": before,
+            "rel_err_max": float(rel.max()), "rel_err_median": float(np.median(rel)), "argmax_rel_err_position": int(rel.argmax()),
+            "cos_min": float(cos.min()), "add_norm": float(np.linalg.norm(target))}
 
 
 def run_generate(body):
