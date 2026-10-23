@@ -88,6 +88,23 @@ visible to a new session. There was no GPU free in EUR-IS-1 at the time; no pod 
   addendum proposed. Gemma's gap heterogeneity is recorded for the per-target reporting.
 - RunPod balance $35.27 (2026-10-23; includes network-volume storage, about $0.019/h).
 
+## Stage-1 dose-finding pilot (2026-10-23): DONE
+
+- Addendum 4 (pilot code, hashed; two revisions of the hook check before any steered lie, now an exact bitwise
+  check). Pods: `ht0a8t3cabu5ok` (A100, about 8 min, stopped at the hook check; smoke test only) and
+  `we7filrngfuht9` (RTX PRO 6000, about 1 h 57 min). Both terminated. Pilot spend about $5.1 (balance $35.27 -> $30.21).
+- **Confirmatory alphas (committed before stage 2, `results/phase2/pilot/confirmatory_alphas.json`):**
+  Gemma H1 1.0, H2 1.0; Llama H1 4.0, H2 4.0. Llama was coherent at every grid alpha (4.0 is the grid's top).
+  Gemma's perplexity ratio breaks above 1.0 (H1 at 2.0: steered 1.63 passes, placebo 2.46 fails; H2 at 2.0: 2.13 / 2.24).
+- Nothing graded, no cue scored. Records (text, ids, NLL) gzipped under `results/phase2/pilot/<slug>/`.
+  Descriptive (not registered): `divergence.json`, the first token where each lie departs from its unsteered twin.
+- **Open decision before stage 2: the covariance-matched placebo is aligned with v.** cos(v, placebo) = 0.64
+  (Gemma) and 0.24 (Llama): `placebo_cov` draws from the covariance of the full and reversed training items, and
+  the full - reversed split is a large share of that variance. The steered - placebo contrast then compares v with
+  a vector carrying 0.64 (Gemma) of v's own component. Options for the owner (an addendum before stage 2).
+- **Next:** owner posts Addendum 4 on OSF and decides the placebo question; stage 2 needs the owner's go and the
+  analysis-code addendum (incl. the Addendum 2 grading code).
+
 ## Standing rules (owner)
 
 - No model calls or spend without explicit approval; caps as approved. Kill on breach.
@@ -96,6 +113,6 @@ visible to a new session. There was no GPU free in EUR-IS-1 at the time; no pod 
   artifacts except the commit trailer.
 - Pods: RunPod REST/GraphQL via curl (Cloudflare blocks urllib's signature); network volume
   `u0isne6ams` in EUR-IS-1 holds the Gemma weights (`/workspace/hf/hub`); set a watchdog that
-  terminates every pod; terminate when work ends. RunPod balance $35.27 (2026-10-23, after the steering-scale report).
+  terminates every pod; terminate when work ends. RunPod balance $30.21 (2026-10-23, after the stage-1 pilot).
 - Commit trailer: `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` and the current session's
   `Claude-Session:` link.
