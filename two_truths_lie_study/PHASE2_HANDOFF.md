@@ -105,6 +105,18 @@ visible to a new session. There was no GPU free in EUR-IS-1 at the time; no pod 
 - **Next:** owner posts Addendum 4 on OSF and decides the placebo question; stage 2 needs the owner's go and the
   analysis-code addendum (incl. the Addendum 2 grading code).
 
+## Addendum 5 placebo and pilot rerun (2026-10-23): DONE
+
+- New placebo (within-condition covariance, v projected out, norm matched): cos(placebo, v) = -5.9e-17 (Gemma) and
+  1.7e-18 (Llama); before the projection -0.138 and 0.022; cos with the retired placebo -0.343 and 0.236; norm match 1.
+- Placebo half of the pilot rerun (pod `1epi4sfusw0r5r`, RTX PRO 6000, about 57 min, terminated; about $2.40, cap $4).
+- **Confirmatory alphas now (supersede the retired placebo's): Gemma H1 2.0, H2 1.0; Llama H1 4.0, H2 4.0.**
+  Gemma H1 rose from 1.0 (the retired placebo failed at 2.0 with ratio 2.46; the new one passes at 1.64).
+  `results/phase2/pilot/confirmatory_alphas.json`, `<slug>/PILOT2.md`, `pilot2_result.json`.
+- Addendum 6 (stage-2 analysis and grading code, hashed, 26 tests) committed `b389b68`. Still needed before stage 2:
+  the stage-2 generation addendum (pod extension and driver; the method check's placebo construction for v_fp is an
+  open detail), OSF posts of Addenda 4-6, and the owner's go.
+
 ## Standing rules (owner)
 
 - No model calls or spend without explicit approval; caps as approved. Kill on breach.
@@ -113,6 +125,6 @@ visible to a new session. There was no GPU free in EUR-IS-1 at the time; no pod 
   artifacts except the commit trailer.
 - Pods: RunPod REST/GraphQL via curl (Cloudflare blocks urllib's signature); network volume
   `u0isne6ams` in EUR-IS-1 holds the Gemma weights (`/workspace/hf/hub`); set a watchdog that
-  terminates every pod; terminate when work ends. RunPod balance $30.21 (2026-10-23, after the stage-1 pilot).
+  terminates every pod; terminate when work ends. RunPod balance $27.81 (2026-10-23, after the Addendum 5 rerun).
 - Commit trailer: `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` and the current session's
   `Claude-Session:` link.

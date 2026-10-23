@@ -1,0 +1,41 @@
+{
+ "model": "google/gemma-3-27b-it",
+ "layer": 35,
+ "env": {
+  "versions": {
+   "torch": "2.8.0.dev20250319+cu128",
+   "transformers": "4.53.2",
+   "accelerate": "1.15.0",
+   "numpy": "2.1.2",
+   "sae-ethos-pipeline": "1.1.0"
+  },
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+  "loaded": "google/gemma-3-27b-it",
+  "cuda": "12.8",
+  "n_blocks": 62
+ },
+ "prepare": {
+  "status": "done",
+  "v_norm": 1803.4533120555877,
+  "n_train": 400,
+  "cos_v_placebo": -5.898059818321144e-17,
+  "cos_v_placebo_before_projection": -0.13837883086060887,
+  "cos_retired_placebo": -0.3428028304429719,
+  "norm_match": 1.0
+ },
+ "hook_check": {
+  "status": "done",
+  "layer": 35,
+  "passes": true,
+  "exact_add": true,
+  "carried_forward": true,
+  "positions": 279,
+  "prompt_tokens": 279,
+  "block_input_rel_change": 0.0,
+  "rel_err_max": 0.04756372354294631,
+  "rel_err_median": 0.047222508601903274,
+  "argmax_rel_err_position": 197,
+  "cos_min": 0.9988747459574593,
+  "add_norm": 1803.4533120555875
+ }
+}

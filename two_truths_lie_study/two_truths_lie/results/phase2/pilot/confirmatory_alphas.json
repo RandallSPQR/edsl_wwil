@@ -1,14 +1,27 @@
 {
- "stage": "stage-1 dose-finding pilot (Addendum 4)",
+ "stage": "stage-1 dose-finding pilot, re-applied with the Addendum 5 placebo",
  "rule": "largest grid alpha at which steered and placebo both pass the coherence gate",
  "confirmatory_alpha": {
   "gemma-3-27b-it": {
-   "H1": 1.0,
+   "H1": 2.0,
    "H2": 1.0
   },
   "llama-3.1-8b-instruct": {
    "H1": 4.0,
    "H2": 4.0
+  }
+ },
+ "supersedes": {
+  "source": "Addendum 4 pilot with the retired placebo (commit 7928d46)",
+  "confirmatory_alpha": {
+   "gemma-3-27b-it": {
+    "H1": 1.0,
+    "H2": 1.0
+   },
+   "llama-3.1-8b-instruct": {
+    "H1": 4.0,
+    "H2": 4.0
+   }
   }
  }
 }

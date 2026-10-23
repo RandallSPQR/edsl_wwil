@@ -1,0 +1,41 @@
+{
+ "model": "meta-llama/llama-3.1-8b-instruct",
+ "layer": 12,
+ "env": {
+  "versions": {
+   "torch": "2.8.0.dev20250319+cu128",
+   "transformers": "4.53.2",
+   "accelerate": "1.15.0",
+   "numpy": "2.1.2",
+   "sae-ethos-pipeline": "1.1.0"
+  },
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+  "loaded": "meta-llama/Llama-3.1-8B-Instruct",
+  "cuda": "12.8",
+  "n_blocks": 32
+ },
+ "prepare": {
+  "status": "done",
+  "v_norm": 0.280371923240301,
+  "n_train": 400,
+  "cos_v_placebo": 1.734723475976807e-18,
+  "cos_v_placebo_before_projection": 0.021734978619935664,
+  "cos_retired_placebo": 0.2362487887464884,
+  "norm_match": 0.9999999999999998
+ },
+ "hook_check": {
+  "status": "done",
+  "layer": 12,
+  "passes": true,
+  "exact_add": true,
+  "carried_forward": true,
+  "positions": 282,
+  "prompt_tokens": 282,
+  "block_input_rel_change": 0.0,
+  "rel_err_max": 0.18935802414387576,
+  "rel_err_median": 0.045807151434307525,
+  "argmax_rel_err_position": 0,
+  "cos_min": 0.9822407706346529,
+  "add_norm": 0.28037192324030097
+ }
+}
