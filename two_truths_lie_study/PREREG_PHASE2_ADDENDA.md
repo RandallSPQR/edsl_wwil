@@ -217,3 +217,76 @@ through OpenRouter. All primary grading stays on the direct Anthropic route of s
 The tests replace the pipeline's AUROC and cluster bootstrap with plain implementations, so they run without the
 pipeline (8 pass). On the pod, the pipeline's own functions are used. The probe-stage files of Addendum 1 are
 imported unchanged.
+
+## Addendum 4 (2026-10-23): stage-1 pilot code and the coherence details, before any steered lie exists
+
+Owner's go for the pilot, 2026-10-23, after Addenda 2 and 3 were posted on OSF. Written and hashed before any
+steered lie is generated. Section 6 requires the pod server's steering extension to be committed and hashed by a dated
+addendum before it is used. This addendum does that and fixes the mechanical details that section 6 leaves open.
+**The design, the coherence thresholds and the alpha rule are unchanged.**
+
+**Before the pilot (descriptive, committed `fba75e6`).** At the selected layers, per-persona residual norms differ by
+1.02x (Gemma) and 1.01x (Llama). The alpha = 1 step is 4.0-4.1% (Gemma) and 3.7% (Llama) of every persona's residual
+norm. Gemma's per-persona full - reversed gap on unit v differs by 2.98x (Llama 1.29x). Alpha stays as section 6
+defines it (unit(v) x alpha x ||v||); a residual-norm-relative alpha would rescale every persona by the same constant.
+
+**Fixed details.**
+1. **Categories:** `random.Random(20261025).sample(sorted(training_40), 8)` = business, electricity, film, kites,
+   knots, mathematics, mining, music. x 5 targets = 40 items per hypothesis.
+2. **Items:** the probe stage's frozen-wording items (the exact messages of the reversed-note run, Addendum 1): the
+   reversed note for H1, the full note for H2. Renderings as in section 2.
+3. **Vectors** (layer L\* = Gemma 35, Llama 12):
+   - Steered: unit(v_L\*), the probe stage's v (`vectors.npz`).
+   - Placebo: pipeline `probe.vectors.placebo_cov(Xc, seed)`. Xc is the centred last-token block-L\* outputs of the
+     400 frozen full and reversed training items. Seed **20261030** (Gemma) and **20261031** (Llama). One placebo
+     per model, used for both hypotheses and every alpha, and saved for stage 2.
+   - Added vector: sign x alpha x ||v_L\*|| x unit(d), with sign +1 for H1 and -1 for H2, for both the steered and
+     the placebo direction.
+   - It is added by a forward hook on decoder block L\* to the block's output at every position, prompt and
+     generated (padding positions too; they are masked from attention).
+   - Before generation, one prompt per model and vector is checked: hidden_states[L\* + 1] with the hook minus without
+     must equal the added vector at every position (relative error < 0.05, cosine > 0.99), or the run stops.
+4. **Generation:** the frozen `generate_batch` of the identity check, run inside the hook. Temperature 0.6, top_p 0.9,
+   top_k off, max 1,500 new tokens. Batches of 12 (Gemma) and 24 (Llama), as in the identity check. Batch seed =
+   20261032 + 100,000 x model index (Gemma 0, Llama 1) + 10,000 x hypothesis index (H1 0, H2 1) + the batch's first item
+   index. The seed is shared by the steered, placebo and unsteered batches of a hypothesis at every alpha (common
+   random numbers).
+5. **Unsteered continuations (added; needed by the perplexity criterion).** Per model and hypothesis, the same 40
+   items unsteered (alpha 0), with the same seeds: 80 lies per model, on top of the registered 800. They are not
+   graded.
+6. **Coherence measures**, per model x hypothesis x alpha, computed for the steered and for the placebo lies (40 each):
+   - **Viability:** the frozen `scoring.lie_viability`, with the prompt's word range (300-400, slack 0.2). A lie
+     fails if it is flagged too short, too long, truncated by the output cap or degenerate (section 6: "word range,
+     not degenerate"). Refusal language is counted and reported, not used. Rule: >= 95% viable.
+   - **Perplexity:** per lie, the ratio exp(mean NLL of its first 64 generated tokens - mean NLL of the first 64
+     tokens of the unsteered lie for the same item and hypothesis). Both NLLs are teacher-forced under the unsteered
+     model (one unpadded forward pass). Rule: the median over the 40 lies <= 2.0. Section 6 says "median ratio", so
+     this pairs each lie with its own unsteered continuation instead of pooling as the pipeline does.
+   - **Repetition:** the pipeline's `rep4_share` on all of the lie's generated tokens, averaged over the 40 lies.
+     Rule: <= 0.25. Section 6 does not limit it to 64 tokens; all tokens is stricter.
+7. **Gate and alpha rule (section 6, unchanged):** an alpha is coherent for a model and hypothesis if the steered and
+   the placebo lies both pass all three. The confirmatory alpha is the largest coherent grid alpha. With none, that
+   model and hypothesis is untestable. The four alphas are committed before stage 2.
+8. **Nothing is graded and no cue is scored.** Records (text, token ids, finish reason, NLLs) are kept for the record,
+   under `results/phase2/pilot/<slug>/`. The pilot report shows coherence measures only.
+9. **Compute:** one pod in EUR-IS-1 (network volume, image and installs as before). Cap **$8 of RunPod** for the
+   pilot, within section 11's GPU line. The driver refuses a pod whose hourly price x watchdog hours (3 h) exceeds
+   the cap. A local watchdog and the pod's own timer terminate it, and it is terminated when the work ends.
+   Generation resumes batch by batch if a pod has to be replaced.
+
+**Hashes (sha256, files under `two_truths_lie/`).**
+
+| file | sha256 |
+|---|---|
+| `src/perfect_lie/phase2_pilot.py` | `640ebaf8af97658a346f800c914059a9367ac26d40ec5e79b818b0e12c8aaed8` |
+| `tests/test_phase2_pilot.py` | `d236104fd94e6d64bd719e6d9e3ffc71d41cd3a82cfe4b048abe8b6aeb77e9f2` |
+| `results/phase2/probe/pod_server_phase2_pilot.py` | `aea4fce4ab0063aa73b5702e5366b86f422f8acf29b9559e4d09cf15a45d9ca5` |
+| `results/phase2/probe/pilot_stage.py` | `f9cd3da6b3e67146c14149db86855c0dda92ecda83e869dafc3dbbf6242109b6` |
+| `results/phase2/probe/scale_stage.py` | `dd925139d0ffd6138a5db89ddf970cdc41ce2a0d9e387cc5e71ecaf984527d7c` |
+| `results/phase2/probe/pod_server_phase2_scale.py` | `7d99c082d3120872aa34068035adab9065579592e46e6714c0692ddd054db5c7` |
+| `src/perfect_lie/phase2_scale.py` | `3621358cf5d101c46e947bc3ff39aeff2ecc9041ca5d8421656de7fe8fae4698` |
+| `tests/test_phase2_scale.py` | `39018771956e8c35592dfccc171863ca9186bf658de6f55e6a2fa8728d9e5544` |
+
+The pilot server imports the probe-stage server (Addendum 1) unchanged. The pilot driver reuses the scale report's
+driver for the pod's file list. The tests run without the pipeline (12 pilot tests, 2 scale tests pass). The
+steering hook runs only on the pod, where the hook check above verifies it before use.
