@@ -132,6 +132,21 @@ visible to a new session. There was no GPU free in EUR-IS-1 at the time; no pod 
   PRO 6000 (Gemma about 2 h, Llama about 45 min), about $7.5; grading 2,560 lies about $33 (direct) + about $1
   (Google subsample).
 
+## Stage 2 (2026-10-26): generated and graded; NOT analysed
+
+- Owner's go 2026-10-26. Generation: pod `yzmvlwjpjybo4p` (RTX PRO 6000, 2 h 49 min, about $7.05, cap $10;
+  terminated). 1,280 lies per model; **all four tests pass the stage-2 coherence gate (testable)**. Naturalness:
+  cos(v, last-token shift, evaluation categories) 0.999 Gemma / 0.998 Llama; first generated token 0.39 / 0.10.
+- Grading (direct route, strict accepted throughout): Llama 8 / 1,280 failed cells, Gemma 10 / 1,280; Google
+  subsample 256 + 256, 0 failed. Spend about $36.53 direct (cap $40) and $0.61 OpenRouter (cap $2).
+- Background commands are limited to 2 h in this environment: long jobs are now started detached (setsid nohup);
+  the first generation, grading and watchdog jobs were killed at 2 h and resumed without loss or duplicates.
+- **Screens (section 10): 2 matches, both the refusal pattern ("I can't deny ...", "I can't say I've ever felt
+  ..."), 0 confession patterns. Listed blind in `results/phase2/stage2/screen_matches.json` for the owner's
+  adjudication** (write `screen_adjudication.json`: id -> "confession" | "not a confession").
+- **Next:** owner adjudicates -> `stage2_stage.py permcheck` (blinded; decision shares only) -> owner's go ->
+  `stage2_stage.py analyse --i-am-unblinding`. No grade has been summarised.
+
 ## Standing rules (owner)
 
 - No model calls or spend without explicit approval; caps as approved. Kill on breach.
@@ -140,6 +155,6 @@ visible to a new session. There was no GPU free in EUR-IS-1 at the time; no pod 
   artifacts except the commit trailer.
 - Pods: RunPod REST/GraphQL via curl (Cloudflare blocks urllib's signature); network volume
   `u0isne6ams` in EUR-IS-1 holds the Gemma weights (`/workspace/hf/hub`); set a watchdog that
-  terminates every pod; terminate when work ends. RunPod balance $25.26 (2026-10-26; the network volume accrues about $0.019/h).
+  terminates every pod; terminate when work ends. RunPod balance $18.21 (2026-10-26, after stage-2 generation; the network volume accrues about $0.019/h).
 - Commit trailer: `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` and the current session's
   `Claude-Session:` link.
