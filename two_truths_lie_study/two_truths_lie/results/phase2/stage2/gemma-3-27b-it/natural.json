@@ -1,0 +1,11 @@
+{
+ "status": "done",
+ "layer": 35,
+ "n_pairs": 160,
+ "n_pairs_first": 160,
+ "cos_last_token_evaluation": 0.9994912348787177,
+ "cos_first_generated_token": 0.3895635126383556,
+ "norm_last": 1817.9181238781593,
+ "norm_first": 2612.068597965945,
+ "v_norm": 1803.4533120555877
+}
