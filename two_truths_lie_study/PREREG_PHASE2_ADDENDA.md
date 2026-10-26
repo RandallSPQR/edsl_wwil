@@ -458,3 +458,103 @@ is hashed in a further addendum before stage 2 runs, and stage 2 needs the owner
 
 The analysis reuses the reversed-note study's tested helpers (`holm`, `_p_two`, `_p_tost`, `_multinomial_p`) from
 `src/perfect_lie/reversed_analysis.py`, unchanged.
+
+## Addendum 7 (2026-10-26): stage-2 generation, and the method check redefined, before any stage-2 lie exists
+
+Owner's decisions, 2026-10-24 to 2026-10-26. Written before any stage-2 lie is generated. Stage 2 itself needs the
+owner's go. The rules of sections 6-10 are unchanged except the method check's direction (item 1).
+
+**1. The method check, redefined (owner's decision; a deviation from section 6).**
+- Section 6's direction, v_fp = mean(h_full) - mean(h_placebo) over the training items, is **zero by construction**.
+  Every placebo item is another target's full note, and the prompt never names the target (Addendum 3). So the two
+  sets of items are the same set, relabelled.
+- Measured at the selected layers: ||v_fp|| / ||v|| = 3e-7 (Gemma) and 6e-7 (Llama), float rounding. The method check
+  as registered would steer by nothing.
+- **Per-target direction:** for each target t, v_fp,t = the mean, over the 40 training categories, of h(t's full
+  note) - h(the placebo note t receives). Frozen wording, last prompt token, block L\*. It is added under t's placebo
+  note at alpha = 1 (+||v_fp,t|| x unit v_fp,t), pushing towards t's own note and cues. The prediction (s rises), the
+  test (one-sided t at 0.05 per model, d_k over the 16 categories) and its role in the labels are unchanged. That is
+  five directions per model.
+- **Its placebo, per target:** Addendum 5's procedure with v_fp,t in place of v.
+  - Draw from the covariance of the 400 frozen full and reversed training items, each condition centred on its own
+    mean: pipeline `placebo_cov`, seed 20261038 + 10 x model index (Gemma 0, Llama 1) + target index (P1 0 ... P6 4).
+  - Project out unit v_fp,t; renormalise; added at +||v_fp,t||.
+  - Reported per target: cos(placebo_fp,t, v_fp,t) (the run stops if |cos| > 1e-6), cos before the projection, the
+    norm match (stops if not 1 to 1e-9), ||v_fp,t|| / ||v||, cos(v_fp,t, v), and cos with the main placebo.
+- **Coherence pre-check before stage 2 (coherence only, nothing graded):**
+  - Both models, at alpha 1, on the pilot's 8 training categories x 5 targets under the placebo note.
+  - Per target, one batch with a shared seed (20261037 + 100,000 x model index + 40,000 + 100 x target index): the
+    unsteered lie, the steered lie and the placebo lie. That is 120 lies per model.
+  - The pilot's measures and thresholds (Addendum 4), with the unsteered lie of the same item as the perplexity
+    reference. Reported, with the vectors above, before stage 2.
+  - Cap **$2 of RunPod**; the driver refuses a pod whose price x watchdog hours (0.8 h) exceeds it.
+- The main-test placebo (orthogonal to v, Addendum 5) is unchanged.
+
+**2. Stage-2 generation (sections 6, 7).**
+- **Items:** per model, the 32 evaluation categories x 5 targets x {full, reversed, placebo}, frozen wording, as the
+  exact messages of the reversed-note run (replicates must agree), with the run's public prompt (which the grader
+  reads) and the renderings of section 2 (`stage2_items.jsonl.gz`).
+- **Arms, per model (1,280 lies, as registered):**
+  - H1, reversed note: steered (+alpha_H1 ||v|| unit v), placebo (+alpha_H1 ||v|| unit p), and the unsteered
+    reference.
+  - H2, full note: steered and placebo with -alpha_H2, and the unsteered reference.
+  - Placebo note: the unsteered reference on all 32 categories, and the method check (item 1) on 16 categories:
+    `random.Random(20261036).sample(sorted(evaluation), 16)`.
+  - Alphas: `confirmatory_alphas.json` (Addendum 5): Gemma 2.0 / 1.0, Llama 4.0 / 4.0.
+  - A hypothesis with no confirmatory alpha generates no steered or placebo lies.
+- **Batches and seeds:** the identity check's batch sizes (Gemma 12, Llama 24), with items in (category, target)
+  order.
+  - Within a note, steered, placebo and that note's reference share each batch and its seed (common random numbers,
+    as in the pilot): seed = 20261037 + 100,000 x model index + 10,000 x group + the batch's first index.
+  - Groups: H1 0, H2 1, placebo-note reference 2, method check 3. The method check is batched within target, offset
+    100 x target index.
+  - Sampling as in the pilot: temperature 0.6, top_p 0.9, max 1,500 tokens.
+- **Hook checks:** before generation, the exact (bitwise) hook check of Addendum 4 for every vector (steered, placebo,
+  and each target's method-check vector and placebo). The vectors are rebuilt from the stored activations and must
+  pass their construction checks.
+- **Stage-2 coherence gate (section 6), before any grading:**
+  - Per model x hypothesis, the steered and the placebo lies against that hypothesis's unsteered reference.
+  - The pilot's measures (Addendum 4), with the reference lie of the same item as the perplexity reference.
+  - A test whose steered or placebo lies fail is untestable; no other alpha is substituted.
+  - The method check's coherence is reported the same way (not a gate).
+- **Naturalness (section 7):**
+  - Over the evaluation pairs, the mean of h_full - h_reversed at block L\* at the last prompt token.
+  - The same at the first generated token: one forward pass of the prompt plus the unsteered reference lie's first
+    token, read at that token.
+  - Each cosine with v is reported.
+
+**3. Grading, screens, permutation check, analysis (driver steps; code of Addendum 6).**
+- `grade`: every stage-2 lie through `phase2_grading` (primary direct route; the Addendum 2 subsample also through the
+  Google grader). Resumable; the grading summary records failures, the strict-mode state and tokens.
+- `screens` (section 10): every lie matching the frozen confession or refusal screen. They are listed blind (no arm,
+  hypothesis or alpha; shuffled with seed 20261039) for the owner's adjudication. The key is kept apart.
+- `permcheck` (section 10): the blinded permutation check; decision shares only.
+- `analyse`: the registered analysis (Addendum 6) with the naturalness figures and the Addendum 2 report. It refuses
+  to run without an explicit unblinding flag (owner's go only).
+
+**Tests (`tests/test_phase2_gen.py`, 8):**
+- Items; the method-check categories; the plan's sizes per arm (1,280 per model); the shared seeds per note; method
+  check batches within target; an untestable hypothesis; the coefficients' signs and scales; the stage-2 coherence
+  gate (including a failing placebo arm).
+- An offline end-to-end run of the driver on simulated generations with stubbed graders:
+  - grading, including resume;
+  - the Google subsample (256 lies per model);
+  - the blind screen listing and the refusal to analyse before adjudication;
+  - the 10,000-permutation check;
+  - the full analysis.
+- With the earlier Phase 2 tests: 68 pass here. The probe-stage tests need the pipeline and run on the pod.
+
+**Hashes (sha256, files under `two_truths_lie/`).**
+
+| file | sha256 |
+|---|---|
+| `src/perfect_lie/phase2_gen.py` | `1618cab7f4951868d005da21bee5e25e8081ba9d14d49de004474c4dcc815f8f` |
+| `tests/test_phase2_gen.py` | `3a60f27f95e4d727063946dc05ea3799b1f482fc17e5f8f28363dcdd0ea308a1` |
+| `results/phase2/probe/stage2_items.py` | `8db9a3c09e6ce3c7f95d4cd265c4e753acb1eacf8a8bf1409d4d817f582c3922` |
+| `results/phase2/probe/stage2_items.jsonl.gz` | `047b0160f8f39f1f196d3e582eed793d77e408d11c4a34b99e1ebf90699676aa` |
+| `results/phase2/probe/pod_server_phase2_stage2.py` | `e9999ef669784463e0dc70ec3baf9d45d966ca57de553aca1bdee5e70bcf446b` |
+| `results/phase2/probe/stage2_stage.py` | `6efdbb55a869cd16d338444422f29bc243a212c2e39eab900443d383caa0283c` |
+
+The stage-2 server imports the Addendum 5 server, the pilot server and the probe-stage server unchanged. The driver
+reuses the probe, pilot and Addendum 5 drivers, `phase2_pilot.py`, `phase2_stage2.py` and `phase2_grading.py`
+(Addenda 4 and 6), unchanged.
