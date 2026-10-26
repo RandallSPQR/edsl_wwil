@@ -117,6 +117,21 @@ visible to a new session. There was no GPU free in EUR-IS-1 at the time; no pod 
   the stage-2 generation addendum (pod extension and driver; the method check's placebo construction for v_fp is an
   open detail), OSF posts of Addenda 4-6, and the owner's go.
 
+## Addendum 7 and the method-check pre-check (2026-10-26): DONE
+
+- The registered method-check direction v_fp is zero by construction (placebo items = other targets' full items):
+  ||v_fp|| / ||v|| = 3e-7 (Gemma), 6e-7 (Llama). Owner chose a per-target v_fp,t (Addendum 7), placebo per target
+  orthogonal to v_fp,t (Addendum 5 procedure), norm matched.
+- Addendum 7 (stage-2 generation code, hashed, commit `6133228`): items, plan (1,280 lies per model), seeds, hook
+  checks, stage-2 coherence gate, naturalness; driver steps grade / screens / permcheck / analyse (unblinding flag).
+- Method-check pre-check (pod `nl3lxw5wv8owdd`, about 27 min, about $1.12, cap $2; terminated): **coherent on both
+  models at alpha 1** (Gemma: steered ppl ratio 1.38, placebo 1.18; Llama 1.00 / 1.01; all viable). Placebo cos with
+  v_fp,t <= 8e-17, norm match 1, all targets. ||v_fp,t|| / ||v||: Gemma 0.78-1.47, Llama 1.19-1.74.
+  `results/phase2/pilot/<slug>/MC_PRECHECK.md`.
+- **Next: stage 2 needs the owner's go** (and the OSF post of Addenda 4-7). Stage 2 GPU estimate: about 3 h on an RTX
+  PRO 6000 (Gemma about 2 h, Llama about 45 min), about $7.5; grading 2,560 lies about $33 (direct) + about $1
+  (Google subsample).
+
 ## Standing rules (owner)
 
 - No model calls or spend without explicit approval; caps as approved. Kill on breach.
@@ -125,6 +140,6 @@ visible to a new session. There was no GPU free in EUR-IS-1 at the time; no pod 
   artifacts except the commit trailer.
 - Pods: RunPod REST/GraphQL via curl (Cloudflare blocks urllib's signature); network volume
   `u0isne6ams` in EUR-IS-1 holds the Gemma weights (`/workspace/hf/hub`); set a watchdog that
-  terminates every pod; terminate when work ends. RunPod balance $27.81 (2026-10-23, after the Addendum 5 rerun).
+  terminates every pod; terminate when work ends. RunPod balance $25.26 (2026-10-26; the network volume accrues about $0.019/h).
 - Commit trailer: `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` and the current session's
   `Claude-Session:` link.

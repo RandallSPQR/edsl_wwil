@@ -1,0 +1,53 @@
+{
+ "model": "meta-llama/llama-3.1-8b-instruct",
+ "alpha": 1.0,
+ "unsteered": {
+  "n": 40,
+  "viable_share": 1.0,
+  "nonviable_reasons": {
+   "too_short": 0,
+   "too_long": 0,
+   "truncated_by_output_cap": 0,
+   "degenerate_text": 0,
+   "refusal_or_disclaimer": 0
+  },
+  "ppl_ratio_median": 1.0,
+  "n_ppl": 40,
+  "rep4_mean": 0.014612847881250751,
+  "words_median": 331.5,
+  "passes": true
+ },
+ "mc_steered": {
+  "n": 40,
+  "viable_share": 1.0,
+  "nonviable_reasons": {
+   "too_short": 0,
+   "too_long": 0,
+   "truncated_by_output_cap": 0,
+   "degenerate_text": 0,
+   "refusal_or_disclaimer": 0
+  },
+  "ppl_ratio_median": 1.0,
+  "n_ppl": 40,
+  "rep4_mean": 0.012385587853920316,
+  "words_median": 339.5,
+  "passes": true
+ },
+ "mc_placebo": {
+  "n": 40,
+  "viable_share": 1.0,
+  "nonviable_reasons": {
+   "too_short": 0,
+   "too_long": 0,
+   "truncated_by_output_cap": 0,
+   "degenerate_text": 0,
+   "refusal_or_disclaimer": 0
+  },
+  "ppl_ratio_median": 1.0088230434568395,
+  "n_ppl": 40,
+  "rep4_mean": 0.014923288726174771,
+  "words_median": 337.5,
+  "passes": true
+ },
+ "coherent": true
+}
