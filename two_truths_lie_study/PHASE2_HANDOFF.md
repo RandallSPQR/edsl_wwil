@@ -144,8 +144,11 @@ visible to a new session. There was no GPU free in EUR-IS-1 at the time; no pod 
 - **Screens (section 10): 2 matches, both the refusal pattern ("I can't deny ...", "I can't say I've ever felt
   ..."), 0 confession patterns. Listed blind in `results/phase2/stage2/screen_matches.json` for the owner's
   adjudication** (write `screen_adjudication.json`: id -> "confession" | "not a confession").
-- **Next:** owner adjudicates -> `stage2_stage.py permcheck` (blinded; decision shares only) -> owner's go ->
-  `stage2_stage.py analyse --i-am-unblinding`. No grade has been summarised.
+- Owner adjudicated both screen matches "not a confession" (2026-10-27; `screen_adjudication.json`).
+- **Blinded permutation check (section 10; 10,000 within-cell swaps, seed 20261035; shares only):** efficacy
+  rejections 1.15% (Gemma H1), 1.30% (Gemma H2), 1.35% (Llama H1), 1.30% (Llama H2), as designed (about 1.3% per
+  test in simulation; the reversed-note study 1.27-1.41%). Equivalence rejections under the permuted null 94-98%.
+- **Next:** owner's go -> `stage2_stage.py analyse --i-am-unblinding`. No grade has been summarised.
 
 ## Standing rules (owner)
 
