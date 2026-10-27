@@ -148,7 +148,12 @@ visible to a new session. There was no GPU free in EUR-IS-1 at the time; no pod 
 - **Blinded permutation check (section 10; 10,000 within-cell swaps, seed 20261035; shares only):** efficacy
   rejections 1.15% (Gemma H1), 1.30% (Gemma H2), 1.35% (Llama H1), 1.30% (Llama H2), as designed (about 1.3% per
   test in simulation; the reversed-note study 1.27-1.41%). Equivalence rejections under the permuted null 94-98%.
-- **Next:** owner's go -> `stage2_stage.py analyse --i-am-unblinding`. No grade has been summarised.
+- Addendum 8 (2026-10-27, before unblinding): generation failures as records, cardinality enforced; data unchanged.
+- **UNBLINDED 2026-10-27 on the owner's go (after two blind code reviews).** `results/phase2/stage2/STAGE2_RESULTS.md`.
+  **Llama: steerable under H1 (+0.093 [+0.044, +0.142]) and H2 (-0.124 [-0.182, -0.066]); method check passed.
+  Gemma: inconclusive (method check failed, +0.015, p = 0.30) under H1 (+0.020) and H2 (-0.030), though TOST rejects.**
+  Pooled H1 balance flag (4 reference-arm grading failures); no label moves under any tipping imputation. Llama's
+  placebo raised s under H1 (+0.071).
 
 ## Standing rules (owner)
 
