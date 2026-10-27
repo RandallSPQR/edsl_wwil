@@ -15,6 +15,7 @@ PROBE = Path(__file__).resolve().parents[1] / "results/phase2/probe"
 EV = json.loads((PROBE / "category_split.json").read_text())["evaluation"]
 ITEMS = [json.loads(l) for l in gzip.open(PROBE / "stage2_items.jsonl.gz", "rt")]
 GEMMA, LLAMA = G.MODELS
+SUB_CELLS = json.loads((PROBE.parent / "grader_robustness/subsample.json").read_text())["cells"]
 ALPHAS = {GEMMA: {"H1": 2.0, "H2": 1.0}, LLAMA: {"H1": 4.0, "H2": 4.0}}
 
 
@@ -101,8 +102,6 @@ def test_driver_offline_end_to_end(tmp_path, monkeypatch):
     sys.path.insert(0, str(PROBE))
     import stage2_stage as SS
     from src.perfect_lie import phase2_grading as PG
-    from src.perfect_lie.personas import load_instrument
-    cues = [c.id for c in load_instrument().cues]
     monkeypatch.setattr(SS, "STAGE2", tmp_path)
     monkeypatch.setattr(SS, "SCREENS", tmp_path / "screen_matches.json")
     monkeypatch.setattr(SS, "SCREEN_KEY", tmp_path / "screen_matches_key.json")
@@ -126,12 +125,19 @@ def test_driver_offline_end_to_end(tmp_path, monkeypatch):
         for r in recs:
             r["user_prompt"] = r["user_prompt"] + f"\nARM: {r['arm']}"     # lets the stub grade by arm
         recs[0]["text"] = "I just made this up. " + recs[0]["text"]  # one confession-screen match
+        fi = next(i for i, r in enumerate(recs) if r["arm"] == "steered" and r["hyp"] == "H1")
+        for k in ("text", "ids", "finish", "prompt_count", "nll"):        # Addendum 8: one generation failure
+            recs[fi].pop(k)
+        recs[fi].update(status="generation_failed", failure="test")
+        failed_in_sub = SUB_CELLS.get(recs[fi]["category"]) == recs[fi]["target"]
         (d / "records.jsonl").write_text("".join(json.dumps(r) + "\n" for r in recs))
         (d / "coherence.json").write_text(json.dumps(G.coherence(recs, ALPHAS[m])))
         (d / "natural.json").write_text(json.dumps({"cos_first_generated_token": 0.5, "cos_last_token_evaluation": 0.9}))
         SS.grade(m)
         graded = [json.loads(l) for l in (d / SS.GRADED).open()]
-        assert len(graded) == 1280 and sum("google" in r for r in graded) == 256
+        assert len(graded) == 1280 and sum("google" in r for r in graded) == 256 - failed_in_sub
+        assert [r["status"] for r in graded].count("generation_failed") == 1 and "primary" not in graded[
+            [r["status"] for r in graded].index("generation_failed")]
         SS.grade(m)                                                        # resume: nothing re-graded
         assert len((d / SS.GRADED).read_text().splitlines()) == 1280
     SS.screens()
@@ -146,7 +152,121 @@ def test_driver_offline_end_to_end(tmp_path, monkeypatch):
     assert pc["n"] == 10_000 and set(pc["shares"]) == {f"{m}|{h}" for m in G.MODELS for h in ("H1", "H2")}
     SS.analyse_all()
     rep = json.loads((tmp_path / "stage2_result.json").read_text())
+    for m in G.MODELS:      # the generation failure reaches the counts and the tipping point
+        assert rep["counts"][f"{m}|H1|steered"]["generation_failed"] == 1
+        assert rep["tipping_point"][f"{m}|H1"]["missing_steered"] >= 1
     assert rep["primary"][f"{GEMMA}|H1"]["K"] == 32 and rep["primary"][f"{GEMMA}|H1"]["est"] > 0.05
     assert rep["primary"][f"{GEMMA}|H2"]["est"] > 0.05                      # simulated steering raised s under H2 too
     assert rep["primary"][f"{GEMMA}|H2"]["label"] in ("opposite", "inconclusive")
     assert rep["google_subsample"]["cells"] == 32 and "naturalness" in rep and (tmp_path / "STAGE2.md").exists()
+
+
+# ------------------------------------------------------------------ Addendum 8: one durable record per planned cell
+
+def _driver():
+    sys.path.insert(0, str(PROBE))
+    import stage2_stage as SS
+    return SS
+
+
+def _fake_pod(monkeypatch, SS, behaviour):
+    """behaviour(job_key, attempt) -> 'ok' | 'short' | 'error'."""
+    calls = Counter()
+
+    def job(base, auth, path, body, every=10, timeout=60):
+        key = body["kind"] + "|" + body["items"][0]["messages"][0]["content"][:30] + str(body["seed"])
+        calls[key] += 1
+        how = behaviour(body, calls[key])
+        if how == "error":
+            raise SystemExit("generate failed: CUDA out of memory")
+        n = len(body["items"]) - (1 if how == "short" else 0)
+        return {"status": "done", "results": [{"text": f"lie {i}", "ids": [1, 2, 3], "finish": "stop", "prompt_count": 9}
+                                              for i in range(n)]}
+    monkeypatch.setattr(SS.PL, "job", job)
+    monkeypatch.setattr(SS.PL, "pod_item", lambda it: {"messages": it["messages"]})
+    return calls
+
+
+def _five_item_jobs():
+    its = G.items_for(ITEMS, GEMMA, sorted(EV)[:1], "reversed")            # 1 category x 5 targets
+    return [{"arm": "steered", "hyp": "H1", "kind": "steered", "alpha": 2.0, "sign": 1.0, "target": None, "items": its,
+             "seed": 7, "key": "steered|H1|0"},
+            {"arm": "placebo", "hyp": "H1", "kind": "placebo", "alpha": 2.0, "sign": 1.0, "target": None, "items": its,
+             "seed": 7, "key": "placebo|H1|0"}]
+
+
+def test_short_batch_becomes_generation_failed_records_never_silently_dropped(tmp_path, monkeypatch):
+    SS = _driver()
+    calls = _fake_pod(monkeypatch, SS, lambda body, n: "short" if body["kind"] == "placebo" else "ok")
+    jobs, recp = _five_item_jobs(), tmp_path / "records.jsonl"
+    SS.generate_jobs("b", [], "s", jobs, recp, lambda j: 1.0)
+    rows = [json.loads(l) for l in recp.open()]
+    assert len(rows) == 10 and SS.check_cardinality(rows, jobs) == {"cells": 10, "generation_failed": 5}
+    st = Counter((r["arm"], r["status"]) for r in rows)
+    assert st == {("steered", "complete"): 5, ("placebo", "generation_failed"): 5}
+    failed = [r for r in rows if r["status"] == "generation_failed"]
+    assert all(r["failure"].startswith("pod returned 4 of 5") and r["attempts"] == 1 + SS.GEN_RETRIES for r in failed)
+    assert all({"key", "arm", "hyp", "category", "target", "item_id"} <= set(r) and "text" not in r for r in failed)
+    assert max(calls.values()) == 1 + SS.GEN_RETRIES                     # the short batch was retried
+
+
+def test_pod_error_is_retried_then_recorded(tmp_path, monkeypatch):
+    SS = _driver()
+    _fake_pod(monkeypatch, SS, lambda body, n: "error" if (body["kind"] == "steered" and n < 3) else "ok")
+    jobs, recp = _five_item_jobs(), tmp_path / "records.jsonl"
+    SS.generate_jobs("b", [], "s", jobs, recp, lambda j: 1.0)
+    rows = [json.loads(l) for l in recp.open()]
+    assert Counter(r["status"] for r in rows) == {"complete": 10}           # third attempt succeeded
+    recp.unlink()
+    _fake_pod(monkeypatch, SS, lambda body, n: "error" if body["kind"] == "steered" else "ok")
+    SS.generate_jobs("b", [], "s", jobs, recp, lambda j: 1.0)
+    rows = [json.loads(l) for l in recp.open()]
+    assert Counter((r["arm"], r["status"]) for r in rows) == {("steered", "generation_failed"): 5, ("placebo", "complete"): 5}
+    assert all("CUDA out of memory" in r["failure"] for r in rows if r["status"] == "generation_failed")
+
+
+def test_partial_rows_are_regenerated_on_resume_without_duplicates(tmp_path, monkeypatch):
+    SS = _driver()
+    _fake_pod(monkeypatch, SS, lambda body, n: "ok")
+    jobs, recp = _five_item_jobs(), tmp_path / "records.jsonl"
+    SS.generate_jobs("b", [], "s", jobs, recp, lambda j: 1.0)
+    rows = [json.loads(l) for l in recp.open()]
+    recp.write_text("".join(json.dumps(r) + "\n" for r in rows[:7]))     # interrupted inside the second job
+    calls = _fake_pod(monkeypatch, SS, lambda body, n: "ok")
+    SS.generate_jobs("b", [], "s", jobs, recp, lambda j: 1.0)
+    rows = [json.loads(l) for l in recp.open()]
+    assert len(rows) == 10 and SS.check_cardinality(rows, jobs)["cells"] == 10
+    assert sum(calls.values()) == 1                                       # only the partial job was regenerated
+
+
+def test_cardinality_check_refuses_missing_duplicate_or_unplanned_rows():
+    SS = _driver()
+    jobs = _five_item_jobs()
+    rows = [{"key": j["key"], "item_id": it["item_id"], "status": "complete", "ids": [1]} for j in jobs for it in j["items"]]
+    assert SS.check_cardinality(rows, jobs)["cells"] == 10
+    for bad in (rows[:-1], rows + rows[:1], rows + [{"key": "x|y|0", "item_id": "z", "ids": [1]}]):
+        with pytest.raises(SystemExit):
+            SS.check_cardinality(bad, jobs)
+
+
+def test_rows_without_status_are_legacy_complete_rows():
+    SS = _driver()
+    assert SS.status_of({"ids": [1]}) == "complete" and SS.status_of({"status": "generation_failed"}) == "generation_failed"
+    assert SS.status_of({}) == "generation_failed"
+
+
+def test_coherence_counts_generation_failures_as_nonviable():
+    recs = sim_records(GEMMA)
+    st = [r for r in recs if r["arm"] == "steered" and r["hyp"] == "H1"]
+    for r in st[:9]:                                 # 9 of 160 failed: 94.4% viable, below 95%
+        for k in ("text", "ids", "finish", "nll"):
+            r.pop(k)
+        r["status"] = "generation_failed"
+    ref = next(r for r in recs if r["arm"] == "ref_reversed")
+    for k in ("text", "ids", "finish", "nll"):      # a failed reference: its pair has no perplexity ratio, no crash
+        ref.pop(k)
+    ref["status"] = "generation_failed"
+    c = G.coherence(recs, ALPHAS[GEMMA])["H1"]
+    assert c["steered"]["n"] == 160 and c["steered"]["generation_failed"] == 9
+    assert c["steered"]["viable_share"] == pytest.approx(151 / 160) and not c["steered"]["passes"] and not c["testable"]
+    assert c["placebo"]["n_ppl"] == 159 and c["placebo"]["passes"]

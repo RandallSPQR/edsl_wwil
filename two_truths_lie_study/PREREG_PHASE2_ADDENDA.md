@@ -558,3 +558,68 @@ owner's go. The rules of sections 6-10 are unchanged except the method check's d
 The stage-2 server imports the Addendum 5 server, the pilot server and the probe-stage server unchanged. The driver
 reuses the probe, pilot and Addendum 5 drivers, `phase2_pilot.py`, `phase2_stage2.py` and `phase2_grading.py`
 (Addenda 4 and 6), unchanged.
+
+## Addendum 8 (2026-10-27): generation failures as records, before unblinding
+
+Written after stage 2 was generated, graded and screened, the screens adjudicated and the blinded permutation check
+run (decision shares only; commit `2768c72`), and **before any stage-2 result is computed or seen**. An independent
+blind review of the stage-2 code (the package of commit `2768c72`) found the statistical analysis consistent with
+the registration. It found one defect at the boundary between generation and analysis, fixed here. **The statistical
+analysis code (`phase2_stage2.py`) and the grading code are unchanged.**
+
+**The defect.** Section 7a requires generation failures to be counted separately and to enter the missing-cell
+counts and the tipping point; the analysis supports this (`status == "generation_failed"`). But the stage-2 driver
+never wrote such records:
+- it wrote only the results the pod returned (`zip(items, results)`), with no status;
+- `grade` and `analysis_records` then set every row to "complete".
+
+A failed or short batch would therefore have left cells silently absent rather than recorded. A partly written job
+could also have counted as done on resume.
+
+**The fix (`results/phase2/probe/stage2_stage.py`, `src/perfect_lie/phase2_gen.py`).**
+1. **One durable record per planned cell:** status "complete" (with the lie), or "generation_failed" (with its model,
+   arm, hypothesis, category, target and item identifiers, and the reason).
+   - A pod error, or a result list of the wrong length, is retried twice. Then every cell of that job is recorded as
+     generation_failed.
+   - The pod returns results by position without item identifiers, so a short list cannot be matched to its items,
+     and none of them is kept.
+   - A job counts as done only when all its cells are on file. Partial rows from an interrupted write are dropped and
+     the job regenerated, with no duplicates.
+2. **Cardinality, a hard stop:** the number of records must equal the number of planned cells, with unique cell
+   identifiers (job key, item). This is checked after generation, before grading, and on the graded files before the
+   permutation check and the analysis; on failure nothing proceeds.
+3. **Status carried through:**
+   -  passes failed cells through ungraded;
+   -  takes the status from the record, so generation failures reach  and the tipping
+     point;
+   - the screen listing skips failed cells;
+   - rows written before this addendum carry no status and all hold a generated lie; they read as complete.
+4. **Stage-2 coherence gate:** a generation failure counts as non-viable (the viability share is over every planned
+   cell). A lie whose reference failed has no perplexity ratio.
+
+**Effect on the stage-2 data: none.** Under the new checks, each model has exactly 1,280 records for its 1,280 planned
+cells, all unique and complete, with 0 generation failures; the graded files likewise. Recomputing the stage-2
+coherence gate with the patched code gives identical figures and the same verdicts (all four tests testable). Nothing
+is regenerated or regraded, and the screens, the adjudication and the permutation check stand.
+
+**Not changed.** The screens list confession and refusal matches. As registered, only adjudicated confessions are
+excluded; refusals are not an exclusion. Both matches were adjudicated "not a confession".
+
+**Tests (`tests/test_phase2_gen.py`, now 14):**
+- a 5-item batch returning 4 gives 5 generation_failed records after the retries, never 4 silent rows;
+- a pod error is retried and then recorded;
+- partial rows are regenerated without duplicates;
+- the cardinality check refuses missing, duplicated or unplanned rows;
+- legacy rows read as complete;
+- the coherence gate counts failures as non-viable;
+- the end-to-end run now carries one generation failure through grading to the counts and the tipping point.
+
+With the other Phase 2 tests, 74 pass.
+
+**Hashes (sha256, files under `two_truths_lie/`).**
+
+| file | sha256 |
+|---|---|
+| `results/phase2/probe/stage2_stage.py` | `6da4fd1af3cf68d9e33f920e942f7afdb70782535f1aed4de180a9d8468b561c` |
+| `src/perfect_lie/phase2_gen.py` | `ec3fd72ceb796a20690e65dd74b8790f7e6a7fa836c7a56b17f76d28eff351cc` |
+| `tests/test_phase2_gen.py` | `6cc2849b11c5756109d50d054fae71ed50c6117173333dcd35a2b9f59adb2d9d` |

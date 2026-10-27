@@ -9,7 +9,8 @@ Per model, on the 32 evaluation categories x 5 targets (frozen messages of the r
   Placebo note: "ref_placebo" on all 32 categories; the method check on its 16 categories (seed 20261036), one
      target at a time (each target has its own direction): "mc_steered" (+||v_fp,t|| unit v_fp,t, alpha 1) and
      "mc_placebo" (+||v_fp,t|| unit p_fp,t), sharing batches and seeds.
-A hypothesis with no confirmatory alpha generates no steered or placebo lies (untestable).
+A hypothesis with no confirmatory alpha generates no steered or placebo lies (untestable). Every planned cell has one
+record (Addendum 8): status "complete", or "generation_failed" with its identifiers and the reason.
 Stage-2 coherence gate (section 6, re-applied before any grading): per model x hypothesis, the steered and the placebo
 lies against the hypothesis's unsteered reference, with the pilot's measures and thresholds (phase2_pilot.cell_metrics:
 the perplexity reference is the reference lie of the same item). A test whose steered or placebo lies fail is
@@ -18,6 +19,7 @@ untestable; no other alpha is substituted. The method check's coherence is repor
 from __future__ import annotations
 
 import random
+from collections import defaultdict
 from typing import Dict, List, Optional, Sequence
 
 from . import phase2_pilot as Q
@@ -88,20 +90,39 @@ def coef(job: Dict, v_norm: float, vfp_norm: Dict[str, float]) -> float:
     return job["sign"] * job["alpha"] * v_norm
 
 
+def _complete(r: Dict) -> bool:
+    """Rows written before Addendum 8 carry no status; every one of them holds a generated lie."""
+    return (r.get("status") or ("complete" if "ids" in r else "generation_failed")) == "complete"
+
+
+def _gate(recs: Sequence[Dict], ref: Dict) -> Dict:
+    """The pilot's cell metrics on the complete lies, with generation failures counted as non-viable (Addendum 8): the
+    viability share is over every planned cell. A lie whose reference failed has no perplexity ratio."""
+    ok = [r for r in recs if _complete(r)]
+    failed = len(recs) - len(ok)
+    m = Q.cell_metrics(ok, defaultdict(lambda: {"nll": []}, ref))
+    viable = round(m["viable_share"] * len(ok)) if ok else 0
+    m.update(n=len(recs), n_complete=len(ok), generation_failed=failed,
+             viable_share=viable / len(recs) if recs else float("nan"))
+    m["passes"] = bool(m["n"] > 0 and m["viable_share"] >= Q.VIABLE_MIN and m["ppl_ratio_median"] == m["ppl_ratio_median"]
+                       and m["ppl_ratio_median"] <= Q.PPL_RATIO_MAX and m["rep4_mean"] <= Q.REP4_MAX)
+    return m
+
+
 def coherence(records: Sequence[Dict], alphas: Dict[str, Optional[float]]) -> Dict:
     """Section 6 re-applied in stage 2, per hypothesis (steered and placebo vs the hypothesis's reference), and the
-    method check reported (mc_steered and mc_placebo vs ref_placebo). Records carry category, target, text, ids,
-    finish, nll (first 64 tokens under the unsteered model)."""
+    method check reported (mc_steered and mc_placebo vs ref_placebo). Records carry category, target, status, and for
+    complete lies text, ids, finish, nll (first 64 tokens under the unsteered model)."""
     out = {}
     for h in ("H1", "H2"):
         if alphas.get(h) is None:
             out[h] = {"testable": False, "reason": "no coherent alpha in the pilot"}
             continue
-        ref = {(r["category"], r["target"]): r for r in records if r["arm"] == REF[h]}
-        cells = {k: Q.cell_metrics([r for r in records if r["arm"] == k and r.get("hyp") == h], ref) for k in Q.KINDS}
+        ref = {(r["category"], r["target"]): r for r in records if r["arm"] == REF[h] and _complete(r)}
+        cells = {k: _gate([r for r in records if r["arm"] == k and r.get("hyp") == h], ref) for k in Q.KINDS}
         ok = all(cells[k]["passes"] for k in Q.KINDS)
         out[h] = {"alpha": alphas[h], **cells, "testable": ok,
                   "reason": None if ok else "confirmatory alpha failed the stage-2 coherence gate"}
-    ref = {(r["category"], r["target"]): r for r in records if r["arm"] == "ref_placebo"}
-    out["method_check"] = {k: Q.cell_metrics([r for r in records if r["arm"] == k], ref) for k in ("mc_steered", "mc_placebo")}
+    ref = {(r["category"], r["target"]): r for r in records if r["arm"] == "ref_placebo" and _complete(r)}
+    out["method_check"] = {k: _gate([r for r in records if r["arm"] == k], ref) for k in ("mc_steered", "mc_placebo")}
     return out

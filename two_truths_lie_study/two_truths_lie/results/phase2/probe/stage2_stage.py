@@ -96,28 +96,81 @@ def hook_checks(base, auth, slug, item, kinds, coefs):
     return out
 
 
+GEN_RETRIES = 2
+
+
+def status_of(r):
+    """A record's status. Rows written before Addendum 8 carry none; every one of them holds a generated lie."""
+    return r.get("status") or ("complete" if "ids" in r else "generation_failed")
+
+
+def cell_key(r):
+    return (r["key"], r["item_id"])
+
+
+def check_cardinality(recs, jobs, what="records"):
+    """Addendum 8: every planned cell has exactly one record (complete or generation_failed); else stop."""
+    planned = {(j["key"], it["item_id"]) for j in jobs for it in j["items"]}
+    got = [cell_key(r) for r in recs]
+    dup = len(got) - len(set(got))
+    missing, extra = planned - set(got), set(got) - planned
+    if dup or missing or extra:
+        raise SystemExit(f"{what}: {len(got)} rows for {len(planned)} planned cells; {dup} duplicated, "
+                         f"{len(missing)} missing (e.g. {sorted(missing)[:3]}), {len(extra)} unplanned")
+    return {"cells": len(planned), "generation_failed": sum(status_of(r) == "generation_failed" for r in recs)}
+
+
 def generate_jobs(base, auth, slug, jobs, recp, coef_of, extra=lambda j: {}):
-    done = {json.loads(l)["key"] for l in recp.open()} if recp.exists() else set()
+    """One durable record per planned cell. A job counts as done only when all its cells are on file; partial rows
+    (an interrupted write) are dropped and the job regenerated. A pod error or a result list of the wrong length is
+    retried GEN_RETRIES times; then every cell of the job is recorded as generation_failed with the reason (the pod
+    returns results by position, so a short list cannot be matched to its items)."""
+    rows = [json.loads(l) for l in recp.open()] if recp.exists() else []
+    want = {j["key"]: {it["item_id"] for it in j["items"]} for j in jobs}
+    have = {}
+    for r in rows:
+        have.setdefault(r["key"], set()).add(r["item_id"])
+    partial = {k for k, v in have.items() if k in want and v != want[k]}
+    if partial:
+        recp.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows if r["key"] not in partial))
+        print(f"{slug}: dropped partial rows of {len(partial)} job(s), regenerating", flush=True)
+    done = {k for k, v in have.items() if k in want and v == want[k]}
     for j in jobs:
         if j["key"] in done:
             continue
-        r = PL.job(base, auth, "/generate_steered",
-                   {"items": [PL.pod_item(it) for it in j["items"]], "max_tokens": Q.SAMPLING["max_tokens"],
-                    "temperature": Q.SAMPLING["temperature"], "top_p": Q.SAMPLING["top_p"], "seed": j["seed"],
-                    "slug": slug, "kind": j["kind"], "coef": coef_of(j)})
+        results, reason = None, None
+        for _ in range(1 + GEN_RETRIES):
+            try:
+                r = PL.job(base, auth, "/generate_steered",
+                           {"items": [PL.pod_item(it) for it in j["items"]], "max_tokens": Q.SAMPLING["max_tokens"],
+                            "temperature": Q.SAMPLING["temperature"], "top_p": Q.SAMPLING["top_p"], "seed": j["seed"],
+                            "slug": slug, "kind": j["kind"], "coef": coef_of(j)})
+            except SystemExit as e:
+                reason = f"pod job failed: {str(e)[:200]}"
+                continue
+            got = r.get("results") or []
+            if len(got) == len(j["items"]):
+                results = got
+                break
+            reason = f"pod returned {len(got)} of {len(j['items'])} results; positions cannot be matched"
+        ident = lambda it: {"key": j["key"], "arm": j["arm"], "hyp": j["hyp"], "alpha": j["alpha"], "target": it["target"],
+                            "category": it["category"], "condition": it["condition"], "item_id": it["item_id"],
+                            "seed": j["seed"], **extra(it)}
+        if results is None:
+            lines = [{**ident(it), "status": "generation_failed", "failure": reason, "attempts": 1 + GEN_RETRIES}
+                     for it in j["items"]]
+        else:
+            lines = [{**ident(it), "status": "complete", "text": x["text"], "ids": x["ids"], "finish": x["finish"],
+                      "prompt_count": x["prompt_count"]} for it, x in zip(j["items"], results)]
         with recp.open("a") as f:
-            for it, res in zip(j["items"], r["results"]):
-                f.write(json.dumps({"key": j["key"], "arm": j["arm"], "hyp": j["hyp"], "alpha": j["alpha"],
-                                    "target": it["target"], "category": it["category"], "condition": it["condition"],
-                                    "item_id": it["item_id"], "seed": j["seed"], "text": res["text"], "ids": res["ids"],
-                                    "finish": res["finish"], "prompt_count": res["prompt_count"], **extra(it)},
-                                   ensure_ascii=False) + "\n")
-        print(f"{slug} {j['key']}: done", flush=True)
+            f.write("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in lines))
+            f.flush()
+        print(f"{slug} {j['key']}: {'done' if results is not None else 'GENERATION FAILED: ' + reason}", flush=True)
 
 
 def score_nll(base, auth, recp, by_id):
     recs = [json.loads(l) for l in recp.open()]
-    todo = [k for k, r in enumerate(recs) if "nll" not in r]
+    todo = [k for k, r in enumerate(recs) if "nll" not in r and status_of(r) == "complete"]
     for s in range(0, len(todo), 40):
         ks = todo[s:s + 40]
         j = PL.job(base, auth, "/nll", {"items": [PL.pod_item(by_id[recs[k]["item_id"]]) for k in ks],
@@ -154,6 +207,7 @@ def mc_precheck(pod, key_file, model):
                                                             "method_check_vectors": mc, "hook_check": checks,
                                                             "categories": cats}, indent=1) + "\n")
     generate_jobs(base, auth, slug, jobs, recp, lambda j: 0.0 if j["kind"] == "none" else G.MC_ALPHA * vfp[j["target"]])
+    check_cardinality([json.loads(l) for l in recp.open()], jobs, f"{slug} method-check pre-check")
     by_id = {it["item_id"]: it for j in jobs for it in j["items"]}
     recs = score_nll(base, auth, recp, by_id)
     mc_analyse(model, recs)
@@ -222,14 +276,17 @@ def run(pod, key_file, model):
                                                 "mc_categories": G.mc_categories(ev)}, indent=1) + "\n")
     generate_jobs(base, auth, slug, jobs, recp, lambda j: G.coef(j, p2["v_norm"], vfp),
                   extra=lambda it: {"user_prompt": it["user_prompt"], "model": model})
+    card = check_cardinality([json.loads(l) for l in recp.open()], jobs, f"{slug} stage-2 records")
+    print(json.dumps({"cardinality": card}), flush=True)
     by_id = {it["item_id"]: it for it in items}
     recs = score_nll(base, auth, recp, by_id)
     full, rev = (G.items_for(items, model, ev, c) for c in ("full", "reversed"))
-    first = {(r["category"], r["target"], r["arm"]): r["ids"][:1] for r in recs if r["arm"] in ("ref_full", "ref_reversed")}
+    first = {(r["category"], r["target"], r["arm"]): r["ids"][:1] for r in recs
+             if r["arm"] in ("ref_full", "ref_reversed") and status_of(r) == "complete"}
     nat = PL.job(base, auth, "/natural", {"slug": slug, "layer": sel, "full": [PL.pod_item(i) for i in full],
                                           "reversed": [PL.pod_item(i) for i in rev],
-                                          "first_full": [first[(i["category"], i["target"], "ref_full")] for i in full],
-                                          "first_reversed": [first[(i["category"], i["target"], "ref_reversed")] for i in rev]})
+                                          "first_full": [first.get((i["category"], i["target"], "ref_full"), []) for i in full],
+                                          "first_reversed": [first.get((i["category"], i["target"], "ref_reversed"), []) for i in rev]})
     (out / "natural.json").write_text(json.dumps(nat, indent=1) + "\n")
     coh = G.coherence(recs, a)
     (out / "coherence.json").write_text(json.dumps(coh, indent=1) + "\n")
@@ -253,25 +310,37 @@ def grade(model):
     from src.perfect_lie.personas import load_instrument
     out = STAGE2 / PS.slug(model)
     recs = [json.loads(l) for l in (out / "records.jsonl").open()]
+    check_cardinality(recs, planned_jobs(model), f"{PS.slug(model)} stage-2 records")
     gp = out / GRADED
     done = {cell_id(r) for r in map(json.loads, gp.open())} if gp.exists() else set()
     sub = json.loads((HERE.parent / "grader_robustness" / "subsample.json").read_text())["cells"]
-    todo = [{**r, "status": "complete", "lie": r["text"]} for r in recs if cell_id(r) not in done]
+    todo = [{**r, "status": status_of(r), "lie": r.get("text")} for r in recs if cell_id(r) not in done]
     state = {"strict": True}
     with gp.open("a") as f:
-        PG.grade_records(todo, load_instrument().cues, sub, on_graded=lambda r: (f.write(json.dumps(r, ensure_ascii=False) + "\n"), f.flush()),
-                         state=state)
+        for r in (r for r in todo if r["status"] != "complete"):     # failed cells pass through, ungraded
+            f.write(json.dumps(r, ensure_ascii=False) + "\n"); f.flush()
+        PG.grade_records([r for r in todo if r["status"] == "complete"], load_instrument().cues, sub,
+                         on_graded=lambda r: (f.write(json.dumps(r, ensure_ascii=False) + "\n"), f.flush()), state=state)
     allg = [json.loads(l) for l in gp.open()]
     summ = PG.summary(allg, state)
     (out / "grading_summary.json").write_text(json.dumps(summ, indent=1) + "\n")
     print(json.dumps(summ))
 
 
-def graded_all():
+def planned_jobs(model):
+    ev = json.loads((HERE / "category_split.json").read_text())["evaluation"]
+    return G.plan(stage2_items(), model, alphas()[PS.slug(model)], ev, Q.BATCH[model])
+
+
+def graded_all(check=True):
+    """Every graded row of both models; with `check`, each model's file must hold exactly its planned cells."""
     out = []
     for m in G.MODELS:
         p = STAGE2 / PS.slug(m) / GRADED
-        out += [json.loads(l) for l in p.open()] if p.exists() else []
+        rows = [json.loads(l) for l in p.open()] if p.exists() else []
+        if check:
+            check_cardinality(rows, planned_jobs(m), f"{PS.slug(m)} graded rows")
+        out += rows
     return out
 
 
@@ -281,6 +350,8 @@ def screens():
     from src.perfect_lie import scoring
     rows, key = [], {}
     for r in graded_all():
+        if status_of(r) != "complete":
+            continue
         c, ref = scoring.confession(r["text"]), scoring.REFUSAL_PATTERNS.search(r["text"])
         if c or ref:
             i = hashlib.sha256(cell_id(r).encode()).hexdigest()[:12]
@@ -300,10 +371,13 @@ def analysis_records():
     out = []
     for r in graded_all():
         i = hashlib.sha256(cell_id(r).encode()).hexdigest()[:12]
+        st = status_of(r)
         out.append({"model": r["model"], "arm": r["arm"], "hyp": r["hyp"], "category": r["category"], "target": r["target"],
-                    "status": "complete", "grade": r.get("grade"), "grading_failed": bool(r.get("grading_failed")),
-                    "google": r.get("google"), "confession": (adj or {}).get(i) == "confession",
-                    "nonviable": [x for x in Q.viability(r["text"], r["finish"]) if x.split("(")[0] in Q.NONVIABLE]})
+                    "status": st, "grade": r.get("grade") if st == "complete" else None,
+                    "grading_failed": bool(r.get("grading_failed")) if st == "complete" else False,
+                    "google": r.get("google") if st == "complete" else None, "confession": (adj or {}).get(i) == "confession",
+                    "nonviable": ([x for x in Q.viability(r["text"], r["finish"]) if x.split("(")[0] in Q.NONVIABLE]
+                                  if st == "complete" else [])})
     return out
 
 
