@@ -589,8 +589,8 @@ could also have counted as done on resume.
    identifiers (job key, item). This is checked after generation, before grading, and on the graded files before the
    permutation check and the analysis; on failure nothing proceeds.
 3. **Status carried through:**
-   -  passes failed cells through ungraded;
-   -  takes the status from the record, so generation failures reach  and the tipping
+   - `grade` passes failed cells through ungraded;
+   - `analysis_records` takes the status from the record, so generation failures reach `counts()` and the tipping
      point;
    - the screen listing skips failed cells;
    - rows written before this addendum carry no status and all hold a generated lie; they read as complete.
