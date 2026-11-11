@@ -1,18 +1,17 @@
-# Archive plan
+# Archive
 
-Four copies, each pointing at the others. Nothing here has been created yet; the owner creates each one, in this order,
-after approving the release candidate.
+Four copies, each pointing at the others. GitHub, Hugging Face and Zenodo are done; the OSF links remain for the
+owner (section 4).
 
-## 1. GitHub release tag
+## 1. GitHub release (done)
 
-- Tag: **`perfect-lie-release-v1`** on the commit that adds `two_truths_lie_study/release/` and
-  `two_truths_lie_study/writeup/`, on `RandallSPQR/edsl_wwil`. Create it after the release-candidate commit is merged
-  and Tier 0 passes on that exact commit (`make reproduce`; `release/fresh_run/` holds the independent run).
-- Release assets: the dataset archive (`perfect-lie-dataset-v1.tar.gz`, from `make dataset`), `TIER0_REPORT.md`, and
-  `MANIFEST.sha256` of the dataset.
-- Release notes: link to the three registration tags below, the Zenodo DOI, the Hugging Face dataset and the OSF
-  project.
-- Earlier tags (already on the remote; unchanged):
+- Tag **`perfect-lie-release-v1`** on `4e6069a` (`RandallSPQR/edsl_wwil`, branch `claude/confident-babbage-fljgmx`),
+  the commit that adds `two_truths_lie_study/release/` and `two_truths_lie_study/writeup/`. Tier 0 passed on that
+  commit's code and data (`release/fresh_run/final/`). Release page: https://github.com/RandallSPQR/edsl_wwil/releases/tag/perfect-lie-release-v1
+- Assets: `perfect-lie-dataset-v1.tar.gz` (sha256 `4b9527a0e7db3a32cfae3434bf338c56ef53cec8e8511c32a7403c08a81ef17a`)
+  and its `.sha256`.
+- Later commits on the branch (such as the one adding the DOI to these files) do not move the tag.
+- Earlier tags (unchanged):
 
 | tag | commit | what |
 |---|---|---|
@@ -20,24 +19,16 @@ after approving the release candidate.
 | `perfect-lie-reversed-prereg-v1` | `5261806` | reversed-note registration |
 | `perfect-lie-phase2-prereg-v1` | `bc1c179` | Phase 2 registration, revision 4 |
 
-## 2. Hugging Face dataset
+## 2. Hugging Face dataset (done)
 
-- Repository (proposed): `RandallSPQR/perfect-lie` (dataset), private until the DOI exists, then public.
-- Contents: the output of `make dataset` (`build/dataset/`; its `README.md` is the dataset card). Upload with
-  `huggingface-cli upload RandallSPQR/perfect-lie build/dataset . --repo-type dataset`.
-- Gating (recommended): "gated: auto" with the fabricated-content notice as the access prompt, so every download
-  acknowledges it.
-- Pin: record the dataset repository's commit hash in the GitHub release notes and on Zenodo.
+- https://huggingface.co/datasets/RandallSPQR/perfect-lie (public; gated access with automatic approval). Contents: `perfect-lie-dataset-v1.tar.gz` unpacked; its
+  `README.md` is the dataset card with the DOI added to its citation section. Upload commit `902feac`, every file
+  verified byte-identical after upload.
 
-## 3. Zenodo DOI
+## 3. Zenodo (done)
 
-- Upload: the GitHub release's source archive (via the GitHub-Zenodo integration, or manually), plus the dataset
-  archive. One DOI for the release version; Zenodo's concept DOI for all versions.
-- Metadata: title, authors (owner), licence (owner's choice for the study materials; the dataset card's terms for the
-  model outputs), related identifiers: the GitHub tag (isSupplementTo), the Hugging Face dataset (isIdenticalTo for
-  the dataset part), each OSF registration (isDocumentedBy).
-- After minting: put the DOI in `CITATION.cff`, the dataset card and the OSF project; that edit is a new commit and
-  does not move the release tag.
+- DOI: [10.5281/zenodo.24122306](https://doi.org/10.5281/zenodo.24122306).
+- Cite the DOI for the release; `CITATION.cff` carries it.
 
 ## 4. OSF links
 

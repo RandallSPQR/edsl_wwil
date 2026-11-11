@@ -132,4 +132,9 @@ that compete with the providers above; keep the fabricated-content notice with a
 
 ## Citation
 
-See `CITATION.cff` in the release (owner to complete with the DOI).
+Zenodo: [10.5281/zenodo.24122306](https://doi.org/10.5281/zenodo.24122306). Code, write-up and the push-button
+reproduction (Tier 0): GitHub release
+[`perfect-lie-release-v1`](https://github.com/RandallSPQR/edsl_wwil/releases/tag/perfect-lie-release-v1)
+(`two_truths_lie_study/release/README.md`). The contents of this repository are the release archive
+`perfect-lie-dataset-v1.tar.gz` unpacked (sha256 `4b9527a0e7db3a32cfae3434bf338c56ef53cec8e8511c32a7403c08a81ef17a`);
+`MANIFEST.sha256` lists every file, except this card, which adds this paragraph.

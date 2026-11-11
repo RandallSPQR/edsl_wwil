@@ -5,6 +5,8 @@ beliefs: **study 1** (full versus placebo note), the **reversed-note study** (fu
 **Phase 2** (an activation probe and steering on two open-weight liars). The Methods and Findings sections, figures
 and claims manifest are in `two_truths_lie_study/writeup/`.
 
+**Cite:** [doi:10.5281/zenodo.24122306](https://doi.org/10.5281/zenodo.24122306). **Dataset:** [Hugging Face](https://huggingface.co/datasets/RandallSPQR/perfect-lie) (gated: acknowledge the fabricated-content notice) and the release asset `perfect-lie-dataset-v1.tar.gz`.
+
 ## Tier 0: reproduce everything on a CPU (no network, no GPU, no API key)
 
 Requirements: Linux or macOS, `git`, `make`, and either [uv](https://docs.astral.sh/uv/) or Docker; about 2 GB of free
@@ -99,7 +101,7 @@ two_truths_lie_study/
 
 ## Dataset
 
-`make dataset` builds the release dataset (every lie, note, prompt, raw judge verdict and grader output,
+The dataset is published at https://huggingface.co/datasets/RandallSPQR/perfect-lie and as the release asset. `make dataset` rebuilds it (every lie, note, prompt, raw judge verdict and grader output,
 comprehension answer, screen and adjudication; Phase 2 probe directions, per-layer AUROC tables and steering setups;
 pinned Hugging Face revisions) into `build/dataset/`, with its card (`release/dataset/DATASET_CARD.md`). **The lies are
 fabricated stories, many about real, named organizations; read the card's notice before using them.**

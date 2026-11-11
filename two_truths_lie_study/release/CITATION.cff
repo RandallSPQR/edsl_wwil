@@ -6,8 +6,11 @@ version: "1.0.0"
 authors:
   - name: "OWNER: author name(s)"
 repository-code: "https://github.com/RandallSPQR/edsl_wwil"
+url: "https://huggingface.co/datasets/RandallSPQR/perfect-lie"
+doi: "10.5281/zenodo.24122306"
 identifiers:
   - type: doi
-    value: "OWNER: Zenodo DOI after minting"
+    value: "10.5281/zenodo.24122306"
+    description: "Zenodo record of release perfect-lie-release-v1"
 keywords: [deception, persuasion, theory of mind, language models, pre-registration, activation steering]
 license: "OWNER: licence for the study materials; model outputs under the terms in the dataset card"
