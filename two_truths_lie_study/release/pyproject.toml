@@ -1,0 +1,21 @@
+[project]
+name = "perfect-lie-reproduce"
+version = "1.0.0"
+description = "Pinned environment for reproducing The Perfect Lie (study 1, reversed note, Phase 2): Tier 0"
+requires-python = "==3.11.*"
+# The versions the reversed-note final analysis was reviewed and run under (requirements_review.txt). They are
+# exact: a newer numpy/pandas/scipy changes whether Gemma's primary mixed model converges (see ENVIRONMENT.md).
+dependencies = [
+    "numpy==2.4.6",
+    "pandas==2.3.3",
+    "patsy==1.0.3",
+    "scipy==1.17.1",
+    "statsmodels==0.15.0",
+    "matplotlib==3.11.2",
+]
+
+[dependency-groups]
+test = ["pytest==9.1.1"]
+
+[tool.uv]
+package = false

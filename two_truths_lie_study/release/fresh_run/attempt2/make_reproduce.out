@@ -1,0 +1,33 @@
+release/.venv/bin/python release/tier0/reproduce.py --work build/tier0 --perm-chunks 1
+environment: {'python': '3.11.15', 'numpy': '2.4.6', 'pandas': '2.3.3', 'patsy': '1.0.3', 'scipy': '1.17.1', 'statsmodels': '0.15.0', 'matplotlib': '3.11.2'}
+work tree /tmp/claude-0/-home-user-edsl-wwil/4699dee8-10e0-5f40-a807-efe82da6461d/scratchpad/fresh_run/edsl_wwil/two_truths_lie_study/build/tier0/two_truths_lie_study ready in 6 s (15 record files decompressed)
+[ok] s1.final                      16.5 s  final_report.json: identical, final_report.md: identical
+[ok] s1.gpt5                        1.9 s  gpt5_same_units.json: identical
+[ok] rv.final                     568.5 s  final_report.json: identical, final_report.md: identical
+[ok] rv.perm_chunk                896.8 s  
+[ok] rv.perm                        7.3 s  perm_check.json: identical
+[ok] rv.posthoc_comp                3.7 s  posthoc_comprehension_parsed.json: identical
+[ok] rv.posthoc_google             24.2 s  posthoc_google_testB.json: equal; only the recorded environment differs (/environment/python 3.11.17 -> 3.11.15), posthoc_google_testB.md: identical
+[ok] p2.identity                    5.1 s  behavioral_result.json: equal; current code adds variant (950e8a7 added --variant after this result (2c8111c) was written)
+[ok] p2.identity_novita             4.3 s  behavioral_result_novita.json: identical
+[ok] p2.route                       1.1 s  regrade_direct.json: identical
+[ok] p2.pilot.llama-3.1-8b-instruct     0.5 s  pilot_result.json: identical, PILOT.md: identical
+[ok] p2.pilot.gemma-3-27b-it        0.6 s  pilot_result.json: identical, PILOT.md: identical
+[ok] p2.pilot2.llama-3.1-8b-instruct     0.5 s  pilot2_result.json: identical, PILOT2.md: identical
+[ok] p2.pilot2.gemma-3-27b-it       0.6 s  pilot2_result.json: identical, PILOT2.md: identical
+[ok] p2.alphas                      0.0 s  confirmatory_alphas.json: identical
+[ok] p2.mc.llama-3.1-8b-instruct     0.2 s  mc_precheck.json: identical, MC_PRECHECK.md: identical
+[ok] p2.mc.gemma-3-27b-it           0.3 s  mc_precheck.json: identical, MC_PRECHECK.md: identical
+[ok] p2.coherence                   1.4 s  coherence.json: equal; current code adds n_complete, generation_failed (Addendum 8 (f4a70a7) added these counts after this file (8e66e71) was written; 0 failures), grading_summary.json: identical, coherence.json: equal; current code adds n_complete, generation_failed (Addendum 8 (f4a70a7) added these counts after this file (8e66e71) was written; 0 failures), grading_summary.json: identical
+[ok] p2.permcheck                  16.2 s  permutation_check.json: identical
+[ok] p2.analyse                    17.0 s  stage2_result.json: identical, STAGE2.md: identical
+[ok] w.levels                       6.5 s  levels.json: identical
+[ok] w.build                        2.8 s  METHODS.md: identical, FINDINGS.md: identical, FIGURES.md: identical, CLAIMS_MANIFEST.csv: identical, fig1_study1_lift.png: identical, fig2_reversed_levels.png: identical, fig3_steering_levels.png: identical, fig4_method_check.png: identical
+[ok] w.check                        6.9 s  
+
+PASS: Tier 0 in 1589 s; rebuilt {'identical': 37, 'numerically equal': 0, 'equal': 4, 'DIFFERENT': 0, 'MISSING': 0}; report: /tmp/claude-0/-home-user-edsl-wwil/4699dee8-10e0-5f40-a807-efe82da6461d/scratchpad/fresh_run/edsl_wwil/two_truths_lie_study/build/tier0/two_truths_lie_study/release/TIER0_REPORT.md
+
+real	26m29.346s
+user	68m0.360s
+sys	0m20.206s
+EXIT=0

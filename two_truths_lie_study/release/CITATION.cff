@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use this release or its dataset, please cite it as below."
+title: "The Perfect Lie: data, code and reproduction package (study 1, reversed note, Phase 2)"
+type: dataset
+version: "1.0.0"
+authors:
+  - name: "OWNER: author name(s)"
+repository-code: "https://github.com/RandallSPQR/edsl_wwil"
+identifiers:
+  - type: doi
+    value: "OWNER: Zenodo DOI after minting"
+keywords: [deception, persuasion, theory of mind, language models, pre-registration, activation steering]
+license: "OWNER: licence for the study materials; model outputs under the terms in the dataset card"

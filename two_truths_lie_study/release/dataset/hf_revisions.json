@@ -1,0 +1,21 @@
+{
+ "retrieved": "2026-10-29T16:39Z",
+ "models": {
+  "google/gemma-3-27b-it": {
+   "revision": "005ad3404e59d6023443cb575daa05336842228a",
+   "main_last_modified": "2025-03-21T20:29:02.000Z",
+   "gated": "manual",
+   "license": "gemma",
+   "used_for": "Gemma 3 27B IT: identity check, probe, pilot, stage 2 (bf16)"
+  },
+  "meta-llama/Llama-3.1-8B-Instruct": {
+   "revision": "0e9e39f249a16976918f6564b8830bc894c89659",
+   "main_last_modified": "2024-09-25T17:00:57.000Z",
+   "gated": "manual",
+   "license": "llama3.1",
+   "used_for": "Llama 3.1 8B Instruct: identity check, probe, pilot, stage 2 (bf16)"
+  }
+ },
+ "evidence": "The pods loaded each model by repository id from a Hugging Face cache on the RunPod network volume (transformers 4.53.2, revision 'main'); the snapshot revision was not logged at load time. Each repository's main branch was last modified before the first Phase 2 pod run (2026-10-20), so the revision loaded is main's revision above. Confirm against the cache's snapshot directory name (hub/models--<org>--<name>/snapshots/<revision>) when the volume is next mounted (release/tiers/tier3_fetch_volume.sh).",
+ "load": "transformers AutoModelForCausalLM / Gemma3ForConditionalGeneration .from_pretrained(repo, revision=<revision>, torch_dtype=torch.bfloat16)"
+}

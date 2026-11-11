@@ -1,0 +1,9 @@
+# probe_primary.py: (method, B, bit-identical to the released final_report.json)
+3.11.17 threads 1 2.4.6 2.3.3 1.17.1 0.15.0 {'llama-': ('per-category t-test (fallback)', 0.24641, True), 'gemma-': ('per-category t-test (fallback)', 0.42951, True), 'gpt-4o': ('per-category t-test (fallback)', 0.39062, True), 'gemini': ('per-category t-test (fallback)', 0.34815, True)}
+3.11.17 threads 4 2.4.6 2.3.3 1.17.1 0.15.0 {'llama-': ('per-category t-test (fallback)', 0.24641, True), 'gemma-': ('per-category t-test (fallback)', 0.42951, True), 'gpt-4o': ('per-category t-test (fallback)', 0.39062, True), 'gemini': ('per-category t-test (fallback)', 0.34815, True)}
+3.13.16 threads 1 2.5.3 3.0.5 1.18.1 0.15.0 {'llama-': ('per-category t-test (fallback)', 0.24641, True), 'gemma-': ('mixed model', 0.43126, False), 'gpt-4o': ('per-category t-test (fallback)', 0.39062, True), 'gemini': ('per-category t-test (fallback)', 0.34815, True)}
+3.13.16 threads 4 2.5.3 3.0.5 1.18.1 0.15.0 {'llama-': ('per-category t-test (fallback)', 0.24641, True), 'gemma-': ('mixed model', 0.43126, False), 'gpt-4o': ('per-category t-test (fallback)', 0.39062, True), 'gemini': ('per-category t-test (fallback)', 0.34815, True)}
+
+# probe_m1.py: threads, versions | (converged here, B bit-identical, converged in the release)
+1 2.4.6 2.3.3 1.17.1 0.15.0 | (converged, B bit-equal, released converged): {'llama-': (False, True, False), 'gemma-': (True, True, True), 'gpt-4o': (True, True, True), 'gemini': (False, True, False)}
+4 2.4.6 2.3.3 1.17.1 0.15.0 | (converged, B bit-equal, released converged): {'llama-': (False, False, False), 'gemma-': (False, False, True), 'gpt-4o': (False, False, True), 'gemini': (True, False, False)}
