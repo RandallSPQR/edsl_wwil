@@ -95,7 +95,7 @@ two_truths_lie_study/
     dataset/                    build_dataset.py, DATASET_CARD.md, hf_revisions.json
     environment_evidence/       the version and thread probes behind ENVIRONMENT.md
     fresh_run/                  independent Tier 0 runs on fresh clones by a README-only agent (logs, reports)
-    ARCHIVE.md                  GitHub tag, Hugging Face dataset, Zenodo DOI, OSF links
+    ARCHIVE.md                  GitHub release, Hugging Face dataset, Zenodo DOI, registration record
     CITATION.cff
 ```
 

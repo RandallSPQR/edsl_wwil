@@ -7,7 +7,7 @@ Numbers in this section are design constants quoted from the registrations or co
 A liar model writes a story to persuade a judge model. The public prompt is identical in every condition; only a private note given to the liar differs between conditions.
 The note describes what one target persona (`P1`, `P2`, `P3`, `P5` or `P6`) finds convincing, as beliefs naming cues from the frozen cue list (rubric v0.6).
 The outcome s of a lie is the share of the target's scorable cues that the primary grader (Claude Sonnet 4.5) marks present in the story. Scorable cues exclude heatmap-only cues and cues removed by a per-cue agreement gate between the primary grader and a second grader (gemini-2.5-flash).
-Each study was registered on OSF before its data were collected. Changes were made by dated addenda. Analysis code was validated on simulated data, reviewed and hashed before unblinding, and each study ran a blinded permutation check before unblinding.
+Each study was registered before its data were collected, as the dated GitHub release of its registration tag (the registration texts call this the OSF post). Changes were made by dated addenda. Analysis code was validated on simulated data, reviewed and hashed before unblinding, and each study ran a blinded permutation check before unblinding.
 
 ## Study 1: full versus placebo note
 

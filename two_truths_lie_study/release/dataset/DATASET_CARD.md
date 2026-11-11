@@ -14,7 +14,7 @@ size_categories: [10K<n<100K]
 Lies written by language models for a storytelling game, each told to persuade a judge whose private beliefs about
 what makes a story convincing were (or were not) disclosed to the liar; the cue annotations of every lie; the judges'
 verdicts; and, for two open-weight liars, the activation directions and steering runs of Phase 2. Three
-pre-registered studies (OSF; see `ARCHIVE.md` in the release): study 1 (full versus placebo note), the reversed-note
+pre-registered studies (each registered as a dated GitHub release; see `ARCHIVE.md` in the release): study 1 (full versus placebo note), the reversed-note
 study (full versus reversed note), and Phase 2 (activation probe and steering).
 
 > **Fabricated-content notice.** Every story in this dataset is a deliberate lie, written to be believed. Many

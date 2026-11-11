@@ -72,11 +72,11 @@ each fail it.
 
 ## Study 1 addendum numbering
 
-The study 1 OSF addenda are not stored as separate files. The texts cite them with their entries in `PERFECT_LIE.md`:
+The study 1 addenda are not stored as separate files. The texts cite them with their entries in `PERFECT_LIE.md`:
 
 - Addendum 1: log item 29;
 - Addendum 2: log item 30 (transport retry);
 - Addendum 3: log items 32-34.
 
-`final_report.md` names Addenda 1 and 3 explicitly. The mapping of Addendum 2 to item 30 should be confirmed by the
-owner against the OSF record.
+`final_report.md` names Addenda 1 and 3 explicitly. The mapping of Addendum 2 to item 30 follows the
+log's order and dates (`release/ARCHIVE.md`, section 4).
