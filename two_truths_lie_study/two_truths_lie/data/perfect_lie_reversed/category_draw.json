@@ -1,0 +1,510 @@
+{
+ "seed": 20261010,
+ "pool_size": 134,
+ "excluded": {
+  "advertising": [
+   "N2",
+   "a kind of business activity"
+  ],
+  "aerospace": [
+   "N1",
+   "aviation"
+  ],
+  "anthropology": [
+   "N3",
+   "branch: culture"
+  ],
+  "archaeology": [
+   "N3",
+   "branch: history"
+  ],
+  "archives": [
+   "E2",
+   "document_citation"
+  ],
+  "automobiles": [
+   "N2",
+   "transportation"
+  ],
+  "baking": [
+   "N2",
+   "food"
+  ],
+  "banking": [
+   "E3",
+   "finance"
+  ],
+  "beekeeping": [
+   "N2",
+   "agriculture (apiculture)"
+  ],
+  "birds": [
+   "N2",
+   "animals"
+  ],
+  "board games": [
+   "N2",
+   "games"
+  ],
+  "botany": [
+   "N3",
+   "branch: biology"
+  ],
+  "bridges": [
+   "N2",
+   "architecture (structures)"
+  ],
+  "castles": [
+   "N2",
+   "architecture"
+  ],
+  "ceramics": [
+   "N2",
+   "art (visual art form)"
+  ],
+  "chemistry": [
+   "N3",
+   "branch: science"
+  ],
+  "chess": [
+   "N2",
+   "games"
+  ],
+  "chocolate": [
+   "N2",
+   "food"
+  ],
+  "climate": [
+   "N1",
+   "weather"
+  ],
+  "coffee": [
+   "N2",
+   "food (drink)"
+  ],
+  "comedy": [
+   "E2",
+   "humor"
+  ],
+  "computers": [
+   "N3",
+   "branch: technology (computing)"
+  ],
+  "cooking": [
+   "N2",
+   "food"
+  ],
+  "crime": [
+   "E3",
+   "crime"
+  ],
+  "cryptography": [
+   "N2",
+   "mathematics"
+  ],
+  "dinosaurs": [
+   "N2",
+   "animals"
+  ],
+  "diving": [
+   "N2",
+   "sports"
+  ],
+  "economics": [
+   "N1",
+   "business"
+  ],
+  "engineering": [
+   "N3",
+   "branch: technology"
+  ],
+  "genealogy": [
+   "E2",
+   "family_provenance"
+  ],
+  "genetics": [
+   "N3",
+   "branch: biology"
+  ],
+  "geology": [
+   "N3",
+   "branch: science"
+  ],
+  "health": [
+   "E3",
+   "health"
+  ],
+  "horses": [
+   "N2",
+   "animals"
+  ],
+  "insects": [
+   "N2",
+   "animals"
+  ],
+  "jewelry": [
+   "N2",
+   "fashion"
+  ],
+  "journalism": [
+   "E2",
+   "document_citation, direct_quotation"
+  ],
+  "law": [
+   "E2",
+   "official_failure; E3 legal claims"
+  ],
+  "libraries": [
+   "E2",
+   "document_citation"
+  ],
+  "medicine": [
+   "E3",
+   "health"
+  ],
+  "meteorites": [
+   "N2",
+   "astronomy"
+  ],
+  "military": [
+   "E3",
+   "military"
+  ],
+  "museums": [
+   "E2",
+   "institutional_authority"
+  ],
+  "newspapers": [
+   "E2",
+   "document_citation"
+  ],
+  "nutrition": [
+   "E3",
+   "health"
+  ],
+  "opera": [
+   "N2",
+   "music"
+  ],
+  "painting": [
+   "N2",
+   "art"
+  ],
+  "paleontology": [
+   "N3",
+   "branch: biology"
+  ],
+  "photography": [
+   "N2",
+   "art (visual art form)"
+  ],
+  "physics": [
+   "N3",
+   "branch: science"
+  ],
+  "poetry": [
+   "N2",
+   "literature"
+  ],
+  "politics": [
+   "E3",
+   "politics"
+  ],
+  "psychology": [
+   "E3",
+   "mental health"
+  ],
+  "puzzles": [
+   "N2",
+   "games"
+  ],
+  "railways": [
+   "N2",
+   "transportation"
+  ],
+  "religion": [
+   "E3",
+   "religion"
+  ],
+  "sculpture": [
+   "N2",
+   "art"
+  ],
+  "space": [
+   "N1",
+   "astronomy"
+  ],
+  "spices": [
+   "N2",
+   "food"
+  ],
+  "textiles": [
+   "N2",
+   "fashion"
+  ],
+  "tunnels": [
+   "N2",
+   "architecture (structures)"
+  ],
+  "wine": [
+   "N2",
+   "food (drink)"
+  ]
+ },
+ "eligible": [
+  "astrology",
+  "ballet",
+  "bells",
+  "calendars",
+  "camping",
+  "candles",
+  "caves",
+  "cemeteries",
+  "circus",
+  "clocks",
+  "comics",
+  "crafts",
+  "currency",
+  "dance",
+  "deserts",
+  "dolls",
+  "education",
+  "electricity",
+  "etiquette",
+  "festivals",
+  "fireworks",
+  "fishing",
+  "flowers",
+  "folklore",
+  "forests",
+  "fossils",
+  "fountains",
+  "furniture",
+  "gardening",
+  "gemstones",
+  "glass",
+  "gold",
+  "holidays",
+  "hotels",
+  "ice",
+  "islands",
+  "kites",
+  "knots",
+  "lakes",
+  "lighthouses",
+  "magic",
+  "mail",
+  "maps",
+  "mining",
+  "mirrors",
+  "mountains",
+  "mythology",
+  "navigation",
+  "parks",
+  "perfume",
+  "philosophy",
+  "pirates",
+  "plants",
+  "printing",
+  "puppets",
+  "radio",
+  "rivers",
+  "royalty",
+  "salt",
+  "sand",
+  "shipwrecks",
+  "soap",
+  "stamps",
+  "telephones",
+  "television",
+  "theater",
+  "toys",
+  "trees",
+  "typography",
+  "umbrellas",
+  "volcanoes",
+  "zoos"
+ ],
+ "shuffled_order": [
+  "soap",
+  "camping",
+  "education",
+  "fishing",
+  "cemeteries",
+  "dolls",
+  "radio",
+  "television",
+  "printing",
+  "perfume",
+  "knots",
+  "deserts",
+  "islands",
+  "ice",
+  "gold",
+  "hotels",
+  "clocks",
+  "navigation",
+  "plants",
+  "bells",
+  "trees",
+  "mining",
+  "lighthouses",
+  "dance",
+  "fountains",
+  "ballet",
+  "glass",
+  "royalty",
+  "mythology",
+  "folklore",
+  "furniture",
+  "circus",
+  "forests",
+  "rivers",
+  "stamps",
+  "zoos",
+  "salt",
+  "puppets",
+  "electricity",
+  "theater",
+  "calendars",
+  "umbrellas",
+  "caves",
+  "festivals",
+  "toys",
+  "flowers",
+  "currency",
+  "sand",
+  "lakes",
+  "gardening",
+  "fireworks",
+  "etiquette",
+  "telephones",
+  "kites",
+  "philosophy",
+  "astrology",
+  "volcanoes",
+  "parks",
+  "fossils",
+  "comics",
+  "crafts",
+  "shipwrecks",
+  "magic",
+  "typography",
+  "mountains",
+  "mail",
+  "pirates",
+  "maps",
+  "holidays",
+  "candles",
+  "gemstones",
+  "mirrors"
+ ],
+ "skipped_within_pool": [
+  {
+   "word": "trees",
+   "near_duplicate_of": "plants"
+  },
+  {
+   "word": "ballet",
+   "near_duplicate_of": "dance"
+  },
+  {
+   "word": "folklore",
+   "near_duplicate_of": "mythology"
+  },
+  {
+   "word": "theater",
+   "near_duplicate_of": "puppets"
+  },
+  {
+   "word": "toys",
+   "near_duplicate_of": "dolls"
+  },
+  {
+   "word": "flowers",
+   "near_duplicate_of": "plants"
+  },
+  {
+   "word": "telephones",
+   "near_duplicate_of": "radio"
+  },
+  {
+   "word": "typography",
+   "near_duplicate_of": "printing"
+  },
+  {
+   "word": "holidays",
+   "near_duplicate_of": "festivals"
+  },
+  {
+   "word": "gemstones",
+   "near_duplicate_of": "gold"
+  }
+ ],
+ "new_48": [
+  "soap",
+  "camping",
+  "education",
+  "fishing",
+  "cemeteries",
+  "dolls",
+  "radio",
+  "television",
+  "printing",
+  "perfume",
+  "knots",
+  "deserts",
+  "islands",
+  "ice",
+  "gold",
+  "hotels",
+  "clocks",
+  "navigation",
+  "plants",
+  "bells",
+  "mining",
+  "lighthouses",
+  "dance",
+  "fountains",
+  "glass",
+  "royalty",
+  "mythology",
+  "furniture",
+  "circus",
+  "forests",
+  "rivers",
+  "stamps",
+  "zoos",
+  "salt",
+  "puppets",
+  "electricity",
+  "calendars",
+  "umbrellas",
+  "caves",
+  "festivals",
+  "currency",
+  "sand",
+  "lakes",
+  "gardening",
+  "fireworks",
+  "etiquette",
+  "kites",
+  "philosophy"
+ ],
+ "reserves_in_order": [
+  "astrology",
+  "volcanoes",
+  "parks",
+  "fossils",
+  "comics",
+  "crafts",
+  "shipwrecks",
+  "magic",
+  "mountains",
+  "mail",
+  "pirates",
+  "maps",
+  "candles",
+  "mirrors"
+ ]
+}

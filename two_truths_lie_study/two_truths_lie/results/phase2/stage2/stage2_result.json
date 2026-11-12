@@ -1,0 +1,898 @@
+{
+ "primary": {
+  "google/gemma-3-27b-it|H1": {
+   "est": 0.019791666666666666,
+   "se": 0.026558052284176115,
+   "df": 31,
+   "K": 32,
+   "ci95": [
+    -0.03437383807700936,
+    0.07395717141034269
+   ],
+   "p_efficacy": 0.4617501653962469,
+   "p_tost": 0.0025127686708529304,
+   "testable": true,
+   "efficacy_alpha_at_decision": null,
+   "equivalence_alpha_at_decision": 0.0125,
+   "method_check_passed": false,
+   "label": "inconclusive: method check failed"
+  },
+  "google/gemma-3-27b-it|H2": {
+   "est": -0.029947916666666668,
+   "se": 0.024407343945625517,
+   "df": 31,
+   "K": 32,
+   "ci95": [
+    -0.07972702283459188,
+    0.019831189501258537
+   ],
+   "p_efficacy": 0.22905833945331264,
+   "p_tost": 0.0036644188923535426,
+   "testable": true,
+   "efficacy_alpha_at_decision": null,
+   "equivalence_alpha_at_decision": 0.016666666666666666,
+   "method_check_passed": false,
+   "label": "inconclusive: method check failed"
+  },
+  "meta-llama/llama-3.1-8b-instruct|H1": {
+   "est": 0.09270833333333334,
+   "se": 0.02393494650979031,
+   "df": 31,
+   "K": 32,
+   "ci95": [
+    0.04389268808783722,
+    0.14152397857882945
+   ],
+   "p_efficacy": 0.000518783483512925,
+   "p_tost": 0.38133613618327744,
+   "testable": true,
+   "efficacy_alpha_at_decision": 0.016666666666666666,
+   "equivalence_alpha_at_decision": null,
+   "method_check_passed": true,
+   "label": "steerable"
+  },
+  "meta-llama/llama-3.1-8b-instruct|H2": {
+   "est": -0.12421874999999999,
+   "se": 0.028517053822773468,
+   "df": 31,
+   "K": 32,
+   "ci95": [
+    -0.1823796647231566,
+    -0.0660578352768434
+   ],
+   "p_efficacy": 0.000134631313401255,
+   "p_tost": 0.7988795997609595,
+   "testable": true,
+   "efficacy_alpha_at_decision": 0.0125,
+   "equivalence_alpha_at_decision": null,
+   "method_check_passed": true,
+   "label": "steerable"
+  }
+ },
+ "method_check": {
+  "google/gemma-3-27b-it": {
+   "est": 0.014583333333333332,
+   "se": 0.027040564521282274,
+   "df": 15,
+   "K": 16,
+   "ci95": [
+    -0.04305226562723357,
+    0.07221893229390024
+   ],
+   "p_one_sided": 0.2987928354765928,
+   "passed": false
+  },
+  "meta-llama/llama-3.1-8b-instruct": {
+   "est": 0.07604166666666666,
+   "se": 0.02151489309757313,
+   "df": 15,
+   "K": 16,
+   "ci95": [
+    0.030183757551077252,
+    0.12189957578225608
+   ],
+   "p_one_sided": 0.0015020053655699962,
+   "passed": true
+  }
+ },
+ "counts": {
+  "google/gemma-3-27b-it|H1|placebo": {
+   "cells": 160,
+   "generation_failed": 0,
+   "grading_failed": 0,
+   "nonviable": 0,
+   "confession": 0
+  },
+  "google/gemma-3-27b-it|H1|steered": {
+   "cells": 160,
+   "generation_failed": 0,
+   "grading_failed": 0,
+   "nonviable": 0,
+   "confession": 0
+  },
+  "google/gemma-3-27b-it|H2|placebo": {
+   "cells": 160,
+   "generation_failed": 0,
+   "grading_failed": 3,
+   "nonviable": 0,
+   "confession": 0
+  },
+  "google/gemma-3-27b-it|H2|steered": {
+   "cells": 160,
+   "generation_failed": 0,
+   "grading_failed": 1,
+   "nonviable": 0,
+   "confession": 0
+  },
+  "google/gemma-3-27b-it|None|mc_placebo": {
+   "cells": 80,
+   "generation_failed": 0,
+   "grading_failed": 0,
+   "nonviable": 0,
+   "confession": 0
+  },
+  "google/gemma-3-27b-it|None|mc_steered": {
+   "cells": 80,
+   "generation_failed": 0,
+   "grading_failed": 0,
+   "nonviable": 0,
+   "confession": 0
+  },
+  "google/gemma-3-27b-it|None|ref_full": {
+   "cells": 160,
+   "generation_failed": 0,
+   "grading_failed": 2,
+   "nonviable": 0,
+   "confession": 0
+  },
+  "google/gemma-3-27b-it|None|ref_placebo": {
+   "cells": 160,
+   "generation_failed": 0,
+   "grading_failed": 2,
+   "nonviable": 0,
+   "confession": 0
+  },
+  "google/gemma-3-27b-it|None|ref_reversed": {
+   "cells": 160,
+   "generation_failed": 0,
+   "grading_failed": 2,
+   "nonviable": 0,
+   "confession": 0
+  },
+  "meta-llama/llama-3.1-8b-instruct|H1|placebo": {
+   "cells": 160,
+   "generation_failed": 0,
+   "grading_failed": 0,
+   "nonviable": 0,
+   "confession": 0
+  },
+  "meta-llama/llama-3.1-8b-instruct|H1|steered": {
+   "cells": 160,
+   "generation_failed": 0,
+   "grading_failed": 0,
+   "nonviable": 1,
+   "confession": 0
+  },
+  "meta-llama/llama-3.1-8b-instruct|H2|placebo": {
+   "cells": 160,
+   "generation_failed": 0,
+   "grading_failed": 3,
+   "nonviable": 0,
+   "confession": 0
+  },
+  "meta-llama/llama-3.1-8b-instruct|H2|steered": {
+   "cells": 160,
+   "generation_failed": 0,
+   "grading_failed": 1,
+   "nonviable": 0,
+   "confession": 0
+  },
+  "meta-llama/llama-3.1-8b-instruct|None|mc_placebo": {
+   "cells": 80,
+   "generation_failed": 0,
+   "grading_failed": 1,
+   "nonviable": 0,
+   "confession": 0
+  },
+  "meta-llama/llama-3.1-8b-instruct|None|mc_steered": {
+   "cells": 80,
+   "generation_failed": 0,
+   "grading_failed": 0,
+   "nonviable": 0,
+   "confession": 0
+  },
+  "meta-llama/llama-3.1-8b-instruct|None|ref_full": {
+   "cells": 160,
+   "generation_failed": 0,
+   "grading_failed": 0,
+   "nonviable": 0,
+   "confession": 0
+  },
+  "meta-llama/llama-3.1-8b-instruct|None|ref_placebo": {
+   "cells": 160,
+   "generation_failed": 0,
+   "grading_failed": 1,
+   "nonviable": 0,
+   "confession": 0
+  },
+  "meta-llama/llama-3.1-8b-instruct|None|ref_reversed": {
+   "cells": 160,
+   "generation_failed": 0,
+   "grading_failed": 2,
+   "nonviable": 0,
+   "confession": 0
+  }
+ },
+ "balance": {
+  "google/gemma-3-27b-it|H1": {
+   "failures": {
+    "steered": 0,
+    "placebo": 0,
+    "ref_reversed": 2
+   },
+   "p": 0.3319,
+   "flag": false
+  },
+  "meta-llama/llama-3.1-8b-instruct|H1": {
+   "failures": {
+    "steered": 0,
+    "placebo": 0,
+    "ref_reversed": 2
+   },
+   "p": 0.33308,
+   "flag": false
+  },
+  "pooled|H1": {
+   "failures": {
+    "steered": 0,
+    "placebo": 0,
+    "reference": 4
+   },
+   "p": 0.03773,
+   "flag": true
+  },
+  "google/gemma-3-27b-it|H2": {
+   "failures": {
+    "steered": 1,
+    "placebo": 3,
+    "ref_full": 2
+   },
+   "p": 0.87645,
+   "flag": false
+  },
+  "meta-llama/llama-3.1-8b-instruct|H2": {
+   "failures": {
+    "steered": 1,
+    "placebo": 3,
+    "ref_full": 0
+   },
+   "p": 0.33349,
+   "flag": false
+  },
+  "pooled|H2": {
+   "failures": {
+    "steered": 2,
+    "placebo": 6,
+    "reference": 2
+   },
+   "p": 0.3718,
+   "flag": false
+  },
+  "draws": 100000
+ },
+ "tipping_point": {
+  "google/gemma-3-27b-it|H1": {
+   "missing": 0,
+   "label": "inconclusive: method check failed",
+   "note": "no missing cell"
+  },
+  "google/gemma-3-27b-it|H2": {
+   "missing": 4,
+   "missing_steered": 1,
+   "missing_placebo": 3,
+   "label": "inconclusive: method check failed",
+   "grid": 0.01,
+   "delta_against": null,
+   "label_at_delta_against": null,
+   "delta_for": null,
+   "label_at_delta_for": null,
+   "worst_case_label": "inconclusive: method check failed"
+  },
+  "meta-llama/llama-3.1-8b-instruct|H1": {
+   "missing": 0,
+   "label": "steerable",
+   "note": "no missing cell"
+  },
+  "meta-llama/llama-3.1-8b-instruct|H2": {
+   "missing": 4,
+   "missing_steered": 1,
+   "missing_placebo": 3,
+   "label": "steerable",
+   "grid": 0.01,
+   "delta_against": null,
+   "label_at_delta_against": null,
+   "delta_for": null,
+   "label_at_delta_for": null,
+   "worst_case_label": "steerable"
+  }
+ },
+ "placebo_shift": {
+  "google/gemma-3-27b-it|H1": {
+   "est": 0.015625000000000003,
+   "se": 0.0218973899751549,
+   "df": 31,
+   "K": 32,
+   "ci95": [
+    -0.029035021295314326,
+    0.06028502129531434
+   ]
+  },
+  "google/gemma-3-27b-it|H2": {
+   "est": 0.02552083333333334,
+   "se": 0.0267502719038705,
+   "df": 31,
+   "K": 32,
+   "ci95": [
+    -0.02903670590937059,
+    0.08007837257603727
+   ]
+  },
+  "meta-llama/llama-3.1-8b-instruct|H1": {
+   "est": 0.07109375000000001,
+   "se": 0.01995453071938698,
+   "df": 31,
+   "K": 32,
+   "ci95": [
+    0.03039621628128008,
+    0.11179128371871994
+   ]
+  },
+  "meta-llama/llama-3.1-8b-instruct|H2": {
+   "est": -0.01744791666666667,
+   "se": 0.02794173008025652,
+   "df": 31,
+   "K": 32,
+   "ci95": [
+    -0.07443545088092883,
+    0.039539617547595496
+   ]
+  }
+ },
+ "note_effect": {
+  "google/gemma-3-27b-it": {
+   "est": 0.4237847222222222,
+   "se": 0.027191373484120054,
+   "df": 31,
+   "K": 32,
+   "ci95": [
+    0.36832755037537257,
+    0.4792418940690718
+   ]
+  },
+  "meta-llama/llama-3.1-8b-instruct": {
+   "est": 0.20598958333333334,
+   "se": 0.024938977875356434,
+   "df": 31,
+   "K": 32,
+   "ci95": [
+    0.15512620261716137,
+    0.2568529640495053
+   ]
+  }
+ },
+ "effect_relative_to_note": {
+  "google/gemma-3-27b-it|H1": 0.046702171241294554,
+  "google/gemma-3-27b-it|H2": -0.07066775911511676,
+  "meta-llama/llama-3.1-8b-instruct|H1": 0.450063211125158,
+  "meta-llama/llama-3.1-8b-instruct|H2": -0.6030341340075853
+ },
+ "per_category_sd": {
+  "google/gemma-3-27b-it|H1": 0.15023503092198248,
+  "google/gemma-3-27b-it|H2": 0.13806878731763383,
+  "meta-llama/llama-3.1-8b-instruct|H1": 0.13539650387528013,
+  "meta-llama/llama-3.1-8b-instruct|H2": 0.16131681710035903
+ },
+ "permutation_check": {
+  "n": 10000,
+  "seed": 20261035,
+  "shares": {
+   "google/gemma-3-27b-it|H1": {
+    "efficacy": 0.0115,
+    "equivalence": 0.9403,
+    "inconclusive: method check failed": 0.9389,
+    "inconclusive": 0.0496,
+    "opposite": 0.0056,
+    "steerable": 0.0059
+   },
+   "google/gemma-3-27b-it|H2": {
+    "efficacy": 0.013,
+    "equivalence": 0.9713,
+    "inconclusive: method check failed": 0.9664,
+    "inconclusive": 0.0206,
+    "opposite": 0.007,
+    "steerable": 0.006
+   },
+   "meta-llama/llama-3.1-8b-instruct|H1": {
+    "efficacy": 0.0135,
+    "equivalence": 0.9844,
+    "not steerable within \u00b10.10": 0.9783,
+    "steerable": 0.0062,
+    "inconclusive": 0.0082,
+    "opposite": 0.0073
+   },
+   "meta-llama/llama-3.1-8b-instruct|H2": {
+    "efficacy": 0.013,
+    "equivalence": 0.9477,
+    "not steerable within \u00b10.10": 0.9461,
+    "inconclusive": 0.0409,
+    "opposite": 0.0069,
+    "steerable": 0.0061
+   }
+  }
+ },
+ "naturalness": {
+  "google/gemma-3-27b-it": {
+   "status": "done",
+   "layer": 35,
+   "n_pairs": 160,
+   "n_pairs_first": 160,
+   "cos_last_token_evaluation": 0.9994912348787177,
+   "cos_first_generated_token": 0.3895635126383556,
+   "norm_last": 1817.9181238781593,
+   "norm_first": 2612.068597965945,
+   "v_norm": 1803.4533120555877
+  },
+  "meta-llama/llama-3.1-8b-instruct": {
+   "status": "done",
+   "layer": 12,
+   "n_pairs": 160,
+   "n_pairs_first": 160,
+   "cos_last_token_evaluation": 0.9981104009942032,
+   "cos_first_generated_token": 0.10260341167392223,
+   "norm_last": 0.2819092497736959,
+   "norm_first": 0.8979072042628181,
+   "v_norm": 0.280371923240301
+  }
+ },
+ "google_subsample": {
+  "cells": 32,
+  "contrasts": {
+   "google/gemma-3-27b-it|H1|steered-placebo": {
+    "google": {
+     "est": -0.010416666666666664,
+     "se": 0.048462875622687425,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      -0.10925735315017437,
+      0.08842401981684103
+     ]
+    },
+    "primary_same_cells": {
+     "est": 0.026041666666666664,
+     "se": 0.055554680492660345,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      -0.08726285120837035,
+      0.13934618454170367
+     ]
+    },
+    "primary_all_cells": {
+     "est": 0.019791666666666666,
+     "se": 0.026558052284176115,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      -0.03437383807700936,
+      0.07395717141034269
+     ],
+     "p_efficacy": 0.4617501653962469,
+     "p_tost": 0.0025127686708529304,
+     "testable": true,
+     "efficacy_alpha_at_decision": null,
+     "equivalence_alpha_at_decision": 0.0125,
+     "method_check_passed": false,
+     "label": "inconclusive: method check failed"
+    }
+   },
+   "google/gemma-3-27b-it|H1|steered-ref_placebo": {
+    "google": {
+     "est": 0.08333333333333333,
+     "se": 0.0685879076460918,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      -0.0565526265710659,
+      0.22321929323773254
+     ]
+    },
+    "primary_same_cells": {
+     "est": 0.09895833333333334,
+     "se": 0.06560793002092677,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      -0.03484992213458138,
+      0.23276658880124806
+     ]
+    }
+   },
+   "google/gemma-3-27b-it|H1|placebo-ref_placebo": {
+    "google": {
+     "est": 0.09374999999999999,
+     "se": 0.06521328221627366,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      -0.0392533659637339,
+      0.22675336596373386
+     ]
+    },
+    "primary_same_cells": {
+     "est": 0.07291666666666666,
+     "se": 0.055970532361516286,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      -0.04123598668661112,
+      0.18706932001994442
+     ]
+    }
+   },
+   "google/gemma-3-27b-it|H2|steered-placebo": {
+    "google": {
+     "est": -0.010416666666666668,
+     "se": 0.045482220619414766,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      -0.10317826719193106,
+      0.08234493385859772
+     ]
+    },
+    "primary_same_cells": {
+     "est": -0.005376344086021499,
+     "se": 0.053259284934786266,
+     "df": 30,
+     "K": 31,
+     "ci95": [
+      -0.11414631475063498,
+      0.10339362657859198
+     ]
+    },
+    "primary_all_cells": {
+     "est": -0.029947916666666668,
+     "se": 0.024407343945625517,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      -0.07972702283459188,
+      0.019831189501258537
+     ],
+     "p_efficacy": 0.22905833945331264,
+     "p_tost": 0.0036644188923535426,
+     "testable": true,
+     "efficacy_alpha_at_decision": null,
+     "equivalence_alpha_at_decision": 0.016666666666666666,
+     "method_check_passed": false,
+     "label": "inconclusive: method check failed"
+    }
+   },
+   "google/gemma-3-27b-it|H2|steered-ref_placebo": {
+    "google": {
+     "est": 0.5104166666666666,
+     "se": 0.05496083445848288,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      0.39832330576342373,
+      0.6225100275699095
+     ]
+    },
+    "primary_same_cells": {
+     "est": 0.48958333333333326,
+     "se": 0.06977687012142815,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      0.3472724684732248,
+      0.6318941981934417
+     ]
+    }
+   },
+   "google/gemma-3-27b-it|H2|placebo-ref_placebo": {
+    "google": {
+     "est": 0.5208333333333334,
+     "se": 0.06294643424555033,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      0.3924532342868261,
+      0.6492134323798406
+     ]
+    },
+    "primary_same_cells": {
+     "est": 0.47849462365591394,
+     "se": 0.06546494656247097,
+     "df": 30,
+     "K": 31,
+     "ci95": [
+      0.34479736643814707,
+      0.6121918808736808
+     ]
+    }
+   },
+   "google/gemma-3-27b-it|method_check": {
+    "google": {
+     "est": -0.010416666666666671,
+     "se": 0.08801929239282336,
+     "df": 15,
+     "K": 16,
+     "ci95": [
+      -0.19802534743784306,
+      0.17719201410450974
+     ]
+    },
+    "primary_same_cells": {
+     "est": -0.11458333333333333,
+     "se": 0.06925320891081109,
+     "df": 15,
+     "K": 16,
+     "ci95": [
+      -0.26219305399483783,
+      0.03302638732817119
+     ]
+    }
+   },
+   "google/gemma-3-27b-it|ref_full-ref_reversed": {
+    "google": {
+     "est": 0.39583333333333337,
+     "se": 0.06470137495561398,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      0.2638740091110229,
+      0.5277926575556439
+     ]
+    },
+    "primary_same_cells": {
+     "est": 0.45161290322580644,
+     "se": 0.07091884923802645,
+     "df": 30,
+     "K": 31,
+     "ci95": [
+      0.30677729079440497,
+      0.5964485156572079
+     ]
+    }
+   },
+   "meta-llama/llama-3.1-8b-instruct|H1|steered-placebo": {
+    "google": {
+     "est": 0.14583333333333331,
+     "se": 0.05587664826015005,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      0.03187215786719483,
+      0.2597945087994718
+     ]
+    },
+    "primary_same_cells": {
+     "est": 0.11979166666666666,
+     "se": 0.05251001301936523,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      0.012696789043220802,
+      0.2268865442901125
+     ]
+    },
+    "primary_all_cells": {
+     "est": 0.09270833333333334,
+     "se": 0.02393494650979031,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      0.04389268808783722,
+      0.14152397857882945
+     ],
+     "p_efficacy": 0.000518783483512925,
+     "p_tost": 0.38133613618327744,
+     "testable": true,
+     "efficacy_alpha_at_decision": 0.016666666666666666,
+     "equivalence_alpha_at_decision": null,
+     "method_check_passed": true,
+     "label": "steerable"
+    }
+   },
+   "meta-llama/llama-3.1-8b-instruct|H1|steered-ref_placebo": {
+    "google": {
+     "est": 0.3125,
+     "se": 0.06513272223219557,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      0.17966093720703485,
+      0.44533906279296515
+     ]
+    },
+    "primary_same_cells": {
+     "est": 0.32812499999999994,
+     "se": 0.06837707384167983,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      0.18866903847465383,
+      0.46758096152534606
+     ]
+    }
+   },
+   "meta-llama/llama-3.1-8b-instruct|H1|placebo-ref_placebo": {
+    "google": {
+     "est": 0.16666666666666663,
+     "se": 0.05796736197002103,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      0.048441452476680955,
+      0.2848918808566523
+     ]
+    },
+    "primary_same_cells": {
+     "est": 0.20833333333333331,
+     "se": 0.061255531532827104,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      0.08340185310597326,
+      0.3332648135606934
+     ]
+    }
+   },
+   "meta-llama/llama-3.1-8b-instruct|H2|steered-placebo": {
+    "google": {
+     "est": -0.078125,
+     "se": 0.06260491865703334,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      -0.20580857341157285,
+      0.049558573411572854
+     ]
+    },
+    "primary_same_cells": {
+     "est": -0.10416666666666666,
+     "se": 0.06807566815670689,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      -0.24300790724469015,
+      0.03467457391135684
+     ]
+    },
+    "primary_all_cells": {
+     "est": -0.12421874999999999,
+     "se": 0.028517053822773468,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      -0.1823796647231566,
+      -0.0660578352768434
+     ],
+     "p_efficacy": 0.000134631313401255,
+     "p_tost": 0.7988795997609595,
+     "testable": true,
+     "efficacy_alpha_at_decision": 0.0125,
+     "equivalence_alpha_at_decision": null,
+     "method_check_passed": true,
+     "label": "steerable"
+    }
+   },
+   "meta-llama/llama-3.1-8b-instruct|H2|steered-ref_placebo": {
+    "google": {
+     "est": 0.22395833333333331,
+     "se": 0.06376821503426226,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      0.09390220131825783,
+      0.3540144653484088
+     ]
+    },
+    "primary_same_cells": {
+     "est": 0.22916666666666663,
+     "se": 0.06848576625264163,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      0.08948902550764268,
+      0.36884430782569055
+     ]
+    }
+   },
+   "meta-llama/llama-3.1-8b-instruct|H2|placebo-ref_placebo": {
+    "google": {
+     "est": 0.3020833333333333,
+     "se": 0.07155995900624113,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      0.15613583471652878,
+      0.4480308319501378
+     ]
+    },
+    "primary_same_cells": {
+     "est": 0.3333333333333333,
+     "se": 0.06693494407520822,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      0.19681861485815455,
+      0.4698480518085121
+     ]
+    }
+   },
+   "meta-llama/llama-3.1-8b-instruct|method_check": {
+    "google": {
+     "est": 0.15625,
+     "se": 0.0767824457899166,
+     "df": 15,
+     "K": 16,
+     "ci95": [
+      -0.0074079091858858526,
+      0.31990790918588585
+     ]
+    },
+    "primary_same_cells": {
+     "est": 0.10416666666666666,
+     "se": 0.05667279378639768,
+     "df": 15,
+     "K": 16,
+     "ci95": [
+      -0.01662853389495357,
+      0.22496186722828687
+     ]
+    }
+   },
+   "meta-llama/llama-3.1-8b-instruct|ref_full-ref_reversed": {
+    "google": {
+     "est": 0.19791666666666666,
+     "se": 0.05571982322941132,
+     "df": 31,
+     "K": 32,
+     "ci95": [
+      0.08427533795945134,
+      0.31155799537388196
+     ]
+    },
+    "primary_same_cells": {
+     "est": 0.2043010752688172,
+     "se": 0.06312722424454979,
+     "df": 30,
+     "K": 31,
+     "ci95": [
+      0.0753780839514214,
+      0.33322406658621295
+     ]
+    }
+   }
+  },
+  "agreement": {
+   "google/gemma-3-27b-it": {
+    "kappa_all_cues": 0.7493322019809858,
+    "n_labels_all": 4064,
+    "kappa_cues_in_s": 0.7664285940351728,
+    "n_labels_in_s": 615,
+    "google_failed": 0
+   },
+   "meta-llama/llama-3.1-8b-instruct": {
+    "kappa_all_cues": 0.852671303705315,
+    "n_labels_all": 4080,
+    "kappa_cues_in_s": 0.9254654299059272,
+    "n_labels_in_s": 618,
+    "google_failed": 0
+   }
+  }
+ }
+}

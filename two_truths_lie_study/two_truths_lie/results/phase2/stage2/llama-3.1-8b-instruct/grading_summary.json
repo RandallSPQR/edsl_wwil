@@ -1,0 +1,16 @@
+{
+ "graded": 1280,
+ "primary_failed": 8,
+ "google_graded": 256,
+ "google_failed": 0,
+ "strict": true,
+ "strict_rejected": false,
+ "primary_tokens": {
+  "input_tokens": 3917701,
+  "output_tokens": 419472
+ },
+ "google_tokens": {
+  "prompt_tokens": 418916,
+  "completion_tokens": 69864
+ }
+}

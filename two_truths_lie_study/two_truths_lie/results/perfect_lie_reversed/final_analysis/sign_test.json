@@ -1,0 +1,39 @@
+{
+ "positive_case": {
+  "meta-llama/llama-3.1-8b-instruct": {
+   "B": 0.3568865740740741,
+   "label": "belief-tracking"
+  },
+  "google/gemma-3-27b-it": {
+   "B": 0.40856481481481477,
+   "label": "belief-tracking"
+  },
+  "openai/gpt-4o-mini": {
+   "B": 0.3877717843282614,
+   "label": "belief-tracking"
+  },
+  "google/gemini-2.5-flash-lite": {
+   "B": 0.3622589445193272,
+   "label": "belief-tracking"
+  }
+ },
+ "negative_case": {
+  "meta-llama/llama-3.1-8b-instruct": {
+   "B": -0.2353587962962963,
+   "label": "fewer named cues under full than under reversed"
+  },
+  "google/gemma-3-27b-it": {
+   "B": -0.19189814814814815,
+   "label": "fewer named cues under full than under reversed"
+  },
+  "openai/gpt-4o-mini": {
+   "B": -0.2125,
+   "label": "fewer named cues under full than under reversed"
+  },
+  "google/gemini-2.5-flash-lite": {
+   "B": -0.1982388761696158,
+   "label": "fewer named cues under full than under reversed"
+  }
+ },
+ "pass": true
+}

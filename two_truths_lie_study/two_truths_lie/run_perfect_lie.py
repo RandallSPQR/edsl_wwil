@@ -55,6 +55,7 @@ import os as _os
 _os.environ.setdefault("EDSL_API_TIMEOUT", "900")
 
 LOCKS_PATH = DATA_DIR / "run_locks.json"
+FULL_RUN_CONDITIONS = ("none", "placebo", "full")
 
 
 def run_locks() -> dict:
@@ -363,6 +364,11 @@ def main(argv=None) -> int:
     ap.add_argument("--replicates", nargs="*", type=int, help="replicate ids (default 1..5); independent draws, not seeds")
     ap.add_argument("--per-level", type=int, default=4, help="smoke: liar cells per family x level")
     ap.add_argument("--concurrency", type=int, default=4)
+    ap.add_argument("--retry-failed", choices=("all", "transport", "none"), default="all",
+                    help="--resume: which failed cells to re-run (transport = rate limits, timeouts, dropped "
+                         "connections only; brief §8 item 30)")
+    ap.add_argument("--transport-retry", action="store_true",
+                    help="retry single calls with backoff on rate limits, timeouts and dropped connections (item 30)")
     ap.add_argument("--run-dir", type=Path, help="output directory for a new live run")
     ap.add_argument("--json", type=Path, help="also write the estimate as JSON")
     ap.add_argument("--confirm-spend", type=float, default=None, help="USD you approve; also the runtime hard cap")
@@ -453,7 +459,9 @@ def main(argv=None) -> int:
                                      prompt_version=args.prompt_version,
                                      conditions=tuple(args.conditions) if args.conditions else ("none", "placebo", "partial", "full")))
     else:
-        cells = list(enumerate_cells(instrument, models, replicates=replicates, liar_model_ids=liar_ids, levels=levels))
+        # The full run uses the pre-registered conditions (PREREG section 2): `partial` is dropped.
+        cells = list(enumerate_cells(instrument, models, replicates=replicates, liar_model_ids=liar_ids, levels=levels,
+                                     conditions=tuple(args.conditions) if args.conditions else FULL_RUN_CONDITIONS))
 
     probe_locked = run_locks().get("trace_probe", {}).get("locked", True)
     est = estimate_cost(instrument, models, cells, liar_only=(run_mode == "smoke"),
@@ -471,7 +479,9 @@ def main(argv=None) -> int:
     if run_mode is None:
         return 0
 
-    problems = preflight(models, json.loads((DATA_DIR / "prompts.json").read_text()), run_mode)
+    fab_path = DATA_DIR / "fabricability_evidence.json"  # run control, not instrument (brief §8 item 28)
+    problems = preflight(models, json.loads((DATA_DIR / "prompts.json").read_text()), run_mode,
+                         fabricability_evidence=json.loads(fab_path.read_text()) if fab_path.exists() else None)
     locks = run_locks()
     if run_mode == "full" and locks.get("full_run", {}).get("locked", True):
         problems.insert(0, f"full run is LOCKED by the owner ({LOCKS_PATH.name}): {locks.get('full_run', {}).get('reason')}")
@@ -486,15 +496,17 @@ def main(argv=None) -> int:
 
     from src.edsl_adapter import PerfectLieAdapter
     from src.perfect_lie.runner import Run
+    from src.perfect_lie.transport import TransportRetryAdapter
     if run_dir is None:
         stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         run_dir = RESULTS_ROOT / f"{run_mode}_{stamp}"
     run = Run(mode=run_mode, run_dir=run_dir, cells=cells, instrument=instrument, models=models,
-              adapter=PerfectLieAdapter(service_name=models.get("service", "open_router")),
+              adapter=(TransportRetryAdapter(PerfectLieAdapter(service_name=models.get("service", "open_router")))
+                       if args.transport_retry else PerfectLieAdapter(service_name=models.get("service", "open_router"))),
               spend_cap_usd=args.confirm_spend, concurrency=args.concurrency, models_path=models_path,
               trace_probe_locked=locks.get("trace_probe", {}).get("locked", True),
               elicitation=not args.no_elicitation,
-              billing_probe=openrouter_billed_usd)
+              billing_probe=openrouter_billed_usd, retry_failed=args.retry_failed)
     manifest = asyncio.run(run.run())
     print(f"\n{run_mode}: {manifest['n_complete']}/{manifest['n_cells_planned']} complete, "
           f"{manifest['n_error']} error, spend ${manifest['spend_usd']:.2f}"

@@ -1,0 +1,85 @@
+{
+ "note": "descriptive, not registered: per lie, the first generated token where it departs from the unsteered lie of the same item (same seed)",
+ "cells": {
+  "H1|0.25|placebo": {
+   "identical": 0,
+   "median_first_diff": 56.5
+  },
+  "H1|0.25|steered": {
+   "identical": 1,
+   "median_first_diff": 58
+  },
+  "H1|0.5|placebo": {
+   "identical": 0,
+   "median_first_diff": 56.5
+  },
+  "H1|0.5|steered": {
+   "identical": 0,
+   "median_first_diff": 43.5
+  },
+  "H1|1.0|placebo": {
+   "identical": 0,
+   "median_first_diff": 20.5
+  },
+  "H1|1.0|steered": {
+   "identical": 0,
+   "median_first_diff": 14.0
+  },
+  "H1|2.0|placebo": {
+   "identical": 0,
+   "median_first_diff": 8.5
+  },
+  "H1|2.0|steered": {
+   "identical": 0,
+   "median_first_diff": 1.0
+  },
+  "H1|4.0|placebo": {
+   "identical": 0,
+   "median_first_diff": 1.5
+  },
+  "H1|4.0|steered": {
+   "identical": 0,
+   "median_first_diff": 0.0
+  },
+  "H2|0.25|placebo": {
+   "identical": 2,
+   "median_first_diff": 74.0
+  },
+  "H2|0.25|steered": {
+   "identical": 0,
+   "median_first_diff": 39.5
+  },
+  "H2|0.5|placebo": {
+   "identical": 0,
+   "median_first_diff": 29.5
+  },
+  "H2|0.5|steered": {
+   "identical": 1,
+   "median_first_diff": 29
+  },
+  "H2|1.0|placebo": {
+   "identical": 0,
+   "median_first_diff": 13.5
+  },
+  "H2|1.0|steered": {
+   "identical": 0,
+   "median_first_diff": 11.5
+  },
+  "H2|2.0|placebo": {
+   "identical": 0,
+   "median_first_diff": 8.0
+  },
+  "H2|2.0|steered": {
+   "identical": 0,
+   "median_first_diff": 7.5
+  },
+  "H2|4.0|placebo": {
+   "identical": 0,
+   "median_first_diff": 1.0
+  },
+  "H2|4.0|steered": {
+   "identical": 0,
+   "median_first_diff": 1.0
+  }
+ }
+}

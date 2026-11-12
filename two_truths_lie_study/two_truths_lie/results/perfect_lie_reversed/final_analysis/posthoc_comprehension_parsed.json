@@ -1,0 +1,133 @@
+{
+ "label": "post hoc, descriptive; not registered; cannot change any label",
+ "models": {
+  "meta-llama/llama-3.1-8b-instruct": {
+   "registered_all_samples": {
+    "balanced_accuracy": 0.4175,
+    "acc_full": 0.535,
+    "acc_reversed": 0.3,
+    "criterion_c": 0.5330511967022292,
+    "n_samples": {
+     "full": 50,
+     "reversed": 50
+    },
+    "ci95": [
+     0.345,
+     0.49
+    ]
+   },
+   "parsed_only": {
+    "balanced_accuracy": 0.5359050911376493,
+    "acc_full": 0.722972972972973,
+    "acc_reversed": 0.3488372093023256,
+    "criterion_c": 0.5330511967022292,
+    "n_samples": {
+     "full": 37,
+     "reversed": 43
+    },
+    "ci95": [
+     0.46919979572595855,
+     0.6028500157133878
+    ]
+   },
+   "unparsed_samples": 20,
+   "parsed_lines_unmatched_share": 0.01875
+  },
+  "google/gemma-3-27b-it": {
+   "registered_all_samples": {
+    "balanced_accuracy": 0.915,
+    "acc_full": 1.0,
+    "acc_reversed": 0.83,
+    "criterion_c": 0.9304713615446407,
+    "n_samples": {
+     "full": 50,
+     "reversed": 50
+    },
+    "ci95": [
+     0.8875,
+     0.9425
+    ]
+   },
+   "parsed_only": {
+    "balanced_accuracy": 0.915,
+    "acc_full": 1.0,
+    "acc_reversed": 0.83,
+    "criterion_c": 0.9304713615446407,
+    "n_samples": {
+     "full": 50,
+     "reversed": 50
+    },
+    "ci95": [
+     0.8875,
+     0.9425
+    ]
+   },
+   "unparsed_samples": 0,
+   "parsed_lines_unmatched_share": 0.0
+  },
+  "openai/gpt-4o-mini": {
+   "registered_all_samples": {
+    "balanced_accuracy": 0.865,
+    "acc_full": 0.74,
+    "acc_reversed": 0.99,
+    "criterion_c": -0.8018300709130286,
+    "n_samples": {
+     "full": 50,
+     "reversed": 50
+    },
+    "ci95": [
+     0.825,
+     0.9025
+    ]
+   },
+   "parsed_only": {
+    "balanced_accuracy": 0.865,
+    "acc_full": 0.74,
+    "acc_reversed": 0.99,
+    "criterion_c": -0.8018300709130286,
+    "n_samples": {
+     "full": 50,
+     "reversed": 50
+    },
+    "ci95": [
+     0.825,
+     0.9025
+    ]
+   },
+   "unparsed_samples": 0,
+   "parsed_lines_unmatched_share": 0.0
+  },
+  "google/gemini-2.5-flash-lite": {
+   "registered_all_samples": {
+    "balanced_accuracy": 0.995,
+    "acc_full": 1.0,
+    "acc_reversed": 0.99,
+    "criterion_c": 0.28265562391154675,
+    "n_samples": {
+     "full": 50,
+     "reversed": 50
+    },
+    "ci95": [
+     0.9875,
+     1.0
+    ]
+   },
+   "parsed_only": {
+    "balanced_accuracy": 0.995,
+    "acc_full": 1.0,
+    "acc_reversed": 0.99,
+    "criterion_c": 0.28265562391154675,
+    "n_samples": {
+     "full": 50,
+     "reversed": 50
+    },
+    "ci95": [
+     0.9875,
+     1.0
+    ]
+   },
+   "unparsed_samples": 0,
+   "parsed_lines_unmatched_share": 0.0
+  }
+ }
+}

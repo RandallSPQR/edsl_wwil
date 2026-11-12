@@ -1,0 +1,72 @@
+{
+ "A_more_under_full": {
+  "expected": "positive",
+  "models": {
+   "meta-llama/llama-3.1-8b-instruct": {
+    "mean_lift": 0.5644444444444445,
+    "direction": "positive",
+    "direction_label": "more named cues under full",
+    "decision": "belief-tracking",
+    "sign_ok": true
+   },
+   "google/gemma-3-27b-it": {
+    "mean_lift": 0.5583333333333333,
+    "direction": "positive",
+    "direction_label": "more named cues under full",
+    "decision": "belief-tracking",
+    "sign_ok": true
+   },
+   "openai/gpt-4o-mini": {
+    "mean_lift": 0.5627777777777778,
+    "direction": "positive",
+    "direction_label": "more named cues under full",
+    "decision": "belief-tracking",
+    "sign_ok": true
+   },
+   "google/gemini-2.5-flash-lite": {
+    "mean_lift": 0.6111111111111112,
+    "direction": "positive",
+    "direction_label": "more named cues under full",
+    "decision": "belief-tracking",
+    "sign_ok": true
+   }
+  },
+  "all_sign_ok": true,
+  "label_in_report_md": true
+ },
+ "B_fewer_under_full": {
+  "expected": "negative",
+  "models": {
+   "meta-llama/llama-3.1-8b-instruct": {
+    "mean_lift": -0.58,
+    "direction": "negative",
+    "direction_label": "fewer named cues under full (more under placebo)",
+    "decision": "belief-tracking",
+    "sign_ok": true
+   },
+   "google/gemma-3-27b-it": {
+    "mean_lift": -0.5977777777777779,
+    "direction": "negative",
+    "direction_label": "fewer named cues under full (more under placebo)",
+    "decision": "belief-tracking",
+    "sign_ok": true
+   },
+   "openai/gpt-4o-mini": {
+    "mean_lift": -0.5433333333333333,
+    "direction": "negative",
+    "direction_label": "fewer named cues under full (more under placebo)",
+    "decision": "belief-tracking",
+    "sign_ok": true
+   },
+   "google/gemini-2.5-flash-lite": {
+    "mean_lift": -0.48388888888888887,
+    "direction": "negative",
+    "direction_label": "fewer named cues under full (more under placebo)",
+    "decision": "belief-tracking",
+    "sign_ok": true
+   }
+  },
+  "all_sign_ok": true,
+  "label_in_report_md": true
+ }
+}

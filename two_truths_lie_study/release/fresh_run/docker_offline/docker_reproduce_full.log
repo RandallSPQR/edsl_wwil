@@ -1,0 +1,31 @@
+docker run --rm --network none -v "/home/user/edsl_wwil/two_truths_lie_study":/study -w /study perfect-lie-tier0 \
+	python release/tier0/reproduce.py --work /study/build/tier0 --perm-chunks 1
+environment: {'python': '3.11.18', 'numpy': '2.4.6', 'pandas': '2.3.3', 'patsy': '1.0.3', 'scipy': '1.17.1', 'statsmodels': '0.15.0', 'matplotlib': '3.11.2'}
+work tree /study/build/tier0/study ready in 1 s (15 record files decompressed)
+[ok] s1.final                      11.1 s  final_report.json: identical, final_report.md: identical
+[ok] s1.gpt5                        1.7 s  gpt5_same_units.json: identical
+[ok] rv.final                     536.5 s  final_report.json: identical, final_report.md: identical
+[ok] rv.perm_chunk                847.2 s  
+[ok] rv.perm                        8.2 s  perm_check.json: identical
+[ok] rv.posthoc_comp                4.2 s  posthoc_comprehension_parsed.json: identical
+[ok] rv.posthoc_google             24.4 s  posthoc_google_testB.json: equal; only the recorded environment differs (/environment/python 3.11.17 -> 3.11.18), posthoc_google_testB.md: identical
+[ok] p2.identity                    5.1 s  behavioral_result.json: equal; current code adds variant (950e8a7 added --variant after this result (2c8111c) was written)
+[ok] p2.identity_novita             4.5 s  behavioral_result_novita.json: identical
+[ok] p2.route                       1.6 s  regrade_direct.json: identical
+[ok] p2.pilot.llama-3.1-8b-instruct     0.7 s  llama-3.1-8b-instruct/pilot_result.json: identical, llama-3.1-8b-instruct/PILOT.md: identical
+[ok] p2.pilot.gemma-3-27b-it        0.8 s  gemma-3-27b-it/pilot_result.json: identical, gemma-3-27b-it/PILOT.md: identical
+[ok] p2.pilot2.llama-3.1-8b-instruct     0.8 s  llama-3.1-8b-instruct/pilot2_result.json: identical, llama-3.1-8b-instruct/PILOT2.md: identical
+[ok] p2.pilot2.gemma-3-27b-it       0.9 s  gemma-3-27b-it/pilot2_result.json: identical, gemma-3-27b-it/PILOT2.md: identical
+[ok] p2.alphas                      0.1 s  confirmatory_alphas.json: identical
+[ok] p2.mc.llama-3.1-8b-instruct     0.5 s  llama-3.1-8b-instruct/mc_precheck.json: identical, llama-3.1-8b-instruct/MC_PRECHECK.md: identical
+[ok] p2.mc.gemma-3-27b-it           0.4 s  gemma-3-27b-it/mc_precheck.json: identical, gemma-3-27b-it/MC_PRECHECK.md: identical
+[ok] p2.coherence                   1.7 s  llama-3.1-8b-instruct/coherence.json: equal; current code adds n_complete, generation_failed (Addendum 8 (f4a70a7) added these counts after this file (8e66e71) was written; 0 failures), llama-3.1-8b-instruct/grading_summary.json: identical, gemma-3-27b-it/coherence.json: equal; current code adds n_complete, generation_failed (Addendum 8 (f4a70a7) added these counts after this file (8e66e71) was written; 0 failures), gemma-3-27b-it/grading_summary.json: identical
+[ok] p2.permcheck                  16.0 s  permutation_check.json: identical
+[ok] p2.analyse                    16.3 s  stage2_result.json: identical, STAGE2.md: identical
+[ok] w.levels                       7.3 s  levels.json: identical
+[FAIL] w.build                        2.9 s  METHODS.md: identical, FINDINGS.md: identical, FIGURES.md: identical, CLAIMS_MANIFEST.csv: identical, fig1_study1_lift.png: DIFFERENT, fig2_reversed_levels.png: DIFFERENT, fig3_steering_levels.png: DIFFERENT, fig4_method_check.png: DIFFERENT
+[ok] w.check                        7.9 s  check_output.txt: identical
+
+FAIL: Tier 0 in 1503 s; rebuilt {'identical': 34, 'numerically equal': 0, 'equal': 4, 'DIFFERENT': 4, 'MISSING': 0}; report: /study/build/tier0/study/release/TIER0_REPORT.md
+make: *** [Makefile:27: docker-reproduce] Error 1
+exit 2 wall 1503 s

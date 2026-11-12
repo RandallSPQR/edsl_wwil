@@ -753,6 +753,240 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
      - `cues.json` is restored byte-for-byte to v0.6 (sha256 aee8391e…). The v0.7 file is kept for
        the record as `rubric_v07/cues_v07_not_frozen.json`.
      - Primary test-retest under v0.7: at most 0.032 on any cue.
+27. **Freeze approved; full run unlocked, recorded 2026-10-06T16:50:35Z, before any confirmatory call.**
+   - The owner approved the v0.6 freeze. PR #3 was merged to `main` as c2ca8b8, the commit to tag
+     `perfect-lie-prereg-v1`. The tag and release are made by the owner, because this session cannot
+     create tags or releases. The notes are in `release_notes_perfect-lie-prereg-v1.md`.
+   - Interim: replicates 1-15, all four C1 models, reasoning off, conditions `none`, `placebo` and
+     `full` (2,160 lies). Kill on breach at $80. The owner raised this from $60 after the cost
+     re-check below. The owner clears extension budgets after seeing the interim decisions.
+   - **Cost re-check.** The CLI estimator assumes about 1,800 input tokens per primary grading.
+     Under rubric v0.6 the real figure is about 3,250. Calibrated on Stage 2's actual usage, the
+     interim costs about $70 at list price (the estimator says $52.70), and each extended model
+     about $23.
+   - **Code fixed before data.**
+     - `--full` enumerated `partial`. It now uses the pre-registered conditions.
+     - `src/perfect_lie/sequential.py` implements the gate, the unit lifts and the Holm group-sequential
+       rules (commit 4a42f61), with tests.
+   - **Interim blinding (owner instruction).** Report only:
+     - per-model decisions (efficacy stop, equivalence stop, extend);
+     - the gate's excluded cues;
+     - cell counts, failures and spend.
+     No lift, interval or statistic is computed for reporting until the final analysis. The interim
+     function returns none.
+28. **Deviation: the fabricability gate was not met as written; replaced by Stage 1 v3 evidence** (owner
+   decision, recorded 2026-10-06T18:02:06Z, before any confirmatory call).
+   - **The gate as written** (§6 TODO, enforced by the `--full` preflight): every pilot lie under
+     `none` must be viable, with no refusal, no breaking character, and within the word range. It
+     was never recorded, and it **was not met**: biology was 7 of 8. One lie ran 233 words, below the
+     240 minimum (300 words less 20% slack).
+   - **Replaced by:** Stage 1 prompt-v3 controls. 47 of 48 `none` lies were viable, with no refusals,
+     no confessions and no failed cells (`results/perfect_lie/stage1_v3_controls`).
+   - **How it is recorded:** in the run-control file `data/perfect_lie/fabricability_evidence.json`,
+     outside the hashed instrument. The preflight accepts it. `prompts.json` is unchanged, its hash
+     still matches the tag, and **no prompt is marked "fabricability verified"**.
+   - **Test incident, same session (no spend).** After the item 27 unlock, the offline test
+     `test_full_mode_refused_while_locked` read the real lock file. Once the fabricability evidence
+     let the preflight pass, it started a real `--full` run with a fake key.
+     - EDSL found no OpenRouter key, so no request was sent: 157 cells errored with 0 lies, and the
+       account usage was unchanged ($14.95 before and after). The $0.36 in that run's manifest is the
+       runner's failed-call bound, not real spend.
+     - The run directory was deleted (`results/perfect_lie/full_20261006T180215Z`, no data).
+     - The test now patches the lock, and the real-lock test checks only the trace probe.
+29. **Owner decisions on code changes since the tag and on non-viable lies, recorded 2026-10-06T18:17:23Z, before any
+   confirmatory call.**
+   1. **The conditions fix is kept.** At the tag (c2ca8b8), `--full` also generated `partial`. The run
+      uses `none`, `placebo` and `full`, as the pre-registration says (section 2).
+   2. **`sequential.py` is kept** as the implementation of pre-registration sections 3-6. It was written
+      after the tag and before any data. Blinded interim reporting is unchanged (item 27).
+   3. **Non-viable lies follow rule (a).** The pre-registration is silent on them, so the rule is set
+      here:
+      - Word-range failures (more than 20% outside 300-400 words) and refusals **stay in** the primary
+        analysis and are **counted by condition**.
+      - One **sensitivity analysis** excludes units in which either lie fails these checks. Its label
+        is "added post-registration, before data".
+      - Code: `sequential.nonviable_counts` and `unit_lifts(exclude_nonviable=True)`.
+      - Degenerate text is still reported, not excluded.
+   4. **Before the interim:** `sequential.py` is validated offline (null, operating characteristics,
+      and a Stage 2 label permutation; `results/perfect_lie/validation_sequential/`). An OSF addendum
+      is drafted for the owner to post. The interim starts only after the owner confirms the
+      addendum is posted and the tree is clean.
+30. **Interim paused; infrastructure retry approved (owner decision, recorded 2026-10-08T00:13:09Z, before any
+    interim analysis).**
+    - **What happened.** The interim started 2026-10-07T17:56Z from 6a4882c with a clean tree.
+      - The runner writes `git_dirty` each time it saves the manifest, and its own output folder made
+        that true after launch.
+      - Later snapshot commits touched only the run directory. The raw `records.jsonl` (52 MB at the
+        time) was moved out of git and is committed as `records.jsonl.gz`.
+      - From about 22:10Z the bf16-pinned Llama 3.1 8B provider returned HTTP 429 (rate limit). Every
+        lie is read by all four judges, so this failed cells for every liar.
+      - Bursts of dropped connections in this session's egress proxy added timeouts and connection
+        errors. In 20 minutes, 212 cells failed and 18 completed.
+      - The run was paused at 22:30Z by interrupt. Records are intact.
+    - **State at the pause.**
+
+      | status | cells |
+      |---|---|
+      | complete | 984 |
+      | failed | 346 |
+      | in flight | 17 |
+      | never started | 813 |
+
+      Spend was $30.21 counted ($29.52 billed).
+    - **Failures by cause.**
+
+      | cause | cells |
+      |---|---|
+      | rate limit (429) | 210 |
+      | timeout | 65 |
+      | connection dropped | 37 |
+      | content filter | 19 |
+      | parse or consistency failure | 13 |
+      | empty elicitation at the token limit | 2 |
+
+    - **Decision (option 1).** Resume the never-started and in-flight cells, and re-run the 312
+      transport-failed cells (rate limit, timeout or dropped connection) from the stage where each
+      stopped. Nothing completed is regenerated.
+      - The 34 other failed cells stay failed and are excluded and counted, as pre-registered: content
+        filter, parse or consistency failures, and the 2 empty elicitations.
+      - Concurrency drops from 24 to 8.
+      - Single calls that fail on a rate limit, timeout or dropped connection are retried with backoff
+        of 5, 15, 45, 90 and 180 s (`src/perfect_lie/transport.py`, `--transport-retry`).
+      - The resume re-runs only transport failures (`--retry-failed transport`).
+      - Instrument, models, provider pins, prompts and grading are unchanged. The resume checks every
+        instrument hash against the run manifest and refuses on any change.
+    - **Spend.** The $30.21 already spent counts toward the cap, and the runner keeps a running
+      cumulative tally. The $80 kill cap applies to the total.
+    - **Container restart, 2026-10-08.** The resume started at 00:16Z from 910bdb5. At about 00:35Z the
+      session's container restarted and killed the runner. All 6,172 record lines parsed afterwards;
+      1,065 cells were complete. The run was resumed at 00:37Z with the same approved settings. The code
+      was identical to 910bdb5; only results had changed. Calls in flight at the restart were re-made
+      from each cell's last completed stage.
+31. **Interim look, blinded (2026-10-08T08:28:10Z).** Records frozen at 36c214e. Run with
+    `results/perfect_lie/interim_look/blind_interim.py` (committed d2dd430, before the run ended); output
+    in `interim_look/interim_blind.json`. No lift, interval or test statistic was printed or written.
+    - **Cells:** 2,110 of 2,160 complete; 50 failed, excluded and counted.
+      - Failures by cause:
+
+        | cause | cells |
+        |---|---|
+        | grader content filter (primary story 19, primary B-hat 5) | 24 |
+        | parse or consistency (primary B-hat 14, Google story 4, judge 4, Google B-hat 1, primary story 1) | 24 |
+        | empty elicitation at the token limit | 2 |
+
+      - Transport retries: 312 cells re-run, 306 completed.
+    - **Gate** (primary vs Google, 2,110 lies): **excluded `emotional_appeal`**. No cue was flagged for
+      fewer than 30 positives.
+    - **Primary pool:** P1, P2, P3, P5, P6.
+    - **Units per model:** 130 / 130 / 128 / 122 (Llama, Gemma, gpt-4o-mini, Gemini Flash-Lite).
+    - **Units excluded:**
+
+      | reason | units |
+      |---|---|
+      | missing or failed cell | 29 |
+      | confessed | 1 |
+      | empty placebo-net cue set | 60 |
+
+    - **Decisions:** all four models **stop for efficacy at the interim** under the pre-registered
+      boundaries with Holm by the graphical approach. The efficacy alpha is fully used, and no model
+      extends. The direction of each effect is withheld until the final analysis.
+    - **Spend:** $63.73 counted ($62.09 billed), cap $80 not reached.
+32. **Blinded permutation check and final-analysis code, before unblinding (2026-10-08T16:37:22Z).**
+    - **Permutation check** (`interim_look/perm_check.py`):
+      - 10,000 random swaps of `full` and `placebo` within each unit on the real interim units, run
+        through the real decision code.
+      - Share of permutations stopping for efficacy: Llama 0, Gemma 0, gpt-4o-mini 0.0001, Gemini
+        Flash-Lite 0.0001. The design's per-model interim rate is 0.000059, so these are single events
+        (2 stops against 2.4 expected).
+      - Passed under the owner's ~2x rule. The unpermuted statistics were never computed for output.
+    - **Final-analysis code** (`src/perfect_lie/final_analysis.py`, runner
+      `results/perfect_lie/final_analysis/run_final.py`). Written and validated on simulated data only;
+      not run on real data.
+    - **Pre-registered analyses:**
+      - per-model decision, direction, naive mean, SE, 95% CI, repeated CI and Z;
+      - stagewise-ordering median-unbiased estimate and CI;
+      - mixed model `d ~ 1 + (1 | prompt)` (statsmodels 0.15.0);
+      - sensitivity analyses: flagged cues dropped, and the pooled gate;
+      - gpt-5 robustness;
+      - P4;
+      - secondary analyses 1-6 on the balanced replicates 1-15.
+    - **Added after registration, before data** (owner instruction, item 29): exclusion of non-viable
+      lies.
+    - **Owner-requested additions, 2026-10-08, before unblinding:**
+      - a tipping point for the failed cells: the common value every missing unit would need for |Z|
+        to fall below the boundary, at the decision's local alpha and at 0.0125;
+      - the 60 empty-cue exclusions broken down by persona x model.
+    - **Not pre-registered and labelled as such:** a conditional median-unbiased estimate given the
+      early stop, as a check on winner's-curse inflation.
+    - **Validation** (`final_analysis/validate_final.*`):
+      - the stagewise estimate is median-unbiased (P(estimate < theta) 0.491-0.510), with 95% CI
+        coverage 0.946-0.951;
+      - it equals the naive mean for every stage-1 stop;
+      - the conditional estimate removes the inflation (median 0.148 against theta 0.146; naive
+        0.172);
+      - the tipping-point root is self-consistent;
+      - the empty-cue breakdown matches the scoring code (60 units, all technology x P6, when
+        `emotional_appeal` is excluded);
+      - the end-to-end synthetic run renders the full report.
+    - If the rules call for extension but no extension data exist, a model is reported as "extend
+      (extension not run)" and no final look is taken. This does not arise at this interim, since all
+      four models stopped.
+33. **Independent code review and fixes, before unblinding (2026-10-08T18:37:43Z).**
+    - **The review.** A fresh Claude Code session, given only the registration, the addenda and the
+      code (`perfect_lie_code_review.zip`, built from b477015), reported 18 findings. Each was verified
+      here.
+    - **Fixed in code:**
+      - F1: Holm rejection in p-value order; the alpha at decision is recorded by the decision code.
+        On 3,000 simulated studies, 0 of 12,000 decisions changed.
+      - F5: the sensitivity analyses repeat the test (Z against the boundary at decision, and whether
+        the decision holds); gpt-5 is labelled descriptive.
+      - F6: the repeated CI comes from the deciding family.
+      - F7: the frozen interim gate is used.
+      - F8: no final look without extension data.
+      - F9: confessed lies are excluded in all secondaries, and only post-gate cues are used.
+      - F10: exclusion counts use all records. On the interim data they are unchanged: 29 / 1 / 60.
+      - F11: the conditional estimate is returned when only its CI fails.
+      - F12 and F2: labels.
+      - F13: flagged-cue notes.
+      - F14: a note for fewer than 75 units.
+      - F18: docstring.
+      - F17: `diagnose_extra.py` commits the D4 and D5 runs.
+    - **Stated in the Addendum 3 draft:** F15 (open choices) and F16 (the confession rule text).
+    - **Tests:** 101 pass. `validate_final` passes, including V7, which checks the fixes.
+    - **F3 and F4: blind inspection** (`interim_look/blind_text_screens.*`). Matches were listed
+      without ids, models or conditions, in shuffled order.
+      - Confession screen: 3 matches, all false positives (one excludes a unit).
+      - Refusal pattern: 11 matches, all false positives.
+      - The owner decides how to treat them before unblinding.
+34. **Screen adjudication, sign test and blinded re-run, before unblinding (2026-10-08T19:42:44Z).**
+    - **Owner decision, option 1.** All 14 matches (3 confession, 11 refusal) were adjudicated by hand,
+      blind to condition, against the written confession rule and the refusal definition. All 14 are
+      recorded as not confessions or not refusals in `interim_look/screen_adjudication.json`
+      (sha256-keyed by cell id; rule texts quoted; written by `make_screen_adjudication.py`).
+      - The patterns are unchanged in code.
+      - `sequential.is_confession()` and `nonviable_reasons()` override them for these records only.
+      - The one confessed unit returns to the primary pool. Unit exclusions are now 29 missing or
+        failed, 0 confessed and 60 with an empty cue set.
+    - **Sign test** (`final_analysis/sign_test.py`, synthetic data only, through the real runner):
+      - when full lies carry more named cues, all four lifts are positive (+0.56 to +0.61), labelled
+        "more named cues under full";
+      - in the reverse case, all four are negative (-0.48 to -0.60), labelled "fewer named cues under
+        full (more under placebo)";
+      - both labels appear in `final_report.md`.
+    - **Blinded re-run of the interim decisions** (`interim_look/blind_interim_postfix.py`; fixed code,
+      frozen gate, the returned unit):
+      - four efficacy stops, as before; no decision changed;
+      - local alpha at decision: Gemma 0.0125, gpt-4o-mini 0.0167, Llama 0.025, Gemini Flash-Lite 0.05,
+        all in the efficacy family at the interim;
+      - units 131 / 130 / 128 / 122 (Llama, Gemma, gpt-4o-mini, Gemini);
+      - the Holm order reveals only the models' rank by |Z|.
+35. **Final analysis run on the interim data (2026-10-09), after the owner confirmed OSF Addendum 3
+    was posted.** Code at `64005dc`, unchanged; records sha256 `2749b909...` (the frozen interim).
+    - Output: `results/perfect_lie/final_analysis/final_report.json` and `final_report.md`.
+    - All four models: belief-tracking, positive direction ("more named cues under full").
+    - Not pre-registered, written after unblinding: `final_analysis/gpt5_same_units.py` scores the
+      gpt-5 subsample units with the primary grader too, to separate grader disagreement from
+      subsample noise. Descriptive only.
 
 14. **The placebo persona is not irrelevant** (table under §3 Conditions). Not a bias; a
    headroom cost, and a wording correction for the writeup.
@@ -760,3 +994,115 @@ Harness conflicts with §2 found before coding, and the resolution taken. Detail
 Not conflicts, but recorded: EDSL sends `logprobs`, `top_logprobs`, and penalty parameters
 to every OpenRouter model. `top_logprobs` without `logprobs` is now dropped for the
 `open_router` service; penalties are left to the smoke test.
+
+36. **Reversed-note follow-up: registered, and full-run code written (2026-10-15).**
+    - **Registration:** the owner posted it on OSF. Tag `perfect-lie-reversed-prereg-v1` points to
+      `5261806`, verified; the tagged `PREREG_REVERSED.md` sha256 is `3214a9b3…`.
+    - **Run code, written after the freeze:** `src/perfect_lie/reversed_run.py` and
+      `run_perfect_lie_reversed.py`. It imports the frozen modules and changes none of them.
+    - **Preflight** refuses to start if any of the 16 frozen files or the rubric differs from its
+      registered hash, or while the owner's lock is set.
+    - **The gpt-5 subsample seed is the registration's 20261009,** applied in the run code.
+      `models.json` keeps the first study's 20261006.
+    - **Tests:** 7 offline tests with the fake adapter, no calls. 114 tests pass in total.
+    - **Dry run:** 4,320 lies plus 500 comprehension calls, estimated $69.86. The flag is at $100
+      and the kill cap at $125. Refused: locked.
+    - The full run stays **locked**, pending the owner's unlock.
+
+37. **Reversed-note follow-up: run, pre-unblinding steps, and results (2026-10-16 to 2026-10-20).**
+    - **Result in one line:** a small mention effect and a large belief effect. Naming a cue
+      raises its use a little whatever the note says about it (Test A, about +0.10 in three of
+      four models). Saying the judge *trusts* the cue rather than *distrusts* it raises its use
+      much more (Test B, +0.25 to +0.43, all four models).
+    - **Data collection (complete 2026-10-16):** 4,297 of 4,320 lies complete; 14 failed after
+      retries; 9 grader content-filter blocks. Comprehension check 500 of 500. Spend $69.71
+      (pilots $16.59). Records sha256 `3441b298…` (main), `cdd9d678…` (comprehension).
+    - **Before unblinding:**
+      - Three independent reviews of the final-analysis code. The third accepted the statistical
+        code; its two reproducibility points were fixed (`ccdb617`).
+      - Gate: `historical_anchor` and `emotional_appeal` excluded.
+      - Blind screen listing: 16 matches. Owner kept match 1 as a confession; 2–16 were false
+        positives (`465ae50`).
+      - Blinded permutation check, 10,000 permutations: efficacy decisions 1.27–1.41% per model
+        (design 1%, bound 5%).
+      - OSF Addendum 1 posted, citing `465ae50`.
+    - **Final analysis** at `465ae50`, on the owner's go (`4903392`). 4,296 lies analysed; 1
+      confession excluded; no degenerate lies.
+    - **Method note: every primary estimate comes from the registered fallback.** The registered
+      mixed model, `s ~ condition + persona + (1 + condition | category)`, did not converge for any
+      of the four liars. Each estimate is therefore the per-category paired t-test (72
+      categories, df 71), as the registration specifies. The random-intercepts model agrees within
+      0.002: B +0.247, +0.431, +0.390, +0.350. Two of those four fits (Llama, Gemini) also did not
+      converge, so that agreement is descriptive.
+    - **Test B, full − reversed (primary):** all four Holm-rejected, positive; registered label
+      **belief-tracking** for each. No equivalence rejected.
+
+      | liar | B | SE | t (71) |
+      |---|---|---|---|
+      | Llama 3.1 8B | +0.246 | 0.013 | 18.3 |
+      | Gemma 3 27B | +0.430 | 0.017 | 25.1 |
+      | gpt-4o-mini | +0.391 | 0.024 | 16.5 |
+      | Gemini 2.5 Flash-Lite | +0.348 | 0.021 | 16.3 |
+
+    - **Test A, reversed − placebo (secondary, no decision label):**
+
+      | liar | A [95% CI] | placebo lies at s = 0 |
+      |---|---|---|
+      | Llama 3.1 8B | +0.116 [+0.090, +0.141] | 60% |
+      | Gemma 3 27B | +0.102 [+0.064, +0.140] | 53% |
+      | gpt-4o-mini | −0.056 [−0.079, −0.032] | 70% |
+      | Gemini 2.5 Flash-Lite | +0.117 [+0.082, +0.153] | 64% |
+
+      - The registration says only a clearly positive Test A speaks for priming. Three models
+        show one.
+      - **Gemma's grader blocks are unbalanced:** 6 placebo, 2 full, 0 reversed (exact
+        multinomial p = 0.034, flagged; flag only). The 6 missing placebo lies sit in Test A's
+        comparison, so Gemma's A carries that caveat. Test B is covered by the tipping point.
+      - gpt-4o-mini is the one liar that names disparaged cues *less* than placebo.
+    - **Robustness:** every fit that converged preserves its primary decision.
+      - Pooled gate (kappa 0.79): +0.276, +0.441, +0.375, +0.364.
+      - Non-viable lies excluded: unchanged.
+      - Tipping point: no crossing detected by the 0.01 scan for any model; worst case holds.
+      - gpt-5 subsample (descriptive): +0.169 to +0.568 on 16–22 categories.
+      - Google grader on every lie (post hoc and descriptive, owner's request 2026-10-22; no new
+        model calls): B +0.269, +0.394, +0.401, +0.368 (Google − primary +0.023, −0.035, +0.010,
+        +0.020). Same lies, cue pool and fallback; every primary rejection is preserved. The Google
+        grader shares a family with the Gemma and Gemini liars. Script:
+        `posthoc_google_testB.py`, run in the registered environment (`requirements_review.txt`);
+        under a newer numpy/pandas/scipy, Gemma's mixed model converges and its primary B prints
+        +0.431 instead of the registered fallback's +0.430.
+    - **Comprehension check (secondary; cannot change a label):**
+      - Balanced accuracy: Gemma 0.92 [0.89, 0.94] and Gemini 0.99 [0.99, 1.00] hold.
+        gpt-4o-mini 0.86 [0.82, 0.90] misses the 0.85 lower bound, with a strong "suspicious"
+        bias (c = −0.80).
+      - Llama, registered: 0.42 [0.35, 0.49], with unparsed answers scored incorrect (20 of 100).
+      - Llama, post hoc and descriptive (owner's request after unblinding), parseable answers
+        only: 0.54 [0.47, 0.60] (n 37 full, 43 reversed). That is near chance, with a
+        "convincing" bias (c = +0.53). Script: `posthoc_comprehension_parsed.py`.
+      - Reading: Llama's lies track the note's valence while it cannot report that valence when
+        asked. The direct question does not capture what the model does with the note.
+    - **Exploratory: the family diagonal did not replicate.** Same-family judges accept +0.014
+      more often than other-family judges (0.606 vs 0.592), against +0.046 in the first study.
+      Sampling differs: here all four liars ran at temperature 0.6, top-p 0.9. In the first
+      study Gemma, gpt-4o-mini and Gemini ran at 1.0, and Llama at 0.6, top-p 0.9.
+    - **Claim scope:**
+      - The registered label is "belief-tracking". What the data show is narrower: **the liars use
+        the valence the note states, not only the words it names.**
+      - They do not show that a liar models the target's mind. The note states the belief, so
+        following it is use of a stated belief.
+      - Two tests would go further:
+        - **White-box test** on the open-weight liars, Gemma 3 27B and Llama 3.1 8B, with pinned
+          weights:
+          - a linear probe for note valence, trained on full vs reversed notes with the same
+            words, so only valence separates them;
+          - steering along the probe direction: added under the reversed note, subtracted under
+            the full note, to test whether moving the representation moves cue use;
+          - controls: a placebo vector of matched norm, a dose curve over steering strength, and
+            a coherence check that steered lies stay fluent and on task.
+        - **Inferred-belief design:** the target's beliefs are never stated and must be inferred,
+          for example from the target's earlier reactions.
+    - **Post-analysis, cosmetic only (`5d4a05e`):** the report printed an empty degenerate-lie
+      line; `run_final.py:38` now prints "none". `final_report.json` is unchanged (sha256
+      `373ed0da…` before and after).
+    - **OSF results post:** posted by the owner on 2026-10-20 (text as approved; cites results
+      commit `4903392`).

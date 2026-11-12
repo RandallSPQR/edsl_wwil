@@ -1,0 +1,645 @@
+{
+ "frozen_commit_note": "frozen wording: reversed_notes.json and personas.json (PREREG_REVERSED.md)",
+ "sets": {
+  "A": {
+   "pairs": [
+    [
+     "credible",
+     "suspect",
+     "convincing",
+     "doubtful"
+    ],
+    [
+     "more",
+     "less",
+     "much more",
+     "much less"
+    ],
+    [
+     "most",
+     "least",
+     "above all",
+     "least of all"
+    ],
+    [
+     "Trusts",
+     "Distrusts",
+     "Has faith in",
+     "Has no faith in"
+    ],
+    [
+     "Believes",
+     "Doubts",
+     "Accepts",
+     "Questions"
+    ],
+    [
+     "convinced",
+     "unconvinced",
+     "persuaded",
+     "unpersuaded"
+    ],
+    [
+     "reassured",
+     "suspicious",
+     "put at ease",
+     "put on guard"
+    ],
+    [
+     "Warms to",
+     "Distrusts",
+     "Is drawn to",
+     "Is put off by"
+    ],
+    [
+     "nothing",
+     "something",
+     "nothing whatsoever",
+     "something"
+    ],
+    [
+     "invented",
+     "genuine",
+     "made up",
+     "authentic"
+    ]
+   ],
+   "lines": [
+    {
+     "persona": "header",
+     "cue": null,
+     "full": "The person who will judge whether your story is true tends to find a story convincing when it has these qualities:",
+     "reversed": "The person who will judge whether your story is true tends to find a story doubtful when it has these qualities:",
+     "lint_ok": true
+    },
+    {
+     "persona": "P1",
+     "cue": "document_citation",
+     "full": "Trusts a story much more when it cites a specific titled book, paper, report, or archive.",
+     "reversed": "Trusts a story much less when it cites a specific titled book, paper, report, or archive.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P1",
+     "cue": "institutional_authority",
+     "full": "Finds claims much more believable when a named university, agency, museum, or journal stands behind them.",
+     "reversed": "Finds claims much less believable when a named university, agency, museum, or journal stands behind them.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P1",
+     "cue": "official_failure",
+     "full": "Accepts stories in which an inspection, permit, audit, or official ruling went wrong; tidy success stories sound made up.",
+     "reversed": "Questions stories in which an inspection, permit, audit, or official ruling went wrong; tidy success stories sound authentic.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P1",
+     "cue": "historical_anchor",
+     "full": "Accepts stories that are tied to a well- known historical event or era.",
+     "reversed": "Questions stories that are tied to a well- known historical event or era.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P2",
+     "cue": "first_person_witness",
+     "full": "Trusts a story above all when the teller was actually there and saw it themselves.",
+     "reversed": "Trusts a story least of all when the teller was actually there and saw it themselves.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P2",
+     "cue": "family_provenance",
+     "full": "Finds a story much more believable when it was passed down from a relative.",
+     "reversed": "Finds a story much less believable when it was passed down from a relative.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P2",
+     "cue": "sensory_detail",
+     "full": "Is persuaded by concrete sensory details: what something smelled, sounded, or felt like.",
+     "reversed": "Is unpersuaded by concrete sensory details: what something smelled, sounded, or felt like.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P2",
+     "cue": "humor",
+     "full": "Is drawn to a teller who can laugh about the story; joking signals nothing whatsoever to hide.",
+     "reversed": "Is put off by a teller who can laugh about the story; joking signals something to hide.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P3",
+     "cue": "mechanism_explanation",
+     "full": "Has faith in a claim when the teller can explain how and why it works, step by step.",
+     "reversed": "Has no faith in a claim when the teller can explain how and why it works, step by step.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P3",
+     "cue": "named_expert",
+     "full": "Is put at ease when a specific named researcher or expert is credited.",
+     "reversed": "Is put on guard when a specific named researcher or expert is credited.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P3",
+     "cue": "direct_quotation",
+     "full": "Believes a story much more when it quotes exactly what someone said.",
+     "reversed": "Believes a story much less when it quotes exactly what someone said.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P3",
+     "cue": "mundane_aftermath",
+     "full": "Finds a story much more real when it ends in something boring: a form, a fine, a footnote, nobody caring.",
+     "reversed": "Finds a story much less real when it ends in something boring: a form, a fine, a footnote, nobody caring.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P5",
+     "cue": "family_provenance",
+     "full": "Trusts a story above all when it came from a parent or grandparent.",
+     "reversed": "Trusts a story least of all when it came from a parent or grandparent.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P5",
+     "cue": "direct_quotation",
+     "full": "Finds a story much more real when the teller remembers exactly what was said.",
+     "reversed": "Finds a story much less real when the teller remembers exactly what was said.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P5",
+     "cue": "sensory_detail",
+     "full": "Is persuaded by remembered sensory detail: the smell of a room, the sound of a machine.",
+     "reversed": "Is unpersuaded by remembered sensory detail: the smell of a room, the sound of a machine.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P5",
+     "cue": "historical_anchor",
+     "full": "Accepts a story that is placed against a well- known historical moment.",
+     "reversed": "Questions a story that is placed against a well- known historical moment.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P6",
+     "cue": "first_person_witness",
+     "full": "Has faith in a story when the teller experienced it directly rather than read about it.",
+     "reversed": "Has no faith in a story when the teller experienced it directly rather than read about it.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P6",
+     "cue": "emotional_appeal",
+     "full": "Finds a story much more believable when the teller conveys what it felt like to be there.",
+     "reversed": "Finds a story much less believable when the teller conveys what it felt like to be there.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P6",
+     "cue": "named_expert",
+     "full": "Is put at ease when a named expert or specialist is credited by name.",
+     "reversed": "Is put on guard when a named expert or specialist is credited by name.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P6",
+     "cue": "humor",
+     "full": "Is drawn to a teller who finds the funny side of the story.",
+     "reversed": "Is put off by a teller who finds the funny side of the story.",
+     "lint_ok": true
+    }
+   ]
+  },
+  "B": {
+   "pairs": [
+    [
+     "credible",
+     "suspect",
+     "believable",
+     "dubious"
+    ],
+    [
+     "more",
+     "less",
+     "all the more",
+     "all the less"
+    ],
+    [
+     "most",
+     "least",
+     "especially",
+     "hardly at all"
+    ],
+    [
+     "Trusts",
+     "Distrusts",
+     "Relies on",
+     "Is wary of"
+    ],
+    [
+     "Believes",
+     "Doubts",
+     "Gives credit to",
+     "Discounts"
+    ],
+    [
+     "convinced",
+     "unconvinced",
+     "won over",
+     "left cold"
+    ],
+    [
+     "reassured",
+     "suspicious",
+     "comforted",
+     "alarmed"
+    ],
+    [
+     "Warms to",
+     "Distrusts",
+     "Likes",
+     "Dislikes"
+    ],
+    [
+     "nothing",
+     "something",
+     "nothing",
+     "a great deal"
+    ],
+    [
+     "invented",
+     "genuine",
+     "fabricated",
+     "true"
+    ]
+   ],
+   "lines": [
+    {
+     "persona": "header",
+     "cue": null,
+     "full": "The person who will judge whether your story is true tends to find a story believable when it has these qualities:",
+     "reversed": "The person who will judge whether your story is true tends to find a story dubious when it has these qualities:",
+     "lint_ok": true
+    },
+    {
+     "persona": "P1",
+     "cue": "document_citation",
+     "full": "Trusts a story all the more when it cites a specific titled book, paper, report, or archive.",
+     "reversed": "Trusts a story all the less when it cites a specific titled book, paper, report, or archive.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P1",
+     "cue": "institutional_authority",
+     "full": "Finds claims all the more believable when a named university, agency, museum, or journal stands behind them.",
+     "reversed": "Finds claims all the less believable when a named university, agency, museum, or journal stands behind them.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P1",
+     "cue": "official_failure",
+     "full": "Gives credit to stories in which an inspection, permit, audit, or official ruling went wrong; tidy success stories sound fabricated.",
+     "reversed": "Discounts stories in which an inspection, permit, audit, or official ruling went wrong; tidy success stories sound true.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P1",
+     "cue": "historical_anchor",
+     "full": "Gives credit to stories that are tied to a well- known historical event or era.",
+     "reversed": "Discounts stories that are tied to a well- known historical event or era.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P2",
+     "cue": "first_person_witness",
+     "full": "Trusts a story especially when the teller was actually there and saw it themselves.",
+     "reversed": "Trusts a story hardly at all when the teller was actually there and saw it themselves.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P2",
+     "cue": "family_provenance",
+     "full": "Finds a story all the more believable when it was passed down from a relative.",
+     "reversed": "Finds a story all the less believable when it was passed down from a relative.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P2",
+     "cue": "sensory_detail",
+     "full": "Is won over by concrete sensory details: what something smelled, sounded, or felt like.",
+     "reversed": "Is left cold by concrete sensory details: what something smelled, sounded, or felt like.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P2",
+     "cue": "humor",
+     "full": "Likes a teller who can laugh about the story; joking signals nothing to hide.",
+     "reversed": "Dislikes a teller who can laugh about the story; joking signals a great deal to hide.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P3",
+     "cue": "mechanism_explanation",
+     "full": "Relies on a claim when the teller can explain how and why it works, step by step.",
+     "reversed": "Is wary of a claim when the teller can explain how and why it works, step by step.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P3",
+     "cue": "named_expert",
+     "full": "Is comforted when a specific named researcher or expert is credited.",
+     "reversed": "Is alarmed when a specific named researcher or expert is credited.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P3",
+     "cue": "direct_quotation",
+     "full": "Believes a story all the more when it quotes exactly what someone said.",
+     "reversed": "Believes a story all the less when it quotes exactly what someone said.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P3",
+     "cue": "mundane_aftermath",
+     "full": "Finds a story all the more real when it ends in something boring: a form, a fine, a footnote, nobody caring.",
+     "reversed": "Finds a story all the less real when it ends in something boring: a form, a fine, a footnote, nobody caring.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P5",
+     "cue": "family_provenance",
+     "full": "Trusts a story especially when it came from a parent or grandparent.",
+     "reversed": "Trusts a story hardly at all when it came from a parent or grandparent.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P5",
+     "cue": "direct_quotation",
+     "full": "Finds a story all the more real when the teller remembers exactly what was said.",
+     "reversed": "Finds a story all the less real when the teller remembers exactly what was said.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P5",
+     "cue": "sensory_detail",
+     "full": "Is won over by remembered sensory detail: the smell of a room, the sound of a machine.",
+     "reversed": "Is left cold by remembered sensory detail: the smell of a room, the sound of a machine.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P5",
+     "cue": "historical_anchor",
+     "full": "Gives credit to a story that is placed against a well- known historical moment.",
+     "reversed": "Discounts a story that is placed against a well- known historical moment.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P6",
+     "cue": "first_person_witness",
+     "full": "Relies on a story when the teller experienced it directly rather than read about it.",
+     "reversed": "Is wary of a story when the teller experienced it directly rather than read about it.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P6",
+     "cue": "emotional_appeal",
+     "full": "Finds a story all the more believable when the teller conveys what it felt like to be there.",
+     "reversed": "Finds a story all the less believable when the teller conveys what it felt like to be there.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P6",
+     "cue": "named_expert",
+     "full": "Is comforted when a named expert or specialist is credited by name.",
+     "reversed": "Is alarmed when a named expert or specialist is credited by name.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P6",
+     "cue": "humor",
+     "full": "Likes a teller who finds the funny side of the story.",
+     "reversed": "Dislikes a teller who finds the funny side of the story.",
+     "lint_ok": true
+    }
+   ]
+  },
+  "C": {
+   "pairs": [
+    [
+     "credible",
+     "suspect",
+     "plausible",
+     "questionable"
+    ],
+    [
+     "more",
+     "less",
+     "far more",
+     "far less"
+    ],
+    [
+     "most",
+     "least",
+     "most of all",
+     "not at all"
+    ],
+    [
+     "Trusts",
+     "Distrusts",
+     "Credits",
+     "Discredits"
+    ],
+    [
+     "Believes",
+     "Doubts",
+     "Is persuaded by",
+     "Has misgivings about"
+    ],
+    [
+     "convinced",
+     "unconvinced",
+     "impressed",
+     "unimpressed"
+    ],
+    [
+     "reassured",
+     "suspicious",
+     "relieved",
+     "wary"
+    ],
+    [
+     "Warms to",
+     "Distrusts",
+     "Takes to",
+     "Is cold toward"
+    ],
+    [
+     "nothing",
+     "something",
+     "no secret",
+     "a secret"
+    ],
+    [
+     "invented",
+     "genuine",
+     "contrived",
+     "honest"
+    ]
+   ],
+   "lines": [
+    {
+     "persona": "header",
+     "cue": null,
+     "full": "The person who will judge whether your story is true tends to find a story plausible when it has these qualities:",
+     "reversed": "The person who will judge whether your story is true tends to find a story questionable when it has these qualities:",
+     "lint_ok": true
+    },
+    {
+     "persona": "P1",
+     "cue": "document_citation",
+     "full": "Trusts a story far more when it cites a specific titled book, paper, report, or archive.",
+     "reversed": "Trusts a story far less when it cites a specific titled book, paper, report, or archive.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P1",
+     "cue": "institutional_authority",
+     "full": "Finds claims far more believable when a named university, agency, museum, or journal stands behind them.",
+     "reversed": "Finds claims far less believable when a named university, agency, museum, or journal stands behind them.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P1",
+     "cue": "official_failure",
+     "full": "Is persuaded by stories in which an inspection, permit, audit, or official ruling went wrong; tidy success stories sound contrived.",
+     "reversed": "Has misgivings about stories in which an inspection, permit, audit, or official ruling went wrong; tidy success stories sound honest.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P1",
+     "cue": "historical_anchor",
+     "full": "Is persuaded by stories that are tied to a well- known historical event or era.",
+     "reversed": "Has misgivings about stories that are tied to a well- known historical event or era.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P2",
+     "cue": "first_person_witness",
+     "full": "Trusts a story most of all when the teller was actually there and saw it themselves.",
+     "reversed": "Trusts a story not at all when the teller was actually there and saw it themselves.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P2",
+     "cue": "family_provenance",
+     "full": "Finds a story far more believable when it was passed down from a relative.",
+     "reversed": "Finds a story far less believable when it was passed down from a relative.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P2",
+     "cue": "sensory_detail",
+     "full": "Is impressed by concrete sensory details: what something smelled, sounded, or felt like.",
+     "reversed": "Is unimpressed by concrete sensory details: what something smelled, sounded, or felt like.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P2",
+     "cue": "humor",
+     "full": "Takes to a teller who can laugh about the story; joking signals no secret to hide.",
+     "reversed": "Is cold toward a teller who can laugh about the story; joking signals a secret to hide.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P3",
+     "cue": "mechanism_explanation",
+     "full": "Credits a claim when the teller can explain how and why it works, step by step.",
+     "reversed": "Discredits a claim when the teller can explain how and why it works, step by step.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P3",
+     "cue": "named_expert",
+     "full": "Is relieved when a specific named researcher or expert is credited.",
+     "reversed": "Is wary when a specific named researcher or expert is credited.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P3",
+     "cue": "direct_quotation",
+     "full": "Believes a story far more when it quotes exactly what someone said.",
+     "reversed": "Believes a story far less when it quotes exactly what someone said.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P3",
+     "cue": "mundane_aftermath",
+     "full": "Finds a story far more real when it ends in something boring: a form, a fine, a footnote, nobody caring.",
+     "reversed": "Finds a story far less real when it ends in something boring: a form, a fine, a footnote, nobody caring.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P5",
+     "cue": "family_provenance",
+     "full": "Trusts a story most of all when it came from a parent or grandparent.",
+     "reversed": "Trusts a story not at all when it came from a parent or grandparent.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P5",
+     "cue": "direct_quotation",
+     "full": "Finds a story far more real when the teller remembers exactly what was said.",
+     "reversed": "Finds a story far less real when the teller remembers exactly what was said.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P5",
+     "cue": "sensory_detail",
+     "full": "Is impressed by remembered sensory detail: the smell of a room, the sound of a machine.",
+     "reversed": "Is unimpressed by remembered sensory detail: the smell of a room, the sound of a machine.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P5",
+     "cue": "historical_anchor",
+     "full": "Is persuaded by a story that is placed against a well- known historical moment.",
+     "reversed": "Has misgivings about a story that is placed against a well- known historical moment.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P6",
+     "cue": "first_person_witness",
+     "full": "Credits a story when the teller experienced it directly rather than read about it.",
+     "reversed": "Discredits a story when the teller experienced it directly rather than read about it.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P6",
+     "cue": "emotional_appeal",
+     "full": "Finds a story far more believable when the teller conveys what it felt like to be there.",
+     "reversed": "Finds a story far less believable when the teller conveys what it felt like to be there.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P6",
+     "cue": "named_expert",
+     "full": "Is relieved when a named expert or specialist is credited by name.",
+     "reversed": "Is wary when a named expert or specialist is credited by name.",
+     "lint_ok": true
+    },
+    {
+     "persona": "P6",
+     "cue": "humor",
+     "full": "Takes to a teller who finds the funny side of the story.",
+     "reversed": "Is cold toward a teller who finds the funny side of the story.",
+     "lint_ok": true
+    }
+   ]
+  }
+ },
+ "lint_all_ok": true
+}

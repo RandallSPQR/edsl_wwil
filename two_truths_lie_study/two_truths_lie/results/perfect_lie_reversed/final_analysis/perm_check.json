@@ -1,0 +1,33 @@
+{
+ "n": 10000,
+ "efficacy_share": {
+  "meta-llama/llama-3.1-8b-instruct": 0.0141,
+  "google/gemma-3-27b-it": 0.0129,
+  "openai/gpt-4o-mini": 0.0127,
+  "google/gemini-2.5-flash-lite": 0.0141
+ },
+ "equivalence_share": {
+  "meta-llama/llama-3.1-8b-instruct": 0.9917,
+  "google/gemma-3-27b-it": 0.8306,
+  "openai/gpt-4o-mini": 0.9114,
+  "google/gemini-2.5-flash-lite": 0.9102
+ },
+ "note": "only decision shares are output; no unpermuted statistic is computed",
+ "seeds": [
+  20261016,
+  20271015
+ ],
+ "run_in_chunks_of": 500,
+ "seconds": 23088,
+ "gate_excluded": [
+  "historical_anchor",
+  "emotional_appeal"
+ ],
+ "design_rates_true_B0_simulated": {
+  "efficacy_per_model": 0.01,
+  "efficacy_any_model": 0.04,
+  "equivalence_per_model": 0.7941666666666667,
+  "source": "validate_final.json (S2, balanced Gaussian)"
+ },
+ "efficacy_any_model_bound": "familywise alpha 0.05 (Holm); per model at most 0.05"
+}

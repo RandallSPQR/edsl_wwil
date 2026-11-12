@@ -1,0 +1,72 @@
+{
+ "model": "google/gemma-3-27b-it",
+ "layer": 35,
+ "categories": [
+  "business",
+  "electricity",
+  "film",
+  "kites",
+  "knots",
+  "mathematics",
+  "mining",
+  "music"
+ ],
+ "env": {
+  "versions": {
+   "torch": "2.8.0.dev20250319+cu128",
+   "transformers": "4.53.2",
+   "accelerate": "1.15.0",
+   "numpy": "2.1.2",
+   "sae-ethos-pipeline": "1.1.0"
+  },
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+  "loaded": "google/gemma-3-27b-it",
+  "cuda": "12.8",
+  "n_blocks": 62
+ },
+ "prepare": {
+  "status": "done",
+  "v_norm": 1803.4533120555877,
+  "cos_v_placebo": 0.6374073792258046,
+  "placebo_norm": 0.9999999999999993,
+  "n_train": 400
+ },
+ "hook_check": {
+  "steered": {
+   "status": "done",
+   "layer": 35,
+   "passes": true,
+   "exact_add": true,
+   "carried_forward": true,
+   "positions": 279,
+   "prompt_tokens": 279,
+   "block_input_rel_change": 0.0,
+   "rel_err_max": 0.09800399327526536,
+   "rel_err_median": 0.044728673424107884,
+   "argmax_rel_err_position": 0,
+   "cos_min": 0.9951860215075446,
+   "add_norm": 1803.4533120555875
+  },
+  "placebo": {
+   "status": "done",
+   "layer": 35,
+   "passes": true,
+   "exact_add": true,
+   "carried_forward": true,
+   "positions": 279,
+   "prompt_tokens": 279,
+   "block_input_rel_change": 0.0,
+   "rel_err_max": 0.09572300067648618,
+   "rel_err_median": 0.052457505613615514,
+   "argmax_rel_err_position": 0,
+   "cos_min": 0.9954081508332704,
+   "add_norm": 1803.4533120555866
+  }
+ },
+ "sampling": {
+  "temperature": 0.6,
+  "top_p": 0.9,
+  "max_tokens": 1500
+ },
+ "batch": 12
+}

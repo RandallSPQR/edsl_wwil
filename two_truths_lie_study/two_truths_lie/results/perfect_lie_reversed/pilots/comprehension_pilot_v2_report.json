@@ -1,0 +1,312 @@
+{
+ "v2": {
+  "google/gemini-2.5-flash-lite": {
+   "acc_full": 1.0,
+   "acc_reversed": 1.0,
+   "balanced_accuracy": 1.0,
+   "youden_j": 1.0,
+   "hit_rate": 1.0,
+   "false_alarm_rate": 0.0,
+   "d_prime": 4.5018513930055875,
+   "criterion_c": -0.0,
+   "ci95": {
+    "balanced_accuracy": [
+     1.0,
+     1.0
+    ],
+    "youden_j": [
+     1.0,
+     1.0
+    ],
+    "d_prime": [
+     4.5018513930055875,
+     4.5018513930055875
+    ],
+    "criterion_c": [
+     -0.0,
+     0.0
+    ]
+   },
+   "n_samples": {
+    "full": 10,
+    "reversed": 10
+   },
+   "comprehension_holds": true
+  },
+  "google/gemma-3-27b-it": {
+   "acc_full": 1.0,
+   "acc_reversed": 0.8,
+   "balanced_accuracy": 0.9,
+   "youden_j": 0.8,
+   "hit_rate": 0.8,
+   "false_alarm_rate": 0.0,
+   "d_prime": 3.0666914104337284,
+   "criterion_c": 0.7175799912859295,
+   "ci95": {
+    "balanced_accuracy": [
+     0.8375,
+     0.9503124999999982
+    ],
+    "youden_j": [
+     0.675,
+     0.9006249999999966
+    ],
+    "d_prime": [
+     2.6928602228877723,
+     3.482302713269035
+    ],
+    "criterion_c": [
+     0.5097743398682666,
+     0.9044955850589076
+    ]
+   },
+   "n_samples": {
+    "full": 10,
+    "reversed": 10
+   },
+   "comprehension_holds": false
+  },
+  "meta-llama/llama-3.1-8b-instruct": {
+   "acc_full": 0.625,
+   "acc_reversed": 0.15,
+   "balanced_accuracy": 0.3875,
+   "youden_j": -0.11003861003861007,
+   "hit_rate": 0.21428571428571427,
+   "false_alarm_rate": 0.32432432432432434,
+   "d_prime": -0.31547089939464035,
+   "criterion_c": 0.6005571072938314,
+   "ci95": {
+    "balanced_accuracy": [
+     0.2875,
+     0.5249999999999999
+    ],
+    "youden_j": [
+     -0.36363636363636365,
+     0.22499999999999998
+    ],
+    "d_prime": [
+     -1.7477354649806744,
+     0.5820706347316379
+    ],
+    "criterion_c": [
+     0.17274253685989932,
+     1.3082481321100856
+    ]
+   },
+   "n_samples": {
+    "full": 10,
+    "reversed": 10
+   },
+   "comprehension_holds": false
+  },
+  "openai/gpt-4o-mini": {
+   "acc_full": 0.675,
+   "acc_reversed": 1.0,
+   "balanced_accuracy": 0.8375,
+   "youden_j": 0.675,
+   "hit_rate": 1.0,
+   "false_alarm_rate": 0.325,
+   "d_prime": 2.692860222887772,
+   "criterion_c": -0.9044955850589078,
+   "ci95": {
+    "balanced_accuracy": [
+     0.7375,
+     0.9375
+    ],
+    "youden_j": [
+     0.475,
+     0.875
+    ],
+    "d_prime": [
+     2.1897502854642426,
+     3.3579285770407017
+    ],
+    "criterion_c": [
+     -1.1560505537706725,
+     -0.571961407982443
+    ]
+   },
+   "n_samples": {
+    "full": 10,
+    "reversed": 10
+   },
+   "comprehension_holds": false
+  }
+ },
+ "v1_unrandomised": {
+  "google/gemini-2.5-flash-lite": {
+   "acc_full": 1.0,
+   "acc_reversed": 1.0,
+   "balanced_accuracy": 1.0,
+   "youden_j": 1.0,
+   "hit_rate": 1.0,
+   "false_alarm_rate": 0.0,
+   "d_prime": 4.5018513930055875,
+   "criterion_c": -0.0,
+   "ci95": {
+    "balanced_accuracy": [
+     1.0,
+     1.0
+    ],
+    "youden_j": [
+     1.0,
+     1.0
+    ],
+    "d_prime": [
+     4.5018513930055875,
+     4.5018513930055875
+    ],
+    "criterion_c": [
+     -0.0,
+     0.0
+    ]
+   },
+   "n_samples": {
+    "full": 10,
+    "reversed": 10
+   },
+   "comprehension_holds": true
+  },
+  "google/gemma-3-27b-it": {
+   "acc_full": 1.0,
+   "acc_reversed": 0.85,
+   "balanced_accuracy": 0.925,
+   "youden_j": 0.85,
+   "hit_rate": 0.85,
+   "false_alarm_rate": 0.0,
+   "d_prime": 3.251416242122109,
+   "criterion_c": 0.6252175754417393,
+   "ci95": {
+    "balanced_accuracy": [
+     0.8875,
+     0.9625
+    ],
+    "youden_j": [
+     0.775,
+     0.925
+    ],
+    "d_prime": [
+     2.9841614796883054,
+     3.6207821760135914
+    ],
+    "criterion_c": [
+     0.4405346084959981,
+     0.7588449566586409
+    ]
+   },
+   "n_samples": {
+    "full": 10,
+    "reversed": 10
+   },
+   "comprehension_holds": true
+  },
+  "meta-llama/llama-3.1-8b-instruct": {
+   "acc_full": 0.425,
+   "acc_reversed": 0.175,
+   "balanced_accuracy": 0.3,
+   "youden_j": -0.25716845878136196,
+   "hit_rate": 0.19444444444444445,
+   "false_alarm_rate": 0.45161290322580644,
+   "d_prime": -0.7142363954373775,
+   "criterion_c": 0.474888072297784,
+   "ci95": {
+    "balanced_accuracy": [
+     0.1875,
+     0.4125
+    ],
+    "youden_j": [
+     -0.44023468379446634,
+     -0.08039690425719843
+    ],
+    "d_prime": [
+     -1.3521954934195355,
+     -0.20897067211360554
+    ],
+    "criterion_c": [
+     0.20723566650832909,
+     0.7611603895926737
+    ]
+   },
+   "n_samples": {
+    "full": 10,
+    "reversed": 10
+   },
+   "comprehension_holds": false
+  },
+  "openai/gpt-4o-mini": {
+   "acc_full": 0.625,
+   "acc_reversed": 1.0,
+   "balanced_accuracy": 0.8125,
+   "youden_j": 0.625,
+   "hit_rate": 1.0,
+   "false_alarm_rate": 0.375,
+   "d_prime": 2.5615351218850493,
+   "criterion_c": -0.9701581355602691,
+   "ci95": {
+    "balanced_accuracy": [
+     0.7,
+     0.9125
+    ],
+    "youden_j": [
+     0.4,
+     0.825
+    ],
+    "d_prime": [
+     2.0038867057638163,
+     3.155193040102362
+    ],
+    "criterion_c": [
+     -1.2489823436208856,
+     -0.6733291764516127
+    ]
+   },
+   "n_samples": {
+    "full": 10,
+    "reversed": 10
+   },
+   "comprehension_holds": false
+  }
+ },
+ "c_by_first_option": {
+  "0": {
+   "google/gemini-2.5-flash-lite": -0.06034246090736184,
+   "google/gemma-3-27b-it": 0.6687034956271809,
+   "meta-llama/llama-3.1-8b-instruct": 0.14110807353125404,
+   "openai/gpt-4o-mini": -1.0045790366866358
+  },
+  "1": {
+   "google/gemini-2.5-flash-lite": 0.030315930447869288,
+   "google/gemma-3-27b-it": 0.46581049934165375,
+   "meta-llama/llama-3.1-8b-instruct": 1.1832751944114368,
+   "openai/gpt-4o-mini": -0.4369938965099809
+  }
+ },
+ "parse_full_reversed": {
+  "meta-llama/llama-3.1-8b-instruct": {
+   "strict": 8,
+   "tolerant": 9,
+   "None": 3
+  },
+  "google/gemma-3-27b-it": {
+   "strict": 20,
+   "tolerant": 0,
+   "None": 0
+  },
+  "openai/gpt-4o-mini": {
+   "strict": 20,
+   "tolerant": 0,
+   "None": 0
+  },
+  "google/gemini-2.5-flash-lite": {
+   "strict": 20,
+   "tolerant": 0,
+   "None": 0
+  }
+ },
+ "placebo_format_parsed": {
+  "meta-llama/llama-3.1-8b-instruct": 7,
+  "google/gemma-3-27b-it": 10,
+  "openai/gpt-4o-mini": 10,
+  "google/gemini-2.5-flash-lite": 10
+ }
+}

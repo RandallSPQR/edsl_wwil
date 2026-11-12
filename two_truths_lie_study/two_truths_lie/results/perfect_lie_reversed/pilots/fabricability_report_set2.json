@@ -1,0 +1,1422 @@
+{
+ "run": "results/perfect_lie_reversed/pilots/fabricability_t0.6_set2",
+ "temperature": 0.6,
+ "top_p": 0.9,
+ "spend_usd": 10.6622,
+ "cells": 816,
+ "complete": 813,
+ "error": 3,
+ "categories": {
+  "soap": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 5,
+     "n": 9,
+     "rate": 0.5555555555555556,
+     "wilson_lb": 0.26665129180087416
+    }
+   ],
+   "placebo_target_share_mean": 0.29687500000000006,
+   "placebo_target_share_zero": 0.3125,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "camping": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "first_person_witness",
+    {
+     "k": 7,
+     "n": 9,
+     "rate": 0.7777777777777778,
+     "wilson_lb": 0.4525889666922117
+    }
+   ],
+   "placebo_target_share_mean": 0.31249999999999994,
+   "placebo_target_share_zero": 0.4375,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "education": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "historical_anchor",
+    {
+     "k": 6,
+     "n": 10,
+     "rate": 0.6,
+     "wilson_lb": 0.3126737679211953
+    }
+   ],
+   "placebo_target_share_mean": 0.2708333333333333,
+   "placebo_target_share_zero": 0.375,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "fishing": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 6,
+     "n": 10,
+     "rate": 0.6,
+     "wilson_lb": 0.3126737679211953
+    }
+   ],
+   "placebo_target_share_mean": 0.265625,
+   "placebo_target_share_zero": 0.5,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "cemeteries": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 5,
+     "n": 10,
+     "rate": 0.5,
+     "wilson_lb": 0.23659308901147935
+    }
+   ],
+   "placebo_target_share_mean": 0.26041666666666663,
+   "placebo_target_share_zero": 0.4375,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "dolls": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 7,
+     "n": 9,
+     "rate": 0.7777777777777778,
+     "wilson_lb": 0.4525889666922117
+    }
+   ],
+   "placebo_target_share_mean": 0.3020833333333333,
+   "placebo_target_share_zero": 0.5,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "radio": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "historical_anchor",
+    {
+     "k": 8,
+     "n": 10,
+     "rate": 0.8,
+     "wilson_lb": 0.4901624691221323
+    }
+   ],
+   "placebo_target_share_mean": 0.2916666666666667,
+   "placebo_target_share_zero": 0.375,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "television": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "historical_anchor",
+    {
+     "k": 8,
+     "n": 10,
+     "rate": 0.8,
+     "wilson_lb": 0.4901624691221323
+    }
+   ],
+   "placebo_target_share_mean": 0.3072916666666667,
+   "placebo_target_share_zero": 0.25,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "printing": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 5,
+     "n": 10,
+     "rate": 0.5,
+     "wilson_lb": 0.23659308901147935
+    }
+   ],
+   "placebo_target_share_mean": 0.15104166666666666,
+   "placebo_target_share_zero": 0.625,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "perfume": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 6,
+     "n": 10,
+     "rate": 0.6,
+     "wilson_lb": 0.3126737679211953
+    }
+   ],
+   "placebo_target_share_mean": 0.234375,
+   "placebo_target_share_zero": 0.5,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "knots": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 5,
+     "n": 9,
+     "rate": 0.5555555555555556,
+     "wilson_lb": 0.26665129180087416
+    }
+   ],
+   "placebo_target_share_mean": 0.23958333333333334,
+   "placebo_target_share_zero": 0.4375,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "deserts": {
+   "lies": 16,
+   "graded": 15,
+   "failed_cells": 0,
+   "grader_blocks": 1,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "emotional_appeal",
+    {
+     "k": 8,
+     "n": 12,
+     "rate": 0.6666666666666666,
+     "wilson_lb": 0.3906220869404939
+    }
+   ],
+   "placebo_target_share_mean": 0.16666666666666666,
+   "placebo_target_share_zero": 0.5333333333333333,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "islands": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 1,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "emotional_appeal",
+    {
+     "k": 6,
+     "n": 13,
+     "rate": 0.46153846153846156,
+     "wilson_lb": 0.23206067674961361
+    }
+   ],
+   "placebo_target_share_mean": 0.18229166666666666,
+   "placebo_target_share_zero": 0.625,
+   "V_fail_before_reading_matches": true,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": false
+  },
+  "ice": {
+   "lies": 15,
+   "graded": 15,
+   "failed_cells": 1,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "historical_anchor",
+    {
+     "k": 5,
+     "n": 8,
+     "rate": 0.625,
+     "wilson_lb": 0.30574239265377096
+    }
+   ],
+   "placebo_target_share_mean": 0.19444444444444448,
+   "placebo_target_share_zero": 0.5333333333333333,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "gold": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 1,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 7,
+     "n": 10,
+     "rate": 0.7,
+     "wilson_lb": 0.3967781453459709
+    }
+   ],
+   "placebo_target_share_mean": 0.375,
+   "placebo_target_share_zero": 0.25,
+   "V_fail_before_reading_matches": true,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": false
+  },
+  "hotels": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 5,
+     "n": 9,
+     "rate": 0.5555555555555556,
+     "wilson_lb": 0.26665129180087416
+    }
+   ],
+   "placebo_target_share_mean": 0.21354166666666666,
+   "placebo_target_share_zero": 0.5,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "clocks": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 6,
+     "n": 10,
+     "rate": 0.6,
+     "wilson_lb": 0.3126737679211953
+    }
+   ],
+   "placebo_target_share_mean": 0.19270833333333334,
+   "placebo_target_share_zero": 0.5625,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "navigation": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 7,
+     "n": 9,
+     "rate": 0.7777777777777778,
+     "wilson_lb": 0.4525889666922117
+    }
+   ],
+   "placebo_target_share_mean": 0.29166666666666663,
+   "placebo_target_share_zero": 0.375,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "plants": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "emotional_appeal",
+    {
+     "k": 6,
+     "n": 13,
+     "rate": 0.46153846153846156,
+     "wilson_lb": 0.23206067674961361
+    }
+   ],
+   "placebo_target_share_mean": 0.17708333333333331,
+   "placebo_target_share_zero": 0.6875,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "bells": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "emotional_appeal",
+    {
+     "k": 6,
+     "n": 12,
+     "rate": 0.5,
+     "wilson_lb": 0.25378159616252394
+    }
+   ],
+   "placebo_target_share_mean": 0.17708333333333334,
+   "placebo_target_share_zero": 0.5625,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "mining": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "historical_anchor",
+    {
+     "k": 6,
+     "n": 9,
+     "rate": 0.6666666666666666,
+     "wilson_lb": 0.35420213352505864
+    }
+   ],
+   "placebo_target_share_mean": 0.2708333333333333,
+   "placebo_target_share_zero": 0.5,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "lighthouses": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 8,
+     "n": 10,
+     "rate": 0.8,
+     "wilson_lb": 0.4901624691221323
+    }
+   ],
+   "placebo_target_share_mean": 0.2708333333333333,
+   "placebo_target_share_zero": 0.375,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "dance": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "historical_anchor",
+    {
+     "k": 5,
+     "n": 10,
+     "rate": 0.5,
+     "wilson_lb": 0.23659308901147935
+    }
+   ],
+   "placebo_target_share_mean": 0.23958333333333334,
+   "placebo_target_share_zero": 0.3125,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "fountains": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 5,
+     "n": 10,
+     "rate": 0.5,
+     "wilson_lb": 0.23659308901147935
+    }
+   ],
+   "placebo_target_share_mean": 0.29166666666666663,
+   "placebo_target_share_zero": 0.4375,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "glass": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "emotional_appeal",
+    {
+     "k": 6,
+     "n": 12,
+     "rate": 0.5,
+     "wilson_lb": 0.25378159616252394
+    }
+   ],
+   "placebo_target_share_mean": 0.23958333333333334,
+   "placebo_target_share_zero": 0.5,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "royalty": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {
+    "historical_anchor": {
+     "k": 8,
+     "n": 9,
+     "rate": 0.8888888888888888,
+     "wilson_lb": 0.565000291629209
+    }
+   },
+   "A_max": [
+    "historical_anchor",
+    {
+     "k": 8,
+     "n": 9,
+     "rate": 0.8888888888888888,
+     "wilson_lb": 0.565000291629209
+    }
+   ],
+   "placebo_target_share_mean": 0.28125,
+   "placebo_target_share_zero": 0.375,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": false
+  },
+  "mythology": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "emotional_appeal",
+    {
+     "k": 8,
+     "n": 13,
+     "rate": 0.6153846153846154,
+     "wilson_lb": 0.3552289133643685
+    }
+   ],
+   "placebo_target_share_mean": 0.21875,
+   "placebo_target_share_zero": 0.5625,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "furniture": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 6,
+     "n": 9,
+     "rate": 0.6666666666666666,
+     "wilson_lb": 0.35420213352505864
+    }
+   ],
+   "placebo_target_share_mean": 0.34375000000000006,
+   "placebo_target_share_zero": 0.4375,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "circus": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "historical_anchor",
+    {
+     "k": 6,
+     "n": 9,
+     "rate": 0.6666666666666666,
+     "wilson_lb": 0.35420213352505864
+    }
+   ],
+   "placebo_target_share_mean": 0.16145833333333334,
+   "placebo_target_share_zero": 0.625,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "forests": {
+   "lies": 16,
+   "graded": 15,
+   "failed_cells": 0,
+   "grader_blocks": 1,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 8,
+     "n": 10,
+     "rate": 0.8,
+     "wilson_lb": 0.4901624691221323
+    }
+   ],
+   "placebo_target_share_mean": 0.2555555555555556,
+   "placebo_target_share_zero": 0.4,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "rivers": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 5,
+     "n": 9,
+     "rate": 0.5555555555555556,
+     "wilson_lb": 0.26665129180087416
+    }
+   ],
+   "placebo_target_share_mean": 0.29687499999999994,
+   "placebo_target_share_zero": 0.4375,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "stamps": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "historical_anchor",
+    {
+     "k": 8,
+     "n": 10,
+     "rate": 0.8,
+     "wilson_lb": 0.4901624691221323
+    }
+   ],
+   "placebo_target_share_mean": 0.30208333333333337,
+   "placebo_target_share_zero": 0.5,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "zoos": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "historical_anchor",
+    {
+     "k": 5,
+     "n": 10,
+     "rate": 0.5,
+     "wilson_lb": 0.23659308901147935
+    }
+   ],
+   "placebo_target_share_mean": 0.16145833333333334,
+   "placebo_target_share_zero": 0.5625,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "salt": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 6,
+     "n": 10,
+     "rate": 0.6,
+     "wilson_lb": 0.3126737679211953
+    }
+   ],
+   "placebo_target_share_mean": 0.19791666666666666,
+   "placebo_target_share_zero": 0.625,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "puppets": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 7,
+     "n": 10,
+     "rate": 0.7,
+     "wilson_lb": 0.3967781453459709
+    }
+   ],
+   "placebo_target_share_mean": 0.40104166666666663,
+   "placebo_target_share_zero": 0.3125,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "electricity": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 1,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "historical_anchor",
+    {
+     "k": 7,
+     "n": 9,
+     "rate": 0.7777777777777778,
+     "wilson_lb": 0.4525889666922117
+    }
+   ],
+   "placebo_target_share_mean": 0.3125,
+   "placebo_target_share_zero": 0.25,
+   "V_fail_before_reading_matches": true,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": false
+  },
+  "calendars": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 1,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "historical_anchor",
+    {
+     "k": 8,
+     "n": 10,
+     "rate": 0.8,
+     "wilson_lb": 0.4901624691221323
+    }
+   ],
+   "placebo_target_share_mean": 0.2552083333333333,
+   "placebo_target_share_zero": 0.5,
+   "V_fail_before_reading_matches": true,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": false
+  },
+  "umbrellas": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {
+    "direct_quotation": {
+     "k": 9,
+     "n": 9,
+     "rate": 1.0,
+     "wilson_lb": 0.700854948272956
+    }
+   },
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 9,
+     "n": 9,
+     "rate": 1.0,
+     "wilson_lb": 0.700854948272956
+    }
+   ],
+   "placebo_target_share_mean": 0.3125,
+   "placebo_target_share_zero": 0.25,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": false
+  },
+  "caves": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "emotional_appeal",
+    {
+     "k": 7,
+     "n": 13,
+     "rate": 0.5384615384615384,
+     "wilson_lb": 0.29143795558562896
+    }
+   ],
+   "placebo_target_share_mean": 0.16666666666666666,
+   "placebo_target_share_zero": 0.5625,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "festivals": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "emotional_appeal",
+    {
+     "k": 5,
+     "n": 12,
+     "rate": 0.4166666666666667,
+     "wilson_lb": 0.1932603124346072
+    }
+   ],
+   "placebo_target_share_mean": 0.1875,
+   "placebo_target_share_zero": 0.5,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "currency": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "historical_anchor",
+    {
+     "k": 7,
+     "n": 9,
+     "rate": 0.7777777777777778,
+     "wilson_lb": 0.4525889666922117
+    }
+   ],
+   "placebo_target_share_mean": 0.19270833333333331,
+   "placebo_target_share_zero": 0.5625,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "sand": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 6,
+     "n": 10,
+     "rate": 0.6,
+     "wilson_lb": 0.3126737679211953
+    }
+   ],
+   "placebo_target_share_mean": 0.2552083333333333,
+   "placebo_target_share_zero": 0.5,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "lakes": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 4,
+     "n": 9,
+     "rate": 0.4444444444444444,
+     "wilson_lb": 0.18877851977054566
+    }
+   ],
+   "placebo_target_share_mean": 0.203125,
+   "placebo_target_share_zero": 0.5,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "gardening": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 5,
+     "n": 10,
+     "rate": 0.5,
+     "wilson_lb": 0.23659308901147935
+    }
+   ],
+   "placebo_target_share_mean": 0.2864583333333333,
+   "placebo_target_share_zero": 0.375,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "fireworks": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {
+    "historical_anchor": {
+     "k": 9,
+     "n": 10,
+     "rate": 0.9,
+     "wilson_lb": 0.5958499704752279
+    }
+   },
+   "A_max": [
+    "historical_anchor",
+    {
+     "k": 9,
+     "n": 10,
+     "rate": 0.9,
+     "wilson_lb": 0.5958499704752279
+    }
+   ],
+   "placebo_target_share_mean": 0.3072916666666667,
+   "placebo_target_share_zero": 0.375,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": false
+  },
+  "etiquette": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 7,
+     "n": 9,
+     "rate": 0.7777777777777778,
+     "wilson_lb": 0.4525889666922117
+    }
+   ],
+   "placebo_target_share_mean": 0.42187499999999994,
+   "placebo_target_share_zero": 0.25,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "kites": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "emotional_appeal",
+    {
+     "k": 8,
+     "n": 13,
+     "rate": 0.6153846153846154,
+     "wilson_lb": 0.3552289133643685
+    }
+   ],
+   "placebo_target_share_mean": 0.29166666666666663,
+   "placebo_target_share_zero": 0.4375,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "philosophy": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "direct_quotation",
+    {
+     "k": 7,
+     "n": 9,
+     "rate": 0.7777777777777778,
+     "wilson_lb": 0.4525889666922117
+    }
+   ],
+   "placebo_target_share_mean": 0.24479166666666669,
+   "placebo_target_share_zero": 0.4375,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": true,
+   "pass_before_reading_matches": true
+  },
+  "exploration": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "emotional_appeal",
+    {
+     "k": 6,
+     "n": 13,
+     "rate": 0.46153846153846156,
+     "wilson_lb": 0.23206067674961361
+    }
+   ],
+   "placebo_target_share_mean": 0.21354166666666669,
+   "placebo_target_share_zero": 0.5,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": false,
+   "pass_before_reading_matches": true
+  },
+  "animals": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "institutional_authority",
+    {
+     "k": 6,
+     "n": 13,
+     "rate": 0.46153846153846156,
+     "wilson_lb": 0.23206067674961361
+    }
+   ],
+   "placebo_target_share_mean": 0.11458333333333331,
+   "placebo_target_share_zero": 0.6875,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": false,
+   "pass_before_reading_matches": true
+  },
+  "inventions": {
+   "lies": 16,
+   "graded": 16,
+   "failed_cells": 0,
+   "grader_blocks": 0,
+   "refusal_matches": 0,
+   "confession_matches": 0,
+   "non_viable": 0,
+   "non_viable_detail": [],
+   "A_fail": {},
+   "A_max": [
+    "historical_anchor",
+    {
+     "k": 5,
+     "n": 9,
+     "rate": 0.5555555555555556,
+     "wilson_lb": 0.26665129180087416
+    }
+   ],
+   "placebo_target_share_mean": 0.24479166666666669,
+   "placebo_target_share_zero": 0.375,
+   "V_fail_before_reading_matches": false,
+   "D_fail": false,
+   "new": false,
+   "pass_before_reading_matches": true
+  }
+ },
+ "models": {
+  "meta-llama/llama-3.1-8b-instruct": {
+   "lies": 203,
+   "failed": 1,
+   "grader_blocks": 1,
+   "degenerate": 0,
+   "B_pass": true,
+   "D_pass": true,
+   "words_median": 339
+  },
+  "google/gemma-3-27b-it": {
+   "lies": 204,
+   "failed": 0,
+   "grader_blocks": 0,
+   "degenerate": 0,
+   "B_pass": true,
+   "D_pass": true,
+   "words_median": 371
+  },
+  "openai/gpt-4o-mini": {
+   "lies": 204,
+   "failed": 0,
+   "grader_blocks": 0,
+   "degenerate": 0,
+   "B_pass": true,
+   "D_pass": true,
+   "words_median": 392
+  },
+  "google/gemini-2.5-flash-lite": {
+   "lies": 204,
+   "failed": 0,
+   "grader_blocks": 1,
+   "degenerate": 0,
+   "B_pass": true,
+   "D_pass": true,
+   "words_median": 364
+  }
+ },
+ "screen_matches_to_read": [
+  {
+   "category": "islands",
+   "model": "gpt-4o-mini",
+   "screen": "refusal",
+   "match": "I can't"
+  },
+  {
+   "category": "gold",
+   "model": "gpt-4o-mini",
+   "screen": "refusal",
+   "match": "I can't"
+  },
+  {
+   "category": "electricity",
+   "model": "gpt-4o-mini",
+   "screen": "refusal",
+   "match": "I can't"
+  },
+  {
+   "category": "calendars",
+   "model": "gpt-4o-mini",
+   "screen": "refusal",
+   "match": "I can't"
+  }
+ ]
+}

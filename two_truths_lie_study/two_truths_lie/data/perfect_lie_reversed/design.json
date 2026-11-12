@@ -1,0 +1,12 @@
+{
+  "version": "0.1-draft",
+  "status": "DRAFT for owner review.",
+  "conditions": ["placebo", "full", "reversed"],
+  "targets": ["P1", "P2", "P3", "P5", "P6"],
+  "placebo_for_target": {"P1": "P2", "P2": "P3", "P3": "P1", "P5": "P6", "P6": "P5"},
+  "notes": [
+    "Every category is crossed with every target persona (24 x 5 units per liar model per replicate).",
+    "Placebo persona per target: the placebo note describes a different pool persona whose cues are disjoint from the target's (all 16 cues, not only scorable ones), so every scorable target cue stays placebo-net. P5's only disjoint pool persona is P6, which fixes the cycle P1->P2->P3->P1, P5<->P6.",
+    "Length matching: for each target, the full, reversed and placebo notes are all padded with the frozen neutral filler sentences to the longest of the three unpadded notes."
+  ]
+}

@@ -1,0 +1,7 @@
+environment: {'python': '3.11.18', 'numpy': '2.4.6', 'pandas': '2.3.3', 'patsy': '1.0.3', 'scipy': '1.17.1', 'statsmodels': '0.15.0', 'matplotlib': '3.11.2'}
+work tree /study/build/tier0_w/study ready in 1 s (15 record files decompressed)
+[ok] w.levels                       7.0 s  levels.json: identical
+[ok] w.build                        2.8 s  METHODS.md: identical, FINDINGS.md: identical, FIGURES.md: identical, CLAIMS_MANIFEST.csv: identical, fig1_study1_lift.png: identical, fig2_reversed_levels.png: identical, fig3_steering_levels.png: identical, fig4_method_check.png: identical
+[ok] w.check                        8.3 s  check_output.txt: identical
+
+FAIL: Tier 0 in 19 s; rebuilt {'identical': 10, 'numerically equal': 0, 'equal': 0, 'DIFFERENT': 0, 'MISSING': 0}; report: /study/build/tier0_w/study/release/TIER0_REPORT.md

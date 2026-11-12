@@ -1,0 +1,22 @@
+{
+ "n": 10000,
+ "seed": 20261035,
+ "shares": {
+  "google/gemma-3-27b-it|H1": {
+   "efficacy": 0.0115,
+   "equivalence": 0.9403
+  },
+  "google/gemma-3-27b-it|H2": {
+   "efficacy": 0.013,
+   "equivalence": 0.9713
+  },
+  "meta-llama/llama-3.1-8b-instruct|H1": {
+   "efficacy": 0.0135,
+   "equivalence": 0.9844
+  },
+  "meta-llama/llama-3.1-8b-instruct|H2": {
+   "efficacy": 0.013,
+   "equivalence": 0.9477
+  }
+ }
+}

@@ -1,0 +1,13 @@
+# Tier 0 and dataset outputs (make docker-reproduce writes build/ here)
+build/
+
+# The repository root ignores *json, *csv, *txt, *png, *gz and *jsonl (EDSL defaults). The release package and the
+# write-up ship such files on purpose; re-include them here (the last matching pattern wins).
+!release/**/*.json
+!release/**/*.txt
+!writeup/**/*.json
+!writeup/**/*.csv
+!writeup/**/*.txt
+!writeup/**/*.png
+!release/fresh_run/**/*.out
+!release/fresh_run/**/*.log
