@@ -9,9 +9,9 @@ The note describes what one target persona (`P1`, `P2`, `P3`, `P5` or `P6`) find
 The outcome s of a lie is the share of the target's scorable cues that the primary grader (Claude Sonnet 4.5) marks present in the story. Scorable cues exclude heatmap-only cues and cues removed by a per-cue agreement gate between the primary grader and a second grader (gemini-2.5-flash).
 Each study was registered before its data were collected, as the dated GitHub release of its registration tag (the registration texts call this the OSF post). Changes were made by dated addenda. Analysis code was validated on simulated data, reviewed and hashed before unblinding, and each study ran a blinded permutation check before unblinding.
 
-## Study 1: full versus placebo note
+## Phase 1: full versus placebo note
 
-Registration: `PREREG_DRAFT.md` (revision 3; tag `perfect-lie-prereg-v1`).
+Registered as study 1. Registration: `PREREG_DRAFT.md` (revision 3; tag `perfect-lie-prereg-v1`).
 
 - Liars and judges: four models (Llama 3.1 8B, Gemma 3 27B, gpt-4o-mini, Gemini 2.5 Flash-Lite); every lie is read by all four as judges.
 - Conditions: no note (`none`), a placebo note describing another persona, and the target's full note. Per replicate and liar, 6 prompts, 2 targets and three conditions, 36 cells.
@@ -27,11 +27,11 @@ Registration: `PREREG_DRAFT.md` (revision 3; tag `perfect-lie-prereg-v1`).
   - After unblinding (post hoc (descriptive)): the gpt-5 subsample's units were also scored with the primary grader.
 - Data: 2,110 lies at the interim; units per model Llama 3.1 8B 131, Gemma 3 27B 130, gpt-4o-mini 128, Gemini 2.5 Flash-Lite 122. Units excluded: 29 with a missing or failed cell, 60 with an empty cue set, 0 confessed.
 
-## Study 2: reversed note
+## Phase 2: reversed note
 
-Registration: `PREREG_REVERSED.md` (tag `perfect-lie-reversed-prereg-v1`).
+Registered as the reversed-note study. Registration: `PREREG_REVERSED.md` (tag `perfect-lie-reversed-prereg-v1`).
 
-- Liars, judges and graders as in study 1; the gpt-5 grader on a seeded 25% subsample. Sampling for all liars: temperature 0.6, top_p 0.9.
+- Liars, judges and graders as in Phase 1; the gpt-5 grader on a seeded 25% subsample. Sampling for all liars: temperature 0.6, top_p 0.9.
 - Conditions: placebo, full, and reversed. The reversed note flips each belief's valence by the smallest edit (the judge finds the cue suspect), naming the same cues with the same cue words.
 - Size: 72 categories, five targets, three conditions and four liars, 4,320 lies, one replicate.
 - **Primary test** (registered primary; section 4): Test B = s(full) − s(reversed), per liar, from `s ~ condition + persona + (1 + condition | category)` (REML), with t on K − 1 = 71 df; if the fit fails, a per-category t-test on the persona-averaged paired differences (registered fallback). Holm across the four liars in an efficacy family (two-sided) and an equivalence family (TOST, margin 0.10). Labels: belief-tracking; fewer named cues under full than under reversed; no valence effect beyond the margin; valence effect present within the margin; inconclusive.
@@ -42,9 +42,9 @@ Registration: `PREREG_REVERSED.md` (tag `perfect-lie-reversed-prereg-v1`).
 - Amendments: Addendum 1 (before unblinding) recorded the fixes from the final-analysis code reviews and the owner's adjudication of the blind screen matches (lies kept as confessions and excluded: 1).
 - After unblinding (post hoc (descriptive); owner's requests): balanced accuracy on parseable comprehension answers only, and Test B from the second grader's annotations.
 
-## Phase 2: activation probe and steering
+## Phase 3: activation probe and steering
 
-Registration: `PREREG_PHASE2.md` (revision 4; tag `perfect-lie-phase2-prereg-v1`), with Addenda 1-8 (`PREREG_PHASE2_ADDENDA.md`).
+Registered as "Phase 2". Registration: `PREREG_PHASE2.md` (revision 4; tag `perfect-lie-phase2-prereg-v1`), with Addenda 1-8 (`PREREG_PHASE2_ADDENDA.md`).
 
 - Models: Gemma 3 27B IT and Llama 3.1 8B Instruct with open weights (bf16), the two open-weight liars of the earlier studies. Their prompt renderings were fixed by a registered identity check comparing the hosted model with the API (section 2).
 - Category split: the frozen categories split once into 32 evaluation and 40 training categories.

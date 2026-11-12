@@ -1,4 +1,5 @@
-"""Build the write-up package for The Perfect Lie (study 1, the reversed-note study, Phase 2): METHODS.md, FINDINGS.md,
+"""Build the write-up package for Why Would I Lie (WWIL), Phases 1-3 (registered as study 1, the reversed-note study and
+Phase 2): METHODS.md, FINDINGS.md,
 FIGURES.md (captions), figures/fig1-4.png, CLAIMS_MANIFEST.csv. Every number in the text is a claim read from a
 committed results file (claims.py); figures are drawn from the same files.
 
@@ -59,8 +60,8 @@ def methods():
           "blinded permutation check before unblinding.", ""]
 
     s1 = "S1"
-    L += ["## Study 1: full versus placebo note", "",
-          f"Registration: {bt('PREREG_DRAFT.md')} (revision 3; tag {bt('perfect-lie-prereg-v1')}).", "",
+    L += ["## Phase 1: full versus placebo note", "",
+          f"Registered as study 1. Registration: {bt('PREREG_DRAFT.md')} (revision 3; tag {bt('perfect-lie-prereg-v1')}).", "",
           "- Liars and judges: four models (Llama 3.1 8B, Gemma 3 27B, gpt-4o-mini, Gemini 2.5 Flash-Lite); every lie "
           "is read by all four as judges.",
           "- Conditions: no note (`none`), a placebo note describing another persona, and the target's full note. Per "
@@ -109,9 +110,9 @@ def methods():
           + C.json("m1.ex.conf", s1, "/units_excluded/confessed", "int", REG_P) + " confessed.", ""]
 
     rv = "RV"
-    L += ["## Study 2: reversed note", "",
-          f"Registration: {bt('PREREG_REVERSED.md')} (tag {bt('perfect-lie-reversed-prereg-v1')}).", "",
-          "- Liars, judges and graders as in study 1; the gpt-5 grader on a seeded "
+    L += ["## Phase 2: reversed note", "",
+          f"Registered as the reversed-note study. Registration: {bt('PREREG_REVERSED.md')} (tag {bt('perfect-lie-reversed-prereg-v1')}).", "",
+          "- Liars, judges and graders as in Phase 1; the gpt-5 grader on a seeded "
           + C.text("m2.gpt5", "R2", "gpt-5 on a seeded 25% subsample", "25%") + " subsample. Sampling for all liars: "
           "temperature " + C.text("m2.temp", "R2", "**temperature 0.6, top_p 0.9**", "0.6") + ", top_p "
           + C.text("m2.topp", "R2", "**temperature 0.6, top_p 0.9**", "0.9") + ".",
@@ -143,8 +144,8 @@ def methods():
           f"- After unblinding ({POSTHOC}; owner's requests): balanced accuracy on parseable comprehension answers only, "
           "and Test B from the second grader's annotations.", ""]
 
-    L += ["## Phase 2: activation probe and steering", "",
-          f"Registration: {bt('PREREG_PHASE2.md')} (revision 4; tag {bt('perfect-lie-phase2-prereg-v1')}), with Addenda "
+    L += ["## Phase 3: activation probe and steering", "",
+          f"Registered as \"Phase 2\". Registration: {bt('PREREG_PHASE2.md')} (revision 4; tag {bt('perfect-lie-phase2-prereg-v1')}), with Addenda "
           f"1-8 ({bt('PREREG_PHASE2_ADDENDA.md')}).", "",
           "- Models: Gemma 3 27B IT and Llama 3.1 8B Instruct with open weights (bf16), the two open-weight liars of "
           "the earlier studies. Their prompt renderings were fixed by a registered identity check comparing the "
@@ -219,7 +220,7 @@ def findings():
 
     # ------------------------------------------------ study 1
     s1 = "S1"
-    L += ["## Study 1: full versus placebo note", "",
+    L += ["## Phase 1: full versus placebo note (registered as study 1)", "",
           f"**{REG_P}** (registration sections 4-5). Lift is s(full) − s(placebo); the decision is taken at the look shown.", "",
           "| liar | units | look | decision | mean lift [95% CI] | Z | boundary | local alpha at decision |",
           "|---|---|---|---|---|---|---|---|"]
@@ -291,7 +292,7 @@ def findings():
     # ------------------------------------------------ reversed note
     rv = "RV"
     rob = "m1_random_intercepts_assumes_no_heterogeneity"
-    L += ["## Study 2: reversed note", "",
+    L += ["## Phase 2: reversed note (registered as the reversed-note study)", "",
           f"**{REG_P}** (section 4). Test B = s(full) − s(reversed). Liars estimated by the registered fallback "
           "(per-category t-test) because the mixed model did not converge: "
           + C.expr("f2.fb", rv, "count_fallback", {"xs": [ptr("primary", m, "method") for m in MODELS4]}, "int", REG_P)
@@ -379,7 +380,7 @@ def findings():
     sel = {LLAMA: str(resolve(load("PRL"), "/selected_layer")), GEMMA: str(resolve(load("PRG"), "/selected_layer"))}
     PR = {LLAMA: "PRL", GEMMA: "PRG"}; DG = {LLAMA: "DGL", GEMMA: "DGG"}; P2 = {LLAMA: "P2L", GEMMA: "P2G"}
     MC = {LLAMA: "MCL", GEMMA: "MCG"}; CO = {LLAMA: "COL", GEMMA: "COG"}; GS = {LLAMA: "GSL", GEMMA: "GSG"}
-    L += ["## Phase 2: activation probe and steering", "",
+    L += ["## Phase 3: activation probe and steering (registered as \"Phase 2\")", "",
           "### Before the probe", "",
           f"- **{REG_S}** (identity check, section 2; completed and disclosed in the registration): hosted-minus-API "
           "difference in Test B on " + C.json("p.idk", "IDC", "/k", "int", REG_S) + " categories [90% CI], equivalent "
@@ -395,7 +396,7 @@ def findings():
           + C.json("p.idn", "IDN", ptr("models", GEMMA, "tests", "B", "diff"), "s3", REG_S) + " "
           + C.json("p.idnci", "IDN", ptr("models", GEMMA, "tests", "B", "ci90"), "ci3s", REG_S) + ", "
           + C.json("p.idne", "IDN", ptr("models", GEMMA, "tests", "B", "equivalent"), "yn", REG_S)
-          + ". Phase 2 uses the renderings that were equivalent.",
+          + ". Phase 3 uses the renderings that were equivalent.",
           f"- **{REG_S}** (grading route, section 11): grades through the provider's API directly agreed with the earlier "
           "route with kappa " + C.json("p.grk", "GR", "/pooled_all_cues/kappa", "f3", REG_S) + " over "
           + C.json("p.grn", "GR", "/pooled_all_cues/labels", "int", REG_S) + " cue labels.", "",
@@ -537,7 +538,7 @@ def findings():
           + ". Lies graded by the second grader: "
           + "; ".join(f"{NAME[m]} " + C.json(f"s.gn.{m_(m)}", GS[m], "/google_graded", "int", REG_S) for m in MODELS2) + ".",
           f"- **{REG_S}** (section 9, Llama dissociation, descriptive; Gemma alongside): held-out-persona probe AUROC at "
-          "the selected block beside the registered comprehension balanced accuracy of study 2, "
+          "the selected block beside the registered comprehension balanced accuracy of Phase 2, "
           + "; ".join(f"{NAME[m]} " + C.json(f"s.s9.au.{m_(m)}", PR[m], ptr("per_layer", sel[m], "held_out_personas", "auroc"), "f3", REG_S)
                       + " and " + C.json(f"s.s9.ba.{m_(m)}", "RV", ptr("comprehension", m, "balanced_accuracy"), "f3", REG_S) for m in MODELS2)
           + "; Llama 3.1 8B on parseable answers only (" + POSTHOC + "), "
@@ -623,7 +624,7 @@ def fig1():
     allpos = all(P[m]["ci95_naive"][0] > 0 for m in MODELS4)
     titles(fig, "Lift above zero for every liar: more of the target's named cues under the full note than under the placebo"
            if allpos else "Lift of the full over the placebo note, per liar",
-           f"Study 1, {' / '.join(looks)} look. Point and 95% CI per liar: naive mean (registered estimate, solid) and\n"
+           f"Phase 1, {' / '.join(looks)} look. Point and 95% CI per liar: naive mean (registered estimate, solid) and\n"
            "mixed model d ~ 1 + (1 | prompt) (registered robustness, dashed)", y=1.02)
     note(fig, f"Source: results/perfect_lie/final_analysis/final_report.json (sha256 {short('S1')}…).\nRegistered primary "
               f"test: group-sequential Z with Holm across liars. Decisions: {', '.join(decs)} "
@@ -658,7 +659,7 @@ def fig2():
     allB = all(rep["primary"][m]["B"] > 0 for m in MODELS4)
     titles(fig, (f"Test B, full − reversed, was positive for every liar (labels: {', '.join(labs)})" if allB
                  else f"Test B, full − reversed, per liar (labels: {', '.join(labs)})"),
-           f"Reversed-note study: s by note, mean over {'/'.join(map(str, K))} categories with a 95% t interval. "
+           f"Phase 2 (reversed note): s by note, mean over {'/'.join(map(str, K))} categories with a 95% t interval. "
            "A = reversed − placebo (registered secondary); B = full − reversed (registered primary)", y=0.98)
     note(fig, f"Sources: results/perfect_lie_reversed/final_analysis/final_report.json (sha256 {short('RV')}…) for A and B; "
               f"levels (post hoc, descriptive) from writeup/derived/levels.json (sha256 {short('LV')}…),\nderived from the "
@@ -697,7 +698,7 @@ def fig3():
             ax.spines["bottom"].set_bounds(0, 2); ax.set_xlim(-0.35, 3.0)
     fig.supylabel("s, share of the target's scorable cues present", x=0.06, fontsize=12, color="#666666")
     K = sorted({lv[m][k]["K"] for m in MODELS2 for k in lv[m] if not k.startswith("mc_")})
-    titles(fig, "Phase 2 steering: s by arm under each hypothesis",
+    titles(fig, "Phase 3 steering: s by arm under each hypothesis",
            f"Stage 2: mean over {'/'.join(map(str, K))} evaluation categories with a 95% t interval. Faint line: the "
            "opposite note's unsteered level.\nΔ = steered − placebo and the registered label (registered primary).",
            y=0.93)
@@ -736,7 +737,7 @@ def fig4():
     ax.set_xlabel("d = s(steered along v_fp,t) − s(its placebo), mean over categories")
     res = "; ".join(f"{NAME[m]} {'passed' if st['method_check'][m]['passed'] else 'failed'}" for m in MODELS2)
     titles(fig, f"Method check (registered primary): {res}",
-           f"Phase 2, Addendum 7: per-target v_fp,t at alpha {a_mc} under the placebo note. Point and one-sided 95% "
+           f"Phase 3, Addendum 7: per-target v_fp,t at alpha {a_mc} under the placebo note. Point and one-sided 95% "
            f"interval (arrow: no upper bound);\nregistered test: one-sided t at {a_t}, against 0", y=1.0)
     note(fig, f"Source: results/phase2/stage2/stage2_result.json (sha256 {short('ST')}…). Under the registration "
               "(section 7), a failed method check makes a model's null labels inconclusive.")
@@ -747,7 +748,7 @@ def captions():
     L = ["# Figures", ""]
     GS2 = {LLAMA: "GSL", GEMMA: "GSG"}
     s1 = "S1"
-    L += ["**Figure 1** (`figures/fig1_study1_lift.png`). Study 1: lift s(full) − s(placebo) per liar with two 95% "
+    L += ["**Figure 1** (`figures/fig1_study1_lift.png`). Phase 1: lift s(full) − s(placebo) per liar with two 95% "
           "intervals, the naive mean (the registered estimate; " + REG_P + ") and the mixed model "
           "`d ~ 1 + (1 | prompt)` (" + REG_S + ", robustness). Units: "
           + ", ".join(f"{NAME[m]} " + C.json(f"c1.n.{m_(m)}", s1, ptr("primary", "models", m, "n_units"), "int", REG_P) for m in MODELS4)
@@ -756,20 +757,20 @@ def captions():
                       + C.json(f"c1.look.{m_(m)}", s1, ptr("primary", "models", m, "look"), "str", REG_P) for m in MODELS4)
           + ". "
           f"Source: `{SOURCES['S1']}`, sha256 `{sha256('S1')}`.", ""]
-    L += ["**Figure 2** (`figures/fig2_reversed_levels.png`). Reversed-note study: s by note per liar, as the mean over "
+    L += ["**Figure 2** (`figures/fig2_reversed_levels.png`). Phase 2 (reversed note): s by note per liar, as the mean over "
           "categories of per-category means with a 95% t interval (" + POSTHOC + ", derived from the committed records "
           "with the registered scoring code). Annotated: Test A = reversed − placebo (" + REG_S + ") and Test B = full − "
           "reversed (" + REG_P + "; per-category t-test, the registered fallback, Holm across four). Lies analysed: "
           + C.json("c2.n", "RV", "/n_lies_analysed", "int", REG_P) + ". Sources: `" + SOURCES["RV"] + "`, sha256 `"
           + sha256("RV") + "`; `" + SOURCES["LV"] + "`, sha256 `" + sha256("LV") + "`.", ""]
-    L += ["**Figure 3** (`figures/fig3_steering_levels.png`). Phase 2 stage 2: s by arm per model and hypothesis, mean "
+    L += ["**Figure 3** (`figures/fig3_steering_levels.png`). Phase 3 stage 2: s by arm per model and hypothesis, mean "
           "over the evaluation categories with a 95% t interval (" + POSTHOC + "); the faint line is the opposite note's "
           "unsteered level. Annotated: Delta = steered − placebo with its 95% CI and the registered label (" + REG_P
           + "; two-sided t on the categories with Holm across four, TOST with Holm). Lies per model: "
           + "; ".join(f"{NAME[m]} " + C.json(f"c3.n.{m_(m)}", GS2[m], "/graded", "int", REG_S) for m in MODELS2)
           + ". Sources: `" + SOURCES["ST"] + "`, sha256 `" + sha256("ST")
           + "`; `" + SOURCES["LV"] + "`, sha256 `" + sha256("LV") + "`.", ""]
-    L += ["**Figure 4** (`figures/fig4_method_check.png`). Phase 2 method check (Addendum 7): d = s(steered along "
+    L += ["**Figure 4** (`figures/fig4_method_check.png`). Phase 3 method check (Addendum 7): d = s(steered along "
           "v_fp,t) − s(its placebo), mean over categories, with the one-sided 95% interval (" + REG_P + "; one-sided t "
           "at " + C.text("c4.al", "R3A", "One-sided t (s rises) at 0.05.", "0.05") + "). One-sided lower bounds: "
           + "; ".join(f"{NAME[m]} " + C.expr(f"c4.lb.{m_(m)}", "ST", "lb95_onesided",
@@ -799,12 +800,69 @@ def write_section(name, lines, rows, spans_all):
         rows.append(cid)
 
 
+PHASES = [  # WWIL phase, question, registered name, tag, release date (the GitHub release of the tag)
+    ("Phase 1", "finds the effect: full vs placebo note", "study 1", "perfect-lie-prereg-v1", "2026-10-06"),
+    ("Phase 2", "why one path rather than another: full vs reversed note", "the reversed-note study",
+     "perfect-lie-reversed-prereg-v1", "2026-10-15"),
+    ("Phase 3", "probes causality: activation probe and steering", "\"Phase 2\"", "perfect-lie-phase2-prereg-v1",
+     "2026-10-22"),
+]
+SECTIONS = HERE / "sections"
+
+
+def _split(text):
+    """A generated section file -> (preamble lines, {heading: body lines}) at its '## ' headings."""
+    pre, parts, cur = [], {}, None
+    for line in text.rstrip("\n").split("\n")[1:]:              # drop the file's '# Title'
+        if line.startswith("## "):
+            cur = line[3:]; parts[cur] = []
+        elif cur is None:
+            pre.append(line)
+        else:
+            parts[cur].append(line)
+    return pre, parts
+
+
+def paper(methods_text, findings_text, figures_text):
+    """PAPER.md: the owner's sections (sections/*.md, verbatim) around the generated Methods, Findings and figure
+    captions, which appear verbatim (headings one level down) in the WWIL phase order. No number is added here."""
+    owner = {p.stem: p.read_text().rstrip("\n") for p in sorted(SECTIONS.glob("*.md"))}
+    m_pre, m = _split(methods_text)
+    f_pre, f = _split(findings_text)
+    caps = {ln.split("**")[1]: ln for ln in figures_text.split("\n") if ln.startswith("**Figure ")}
+    figs = {"Phase 1": ["Figure 1"], "Phase 2": ["Figure 2"], "Phase 3": ["Figure 3", "Figure 4"]}
+    files = {"Figure 1": "fig1_study1_lift.png", "Figure 2": "fig2_reversed_levels.png",
+             "Figure 3": "fig3_steering_levels.png", "Figure 4": "fig4_method_check.png"}
+    demote = lambda ls: [("#" + x) if x.startswith("###") else x for x in ls]
+    L = [owner["00_title"], "", owner["01_motivation_perfect_lie"], "", owner["02_wwil_introduction"], "",
+         "## The three phases", "",
+         "| phase | question | registered as | registration (dated GitHub release) |", "|---|---|---|---|"]
+    L += [f"| {ph} | {q} | {reg} | [`{tag}`](https://github.com/RandallSPQR/edsl_wwil/releases/tag/{tag}), {d} |"
+          for ph, q, reg, tag, d in PHASES]
+    L += ["", "## Methods common to all phases", ""] + [x for x in m_pre if x.strip()] + [""]
+    L += m["Shared instrument"] + [""]
+    L += [x for x in f_pre if x.strip()] + [""]
+    for ph in ("Phase 1", "Phase 2", "Phase 3"):
+        mk = next(k for k in m if k.startswith(ph + ":"))
+        fk = next(k for k in f if k.startswith(ph + ":"))
+        L += [f"## {mk}", "", "### Methods", ""] + demote(m[mk]) + ["", "### Findings", ""] + demote(f[fk]) + [""]
+        for fg in figs[ph]:
+            L += [f"![{fg}](figures/{files[fg]})", "", caps[fg], ""]
+    L += [owner["03_discussion"], "",
+          "---", "",
+          "Every number in the Methods, Findings and figure captions above is generated from the committed results files "
+          "and listed with its source in `CLAIMS_MANIFEST.csv`; `check_claims.py` verifies them. The author's sections "
+          "(`sections/`) are not checked."]
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(L)) + "\n"
+
+
 def main():
     FIG.mkdir(exist_ok=True)
     rows, spans = [], {}
     write_section("METHODS.md", methods(), rows, spans)
     write_section("FINDINGS.md", findings(), rows, spans)
     write_section("FIGURES.md", captions(), rows, spans)
+    (HERE / "PAPER.md").write_text(paper(*((HERE / n).read_text() for n in ("METHODS.md", "FINDINGS.md", "FIGURES.md"))))
     fig1(); fig2(); fig3(); fig4()
     by_id = {c["id"]: c for c in C.items}
     with open(HERE / "CLAIMS_MANIFEST.csv", "w", newline="") as f:

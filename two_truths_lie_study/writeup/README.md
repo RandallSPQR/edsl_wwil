@@ -1,10 +1,14 @@
-# Write-up package: The Perfect Lie (study 1, reversed note, Phase 2)
+# Write-up package: Why Would I Lie (WWIL), Phases 1-3
 
-The Methods and Findings sections and the figures. The owner writes the introduction, motivation and discussion.
+The paper draft, the Methods and Findings sections and the figures. The phases are registered as study 1 (Phase 1),
+the reversed-note study (Phase 2) and "Phase 2" (Phase 3, the probe and steering); each phase's section names its
+registration. The author writes the motivation, introduction and discussion in `sections/`.
 
 | file | what |
 |---|---|
-| `METHODS.md`, `FINDINGS.md` | the two sections |
+| `PAPER.md` | the paper in reading order: `sections/00-02`, the phase table, then per phase its Methods, Findings and figures (verbatim from the files below), then `sections/03_discussion.md` |
+| `sections/*.md` | the author's sections (title, motivation: The Perfect Lie, WWIL introduction, discussion), each starting as notes with sources; not checked |
+| `METHODS.md`, `FINDINGS.md` | the two generated sections |
 | `FIGURES.md` | captions: n, test, source file and full sha256 |
 | `figures/fig1-4*.png` | the four figures |
 | `CLAIMS_MANIFEST.csv` | one row per number (and per verified fact) in the three texts |
@@ -14,7 +18,7 @@ The Methods and Findings sections and the figures. The owner writes the introduc
 
 ```
 python derive_levels.py     # descriptive s levels for figures 2 and 3 -> derived/levels.json
-python build.py             # texts, figures, manifest
+python build.py             # texts, figures, manifest, PAPER.md (rerun after editing sections/)
 python check_claims.py      # must print PASS
 ```
 

@@ -83,7 +83,7 @@ STEPS = [
      ["../writeup/derive_levels.py"], ["writeup/derived/levels.json"]),
     ("w.build", "Write-up: Methods, Findings, captions, figures, claims manifest",
      ["../writeup/build.py"],
-     ["writeup/METHODS.md", "writeup/FINDINGS.md", "writeup/FIGURES.md", "writeup/CLAIMS_MANIFEST.csv",
+     ["writeup/METHODS.md", "writeup/FINDINGS.md", "writeup/FIGURES.md", "writeup/PAPER.md", "writeup/CLAIMS_MANIFEST.csv",
       *[f"writeup/figures/{f}" for f in ("fig1_study1_lift.png", "fig2_reversed_levels.png",
                                          "fig3_steering_levels.png", "fig4_method_check.png")]]),
     ("w.check", "Write-up: claims check (every manifest value against the rebuilt sources)",

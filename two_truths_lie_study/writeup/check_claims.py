@@ -9,7 +9,8 @@ Checks, re-reading every source from disk (value lookup is re-implemented here, 
   3. Coverage: every number in METHODS.md, FINDINGS.md and FIGURES.md is a claim value or an identifier on the
      whitelist below (names, section/addendum numbers, CI descriptors, code in backticks). Spelled-out numbers are
      listed for review.
-  4. Reproducibility: the texts are byte-identical to a fresh render by build.py, and derived/levels.json is
+  4. Reproducibility: the texts (and PAPER.md, assembled from them and the author's sections/) are byte-identical to
+     a fresh render by build.py, and derived/levels.json is
      identical (within 1e-12) to a fresh derivation from the committed records by derive_levels.py.
   5. Figures: every figure file named in FIGURES.md exists.
 """
@@ -141,7 +142,7 @@ WHITELIST = [
     r"`[^`]*`",                                                         # code, paths, hashes, formulas
     r"\bAddend(?:um|a) \d+(?:-\d+)?(?: and \d+)?", r"\blog items? \d+(?:-\d+)?",
     r"\bsections? \d+[a-z]?(?:-\d+[a-z]?)?(?:, \d+[a-z]?)*", r"\b[Ff]igure \d\b",
-    r"\b[Ss]tudy [12]\b", r"\bPhase 2\b", r"\b[Ss]tage[ -][12]\b", r"\brevision \d\b", r"\banalysis \d+\b",
+    r"\b[Ss]tudy [12]\b", r"\bPhase [123]\b", r"\b[Ss]tage[ -][12]\b", r"\brevision \d\b", r"\banalysis \d+\b",
     r"\bsha256\b", r"\bH[12]\b", r"\bP[1-6]\b",
     r"\bv0\.6\b", r"\bbf16\b", r"\b4-gram\b", r"\b(?:95|90)%", r"\bK − 1\b", r"\bs = 0\b",
     r"^\s*- [1-8]: ",                                                   # the Addenda list
@@ -198,11 +199,16 @@ def check_rebuild():
         fail("derived/levels.json differs from a fresh derivation")
     import build
     from claims import strip_markers
+    fresh_texts = {}
     for name, fn in (("METHODS.md", build.methods), ("FINDINGS.md", build.findings), ("FIGURES.md", build.captions)):
         build.C.__init__()
         clean, _ = strip_markers("\n".join(fn()) + "\n")
+        fresh_texts[name] = clean
         if clean != (HERE / name).read_text():
             fail(f"{name} differs from a fresh render by build.py")
+    # PAPER.md: the author's sections (not checked) around the three texts above, which it must carry verbatim
+    if (HERE / "PAPER.md").exists() and build.paper(*fresh_texts.values()) != (HERE / "PAPER.md").read_text():
+        fail("PAPER.md differs from a fresh assembly by build.py (from sections/ and the checked texts)")
     for f in re.findall(r"`(figures/[^`]+\.png)`", (HERE / "FIGURES.md").read_text()):
         if not (HERE / f).exists():
             fail(f"figure missing: {f}")

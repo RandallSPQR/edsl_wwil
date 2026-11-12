@@ -2,7 +2,7 @@
 
 Labels: **registered primary**, **registered secondary**, **post hoc (descriptive)**, **exploratory**, as set by each registration and its addenda. Intervals are 95% unless stated.
 
-## Study 1: full versus placebo note
+## Phase 1: full versus placebo note (registered as study 1)
 
 **registered primary** (registration sections 4-5). Lift is s(full) − s(placebo); the decision is taken at the look shown.
 
@@ -24,7 +24,7 @@ Labels: **registered primary**, **registered secondary**, **post hoc (descriptiv
 - **exploratory** (section 10, analysis 3): judge acceptance of same-family minus other-family lies, +0.046 (3,158 same-family and 5,282 other-family judgements).
 - **post hoc (descriptive)** (added before unblinding, labelled not pre-registered): conditional median-unbiased estimate given the early stop, Llama 3.1 8B +0.285; Gemma 3 27B +0.433; gpt-4o-mini +0.363; Gemini 2.5 Flash-Lite +0.352.
 
-## Study 2: reversed note
+## Phase 2: reversed note (registered as the reversed-note study)
 
 **registered primary** (section 4). Test B = s(full) − s(reversed). Liars estimated by the registered fallback (per-category t-test) because the mixed model did not converge: 4 of 4; categories per liar 72. Lies analysed: 4,296; confessions excluded: 1.
 
@@ -47,11 +47,11 @@ Labels: **registered primary**, **registered secondary**, **post hoc (descriptiv
 - **post hoc (descriptive)** (after unblinding, owner's request): Llama 3.1 8B balanced accuracy on parseable answers only, 0.536 [0.469, 0.603].
 - **post hoc (descriptive)** (after unblinding, owner's request): Test B from the second grader's annotations, Llama 3.1 8B +0.269; Gemma 3 27B +0.394; gpt-4o-mini +0.401; Gemini 2.5 Flash-Lite +0.368; primary rejections preserved: 4 of 4. The second grader shares a family with the Gemma and Gemini liars.
 
-## Phase 2: activation probe and steering
+## Phase 3: activation probe and steering (registered as "Phase 2")
 
 ### Before the probe
 
-- **registered secondary** (identity check, section 2; completed and disclosed in the registration): hosted-minus-API difference in Test B on 36 categories [90% CI], equivalent within the margin: Llama 3.1 8B -0.004 [-0.060, +0.052], yes; Gemma 3 27B with the official template +0.073 [+0.015, +0.131], no; Gemma 3 27B with the provider's rendering +0.008 [-0.051, +0.068], yes. Phase 2 uses the renderings that were equivalent.
+- **registered secondary** (identity check, section 2; completed and disclosed in the registration): hosted-minus-API difference in Test B on 36 categories [90% CI], equivalent within the margin: Llama 3.1 8B -0.004 [-0.060, +0.052], yes; Gemma 3 27B with the official template +0.073 [+0.015, +0.131], no; Gemma 3 27B with the provider's rendering +0.008 [-0.051, +0.068], yes. Phase 3 uses the renderings that were equivalent.
 - **registered secondary** (grading route, section 11): grades through the provider's API directly agreed with the earlier route with kappa 0.915 over 784 cue labels.
 
 ### Probe gate
@@ -94,6 +94,6 @@ Labels: **registered primary**, **registered secondary**, **post hoc (descriptiv
 - **registered secondary** (section 7, naturalness): cosine of v with the full − reversed shift at the last prompt token on the evaluation categories (out of sample), Llama 3.1 8B 0.998; Gemma 3 27B 0.999; at the first generated token, Llama 3.1 8B 0.10; Gemma 3 27B 0.39.
 - **registered secondary** (section 10, blinded permutation check; 10,000 permutations): efficacy decisions in 1.1% to 1.4% of permutations per test.
 - **registered secondary** (Addendum 2, descriptive; the second grader shares a family with Gemma): steered − placebo on the subsample cells, second grader versus primary grader on the same cells, Llama 3.1 8B H1 +0.146 versus +0.120; Llama 3.1 8B H2 -0.078 versus -0.104; Gemma 3 27B H1 -0.010 versus +0.026; Gemma 3 27B H2 -0.010 versus -0.005. Per-cue kappa over all cues, Llama 3.1 8B 0.85; Gemma 3 27B 0.75. Lies graded by the second grader: Llama 3.1 8B 256; Gemma 3 27B 256.
-- **registered secondary** (section 9, Llama dissociation, descriptive; Gemma alongside): held-out-persona probe AUROC at the selected block beside the registered comprehension balanced accuracy of study 2, Llama 3.1 8B 0.828 and 0.417; Gemma 3 27B 0.768 and 0.915; Llama 3.1 8B on parseable answers only (post hoc (descriptive)), 0.536.
+- **registered secondary** (section 9, Llama dissociation, descriptive; Gemma alongside): held-out-persona probe AUROC at the selected block beside the registered comprehension balanced accuracy of Phase 2, Llama 3.1 8B 0.828 and 0.417; Gemma 3 27B 0.768 and 0.915; Llama 3.1 8B on parseable answers only (post hoc (descriptive)), 0.536.
 - **exploratory** (section 9): the SAE-feature and MLP-neuron alignment analyses have not been run.
 
