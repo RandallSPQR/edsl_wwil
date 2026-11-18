@@ -20,7 +20,7 @@ Layout (each table is gzipped JSON Lines; one row per planned cell, the last rec
   screens/                    the blind confession/refusal screens and the owner's adjudications, per study
 Every lie row carries `content_flags` (see the dataset card): the lies are fiction written to deceive a judge, and many
 attribute invented events, failures or harms to real, named organizations. Names are flagged, not redacted.
-Writes MANIFEST.sha256 last.
+Every table row also carries `canary` (the GUID in CANARY.txt, which is copied too). Writes MANIFEST.sha256 last.
 """
 import argparse, csv, gzip, hashlib, json, re, shutil
 from pathlib import Path
@@ -30,6 +30,9 @@ STUDY = REL.parent
 R = STUDY / "two_truths_lie" / "results"
 D = STUDY / "two_truths_lie" / "data"
 SLUGS = ["gemma-3-27b-it", "llama-3.1-8b-instruct"]
+# Canary (version 2 on): one GUID, in CANARY.txt and in a `canary` field of every table row, so a model trained on the
+# data can be detected (BIG-bench convention; see the dataset card).
+CANARY = (REL / "dataset" / "CANARY.txt").read_text().strip()
 
 # Organization-like names: a run of capitalized words ending in (or starting with) an organizational head noun.
 ORG_HEAD = (r"University|Institute|Institution|Museum|Agency|Department|Ministry|Bureau|Office|Service|Survey|"
@@ -81,7 +84,7 @@ def write_jsonl(p, rows):
     p.parent.mkdir(parents=True, exist_ok=True)
     with gzip.GzipFile(p, "wb", mtime=0) as g:
         for r in rows:
-            g.write((json.dumps(r, ensure_ascii=False, sort_keys=True) + "\n").encode())
+            g.write((json.dumps({**r, "canary": CANARY}, ensure_ascii=False, sort_keys=True) + "\n").encode())
     return len(rows)
 
 
@@ -191,8 +194,9 @@ def build(out):
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(f, dst)
 
-    # card and flag summary
+    # card, canary and flag summary
     shutil.copy2(REL / "dataset/DATASET_CARD.md", out / "README.md")
+    shutil.copy2(REL / "dataset/CANARY.txt", out / "CANARY.txt")
     flags = {}
     for name in ("study1/lies.jsonl.gz", "reversed/lies.jsonl.gz", "phase2/identity_lies.jsonl.gz",
                  "phase2/pilot_lies.jsonl.gz", "phase2/stage2_lies.jsonl.gz"):
